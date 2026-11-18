@@ -108,6 +108,11 @@ internal sealed class ScriptedTransport : IClaudeTransport
         ["turn/start"] = _ => new JsonObject { ["turn"] = new JsonObject { ["id"] = CodexTurn, ["status"] = "inProgress" } },
     };
 
+    /// <summary>An answer to <see cref="RpcAnswers"/> that refuses the request, as Codex refuses one it can't carry out.</summary>
+    public static JsonObject RpcError(string message, int code = -32600) => new() { [RpcErrorKey] = new JsonObject { ["code"] = code, ["message"] = message } };
+
+    private const string RpcErrorKey = "$error";
+
     /// <summary>The thread a Codex tab's scripted session starts, and the turn it runs.</summary>
     public const string CodexThread = "codex-thread-1";
 
@@ -183,7 +188,11 @@ internal sealed class ScriptedTransport : IClaudeTransport
         {
             // A Codex session's request: answered as Codex would.
             var result = RpcAnswers.TryGetValue(method.GetValue<string>(), out var rpc) ? rpc(message["params"] as JsonObject ?? []) : [];
-            if (result is not null)
+            if (result?[RpcErrorKey] is JsonObject error)
+            {
+                process.Write(new JsonObject { ["id"] = rpcId.DeepClone(), ["error"] = error.DeepClone() }.ToJsonString());
+            }
+            else if (result is not null)
             {
                 process.Write(new JsonObject { ["id"] = rpcId.DeepClone(), ["result"] = result }.ToJsonString());
             }
@@ -759,7 +768,7 @@ internal sealed class TabTestHarness : IAsyncDisposable
         // Other programs' folders (the Epic launcher's, Unity Hub's) are empty ones here, never the real ones (DESIGN.md §18).
         var otherPrograms = new Core.ProjectTools.ProjectToolPaths(Path.Combine(_root, "home"), Path.Combine(_root, "appdata"), Path.Combine(_root, "localappdata"),
             Path.Combine(_root, "programdata"), Path.Combine(_root, "programfiles"), Path.Combine(_root, "applications"));
-        // Real processes, or the test's, but never p4 unless the test's is FakeP4 (NoRealP4Launcher says why). A real one's
+        // Real processes, or the test's, but never p4 unless the test's is FakeP4, nor codex (NoRealP4Launcher says why). A real one's
         // output is read to its end however long a busy machine takes to get to it: two seconds after it exited, a
         // starved thread pool had read none of git's error. Nothing the tests start leaves a process holding it open.
         Services = new AppServices(AppPaths.Under(_root), launcher is FakeP4 ? launcher : new NoRealP4Launcher(launcher ?? new ProcessLauncher(outputDrainTime: Waiting.Timeout)), Time, Platform, dispatcher ?? new InlineDispatcher(), processTrees: Trees, notifier: Notifier,
@@ -769,6 +778,8 @@ internal sealed class TabTestHarness : IAsyncDisposable
         Services.Notifications.UseBadge(Notifier);
         // The machine running the tests doesn't decide whether the Claude app is available (its ANTHROPIC_BASE_URL, say).
         Services.RemoteControl.EnvironmentVariable = _ => null;
+        // Nor whether it has Codex (DESIGN.md §18, "Codex, a second agent"): not found, unless a test says it is.
+        Services.FindCodex = _ => Task.FromResult(new Core.Installation.CodexLocateResult(null, Core.Installation.CodexInstallProblem.NotFound, "Codex wasn't found."));
         // Nor do its organization's managed Claude Code settings (DESIGN.md §7, "Starting mode").
         Services.ClaudeManagedSettingsDirectory = null;
         // Nor its environment, for what Claude Code's configuration says (its DISABLE_PROMPT_CACHING, say).
@@ -783,6 +794,7 @@ internal sealed class TabTestHarness : IAsyncDisposable
         configure?.Invoke(Services.Settings);
         // Never the real installer: it would install Claude Code on the machine running the tests.
         Services.InstallerFactory = () => Installer;
+        Services.CodexInstallerFactory = () => CodexInstaller;
         if (updater is not null)
         {
             Services.UpdaterFactory = _ => updater;
@@ -798,6 +810,9 @@ internal sealed class TabTestHarness : IAsyncDisposable
 
     /// <summary>Claude Code's installer, for the setup screen's Install Claude Code (DESIGN.md §12, "Installing Claude Code").</summary>
     public FakeClaudeInstaller Installer { get; } = new();
+
+    /// <summary>Codex's installer, for Settings → Agents → Codex (DESIGN.md §18, "Installing and signing in").</summary>
+    public FakeCodexInstaller CodexInstaller { get; } = new();
 
     /// <summary>
     /// Stands in for the user environment each tab's <c>claude</c> starts from, as far as Deventry reads it (DESIGN.md

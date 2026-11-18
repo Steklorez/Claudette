@@ -1646,6 +1646,12 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         {
             return;
         }
+        if (IsCodex)
+        {
+            // Codex keeps the conversation, and reads it back only once it has started (DESIGN.md §18, "History").
+            _ = EnsureStartedAsync();
+            return;
+        }
         _restoredTranscript = true;
         _transcriptRead = ReadAsync();
 
@@ -2003,6 +2009,12 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
 
     public const string SessionMissingText =
         "The earlier conversation couldn't be found here or in the session library (Claude Code may have cleaned it up). You can start a new session in this folder.";
+
+    public const string CodexSessionMissingText =
+        "Codex couldn't find the earlier conversation (it may have been cleaned up). You can start a new session in this folder.";
+
+    /// <summary>What the composer says when the earlier conversation is gone, in the words of the tab's agent.</summary>
+    public string SessionMissingMessage => IsCodex ? CodexSessionMissingText : SessionMissingText;
 
     /// <summary><b>Start a new session</b> in the same folder, keeping the tab's name, overrides and suffixes.</summary>
     [RelayCommand]
@@ -2447,6 +2459,10 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 break;
             case SystemNotice { Message.Subtype: "bridge_state" or "worker_shutting_down" } remote:
                 RemoteControl.OnNotice(remote.Message);
+                break;
+            case Core.Codex.RateLimitsReported codexLimits:
+                // Codex's account's limits, for the header while a Codex tab is selected (DESIGN.md §18, "The usage header").
+                _services.Usage?.OnCodexRateLimits(codexLimits.RateLimits);
                 break;
             case RateLimitUpdated rateLimit:
                 // The header's plan usage is the Default account's (DESIGN.md §4, "Accounts").

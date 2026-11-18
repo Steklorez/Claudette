@@ -91,6 +91,13 @@ public sealed record CodexStartOptions
     /// <summary>Deventry's version, for <c>clientInfo</c>.</summary>
     public string ClientVersion { get; init; } = "0.0.0";
 
+    /// <summary>
+    /// Ask whether Codex's Windows sandbox is ready before starting the thread, and stop with
+    /// <see cref="CodexSandboxNotReadyException"/> when it isn't, so the factory can try another (DESIGN.md §18, "Codex's
+    /// sandbox"). Off elsewhere than on Windows.
+    /// </summary>
+    public bool RequireWindowsSandbox { get; init; }
+
     /// <summary>Tools Deventry runs for Codex, as <c>dynamicTools</c> (DESIGN.md §18, "Threads").</summary>
     public JsonArray? DynamicTools { get; init; }
 }

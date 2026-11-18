@@ -13,6 +13,9 @@
 //   FAKE_CODEX_RECORD     path: write {args, cwd, env} there at startup
 //   FAKE_CODEX_USAGE      "demo": each turn reports the account's rate limits, its five-hour window starting at 35%
 //                         and climbing 3% a turn, its week at 12%; unset: none
+//   FAKE_CODEX_SANDBOX    the Windows sandboxes that are ready, by name ("mxc,unelevated"); "windowsSandbox/readiness"
+//                         says whether the one "-c windows.sandbox=..." chose is ("none" without one), and choosing mxc
+//                         when it isn't ready fails, as Codex's does where MXC is unavailable. Unset: always ready
 //
 // Turn prompts (the first word):
 //   RUN <command>      a commandExecution that "runs" it: its output is "ran: <command>"
@@ -23,6 +26,9 @@
 //   SLOW               streams its reply over about ten seconds (for interrupts and steering)
 //   LIMIT              a turn that fails at the usage limit, the five-hour window at 100%
 //   anything else      replies "pong: <prompt>"; an image sent with it is named: "[images: 1]"
+// A thread's finished items are kept in fake-codex/<thread>.jsonl in CODEX_HOME, which "thread/turns/list" reads back and
+// without which "thread/read" and "thread/resume" fail, as Codex's do for a thread it has no rollout of; its prompts and replies go in
+// its rollout too, for History.
 // Each turn spends 1,200 input tokens (800 of them cached) and 40 output tokens of gpt-fake-1. A message steered into a
 // running turn ("turn/steer") ends it with "steered: <message>".
 using System.Collections.Concurrent;
@@ -75,7 +81,10 @@ if (Environment.GetEnvironmentVariable("FAKE_CODEX_RECORD") is { Length: > 0 } r
     File.WriteAllText(record, new JsonObject { ["args"] = new JsonArray([.. args.Select(a => (JsonNode?)a)]), ["cwd"] = Environment.CurrentDirectory, ["env"] = env }.ToJsonString());
 }
 
-var server = new AppServer(version, home);
+// The Windows sandbox the launch chose, as -c windows.sandbox="<name>" sets it.
+var sandbox = args.Select((a, i) => (a, i)).Where(p => p.a == "-c" && p.i + 1 < args.Length && args[p.i + 1].StartsWith("windows.sandbox=", StringComparison.Ordinal))
+    .Select(p => args[p.i + 1]["windows.sandbox=".Length..].Trim('"')).LastOrDefault() ?? "none";
+var server = new AppServer(version, home, sandbox);
 await server.RunAsync();
 return 0;
 
@@ -98,12 +107,13 @@ internal static class Auth
     }
 }
 
-internal sealed class AppServer(string version, string home)
+internal sealed class AppServer(string version, string home, string sandbox)
 {
     private readonly Lock _write = new();
     private readonly ConcurrentDictionary<long, TaskCompletionSource<JsonObject>> _answers = new();
     private long _nextRequest = 1000;
     private string? _thread;
+    private string? _rollout;
     private string _model = "gpt-fake-1";
     private Turn? _turn;
     private long _inputTotal;
@@ -176,6 +186,16 @@ internal sealed class AppServer(string version, string home)
                     ? new JsonObject { ["account"] = new JsonObject { ["type"] = "chatgpt", ["email"] = "fake@example.com", ["planType"] = "pro" }, ["requiresOpenaiAuth"] = true }
                     : new JsonObject { ["account"] = null, ["requiresOpenaiAuth"] = true });
                 break;
+            case "windowsSandbox/readiness":
+                var ready = Environment.GetEnvironmentVariable("FAKE_CODEX_SANDBOX") is not { } readySandboxes
+                    || readySandboxes.Split(',', StringSplitOptions.TrimEntries).Contains(sandbox);
+                if (!ready && sandbox == "mxc")
+                {
+                    Error(id, -32600, "the MXC sandbox is unavailable on this machine");
+                    break;
+                }
+                Respond(id, new JsonObject { ["status"] = ready ? "ready" : sandbox == "none" ? "notConfigured" : "updateRequired" });
+                break;
             case "account/rateLimits/read":
                 Respond(id, new JsonObject { ["rateLimits"] = RateLimits() });
                 break;
@@ -184,14 +204,25 @@ internal sealed class AppServer(string version, string home)
                 _model = parameters["model"]?.GetValue<string>() ?? _model;
                 Respond(id, new JsonObject
                 {
-                    ["thread"] = new JsonObject { ["id"] = _thread, ["path"] = WriteRollout(_thread, parameters["cwd"]?.GetValue<string>()) },
+                    ["thread"] = new JsonObject { ["id"] = _thread, ["path"] = _rollout = WriteRollout(_thread, parameters["cwd"]?.GetValue<string>()) },
                     ["model"] = _model,
                     ["reasoningEffort"] = "medium",
                 });
                 break;
+            case "thread/read" or "thread/resume" when !File.Exists(ItemsFile(parameters["threadId"]?.GetValue<string>() ?? "")):
+                Error(id, -32600, $"no rollout found for thread id {parameters["threadId"]}");
+                break;
+            case "thread/read":
+                Respond(id, new JsonObject { ["thread"] = new JsonObject { ["id"] = parameters["threadId"]?.DeepClone(), ["status"] = new JsonObject { ["type"] = "notLoaded" } } });
+                break;
             case "thread/resume":
-                _thread = parameters["threadId"]?.GetValue<string>();
-                Respond(id, new JsonObject { ["thread"] = new JsonObject { ["id"] = _thread }, ["model"] = _model, ["reasoningEffort"] = "medium" });
+                var resumed = parameters["threadId"]!.GetValue<string>();
+                _thread = resumed;
+                _rollout = Directory.EnumerateFiles(Path.Combine(home, "sessions"), $"rollout-*-{resumed}.jsonl", SearchOption.AllDirectories).FirstOrDefault();
+                Respond(id, new JsonObject { ["thread"] = new JsonObject { ["id"] = _thread, ["path"] = _rollout }, ["model"] = _model, ["reasoningEffort"] = "medium" });
+                break;
+            case "thread/turns/list":
+                Respond(id, new JsonObject { ["data"] = TurnsOf(parameters["threadId"]?.GetValue<string>() ?? ""), ["nextCursor"] = null });
                 break;
             case "thread/settings/update":
                 _model = parameters["model"]?.GetValue<string>() ?? _model;
@@ -451,6 +482,8 @@ internal sealed class AppServer(string version, string home)
         var now = DateTimeOffset.UtcNow;
         var folder = Path.Combine(home, "sessions", now.ToString("yyyy", System.Globalization.CultureInfo.InvariantCulture), now.ToString("MM", System.Globalization.CultureInfo.InvariantCulture), now.ToString("dd", System.Globalization.CultureInfo.InvariantCulture));
         Directory.CreateDirectory(folder);
+        Directory.CreateDirectory(Path.Combine(home, "fake-codex"));
+        File.WriteAllText(ItemsFile(thread), "");
         var path = Path.Combine(folder, $"rollout-{now:yyyy-MM-ddTHH-mm-ss}-{thread}.jsonl");
         File.WriteAllText(path, new JsonObject
         {
@@ -475,7 +508,74 @@ internal sealed class AppServer(string version, string home)
 
     private static string Text(JsonArray input) => string.Join("\n", input.OfType<JsonObject>().Where(i => i["type"]?.GetValue<string>() == "text").Select(i => i["text"]?.GetValue<string>() ?? ""));
 
-    private void Item(Turn turn, string method, JsonObject item) => Notify(method, new JsonObject { ["threadId"] = _thread, ["turnId"] = turn.Id, ["item"] = item });
+    private void Item(Turn turn, string method, JsonObject item)
+    {
+        Notify(method, new JsonObject { ["threadId"] = _thread, ["turnId"] = turn.Id, ["item"] = item });
+        if (method == "item/completed" && _thread is { } thread)
+        {
+            Keep(thread, turn.Id, item);
+        }
+    }
+
+    private string ItemsFile(string thread) => Path.Combine(home, "fake-codex", $"{thread}.jsonl");
+
+    /// <summary>A finished item, for "thread/turns/list", and a prompt or reply in the rollout, for History.</summary>
+    private void Keep(string thread, string turnId, JsonObject item)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var kept = item.DeepClone().AsObject();
+        kept["startedAtMs"] = now.ToUnixTimeMilliseconds();
+        lock (_write)
+        {
+            File.AppendAllText(ItemsFile(thread), new JsonObject { ["turnId"] = turnId, ["item"] = kept }.ToJsonString() + "\n");
+            var (role, text) = item["type"]?.GetValue<string>() switch
+            {
+                "userMessage" => ("user", Text(item["content"] as JsonArray ?? [])),
+                "agentMessage" => ("assistant", item["text"]?.GetValue<string>() ?? ""),
+                _ => (null, ""),
+            };
+            if (role is not null && _rollout is { } rollout)
+            {
+                File.AppendAllText(rollout, new JsonObject
+                {
+                    ["timestamp"] = now.ToString("O"),
+                    ["type"] = "response_item",
+                    ["payload"] = new JsonObject
+                    {
+                        ["type"] = "message",
+                        ["role"] = role,
+                        ["content"] = new JsonArray(new JsonObject { ["type"] = role == "user" ? "input_text" : "output_text", ["text"] = text }),
+                    },
+                }.ToJsonString() + "\n");
+            }
+        }
+    }
+
+    /// <summary>The thread's turns, oldest first, each with its items.</summary>
+    private JsonArray TurnsOf(string thread)
+    {
+        var turns = new JsonArray();
+        if (!File.Exists(ItemsFile(thread)))
+        {
+            return turns;
+        }
+        JsonObject? current = null;
+        foreach (var line in File.ReadLines(ItemsFile(thread)))
+        {
+            if (JsonNode.Parse(line) is not JsonObject kept)
+            {
+                continue;
+            }
+            var turnId = kept["turnId"]?.GetValue<string>();
+            if (current is null || current["id"]?.GetValue<string>() != turnId)
+            {
+                current = new JsonObject { ["id"] = turnId, ["status"] = "completed", ["items"] = new JsonArray() };
+                turns.Add(current);
+            }
+            ((JsonArray)current["items"]!).Add(kept["item"]!.DeepClone());
+        }
+        return turns;
+    }
 
     private void Notify(string method, JsonObject parameters) => Send(new JsonObject { ["method"] = method, ["params"] = parameters });
 

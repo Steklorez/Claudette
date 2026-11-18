@@ -1,4 +1,5 @@
 using Avalonia.Headless.XUnit;
+using Deventry.App.Services;
 using Deventry.App.Tests.Support;
 using Deventry.App.ViewModels;
 using Deventry.App.Views;
@@ -24,6 +25,20 @@ public class SetupScreenUiTests
         var window = UiText.Show(new SetupView { DataContext = setup }, 900, 600);
 
         await setup.InstallCommand.ExecuteAsync(null);
+        UiText.Settle(window);
+
+        await Verify(UiText.Describe(window));
+    }
+
+    [AvaloniaFact]
+    public async Task Codex_is_offered_beside_it()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        await h.Services.LocateCodexAsync();
+        using var codex = new CodexSetupViewModel(h.Services);
+        var setup = new SetupViewModel(new ClaudeLocateResult(null, ClaudeInstallProblem.NotFound, "Claude Code wasn't found."), new NoPlatform(), _ => Task.CompletedTask,
+            codex: codex);
+        var window = UiText.Show(new SetupView { DataContext = setup }, 900, 700);
         UiText.Settle(window);
 
         await Verify(UiText.Describe(window));

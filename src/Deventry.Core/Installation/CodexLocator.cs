@@ -34,6 +34,10 @@ public sealed partial class CodexLocator(IProcessLauncher launcher, TimeProvider
 
     private static readonly TimeSpan VersionTimeout = TimeSpan.FromSeconds(20);
 
+    /// <summary>Codex's own folder: <c>CODEX_HOME</c> when it's set, else <c>.codex</c> in the home folder.</summary>
+    public static string HomeFor(string? codexHomeVariable, string userProfile) =>
+        codexHomeVariable is { Length: > 0 } home ? home : Path.Combine(userProfile, ".codex");
+
     public async Task<CodexLocateResult> LocateAsync(string? configuredPath, CancellationToken cancellationToken = default)
     {
         var userEnvironment = environment is null ? null : await environment.GetAsync(cancellationToken).ConfigureAwait(false);

@@ -80,6 +80,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         Keyboard = new KeyboardPage(_context);
         Tabs = new TabsPage(_context);
         ClaudeCode = new ClaudeCodePage(_context, accountText, updates, Tabs);
+        Codex = new CodexPage(_context);
         Accounts = new AccountsPage(_context);
         Usage = new UsagePage(_context);
         Sessions = new SessionsPage(_context);
@@ -108,7 +109,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         Advanced = new AdvancedPage(_context, ClaudeCode);
         _groups = SettingsSidebar.Groups(types, services.RemoteClients.Types, services.Tickets.Types);
         Categories = [.. _groups.SelectMany(g => g.Categories)];
-        SettingsPage[] pages = [General, Appearance, Conversation, Notifications, Keyboard, ClaudeCode, Accounts, Tabs, Usage, Advanced, Sessions, Files, TimedMessages, AllTools, .. ProjectTypes, Git, Perforce, AllTicketProviders, .. TicketProviders, AllClients, .. Clients];
+        SettingsPage[] pages = [General, Appearance, Conversation, Notifications, Keyboard, ClaudeCode, Codex, Accounts, Tabs, Usage, Advanced, Sessions, Files, TimedMessages, AllTools, .. ProjectTypes, Git, Perforce, AllTicketProviders, .. TicketProviders, AllClients, .. Clients];
         _categoryPages = [.. Categories.Select(category => pages.Single(p => p.Title == category))];
         foreach (var page in _categoryPages)
         {
@@ -148,6 +149,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
             provider.Dispose();
         }
         ClaudeCode.Dispose();
+        Codex.Dispose();
         Accounts.Dispose();
         TimedMessages.Dispose();
         Git.Dispose();
@@ -186,6 +188,8 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
 
 
     public ClaudeCodePage ClaudeCode { get; }
+
+    public CodexPage Codex { get; }
 
     public AccountsPage Accounts { get; }
 

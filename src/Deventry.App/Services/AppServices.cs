@@ -166,6 +166,8 @@ public sealed class AppServices : IAsyncDisposable
         var otherPrograms = projectToolPaths ?? ProjectToolPaths.ForCurrentUser();
         Locator = new ClaudeLocator(launcher, timeProvider, UserEnvironment, ClaudeVariables, new ClaudeDesktop(otherPrograms, ToolOSExtensions.Current));
         CodexLocator = new CodexLocator(launcher, timeProvider, UserEnvironment);
+        FindCodex = path => CodexLocator.LocateAsync(path);
+        CodexInstallerFactory = () => new CodexInstaller(ToolOSExtensions.Current, Paths.UtilityDirectory, _launcher, Time, UserEnvironment.Probe, UserEnvironment);
         // Settings → Git → Path to git, read as each run starts (DESIGN.md §14).
         Git = new GitWorkingTree(launcher, timeProvider, environment: UserEnvironment, logger: Loggers.CreateLogger("Git")) { ConfiguredPath = () => Settings.Git.Path };
         MentionFolders = new MentionFolderReader(Git, timeProvider);
@@ -579,7 +581,7 @@ public sealed class AppServices : IAsyncDisposable
     /// </summary>
     public async Task<CodexLocateResult> LocateCodexAsync()
     {
-        var result = await CodexLocator.LocateAsync(Settings.Codex.CodexPath).ConfigureAwait(false);
+        var result = await FindCodex(Settings.Codex.CodexPath).ConfigureAwait(false);
         Dispatcher.Post(() =>
         {
             CodexFound = result;
@@ -592,11 +594,29 @@ public sealed class AppServices : IAsyncDisposable
         return result;
     }
 
+    /// <summary>How <see cref="LocateCodexAsync"/> looks, given the path Settings names: <see cref="CodexLocator"/>'s way, but a test's own.</summary>
+    internal Func<string?, Task<CodexLocateResult>> FindCodex { get; set; }
+
     public void UseCodexInstall(CodexInstall install)
     {
         CodexInstall = install;
         CodexSessions = new CodexSessionFactory(install.Path, _launcher, Time, Loggers, Diagnostics, UserEnvironment);
+        CodexAuth = new CodexAuth(install.Path, _launcher, Time, UserEnvironment);
     }
+
+    /// <summary>
+    /// Codex's own folder, which History reads its sessions from (DESIGN.md §18, "Codex, a second agent"): the app gives
+    /// it <see cref="CodexLocator.HomeFor"/>. Null reads none: tests.
+    /// </summary>
+    public string? CodexHome { get; set; }
+
+    /// <summary>Codex's own sign-in, once Codex is found (DESIGN.md §18, "Installing and signing in").</summary>
+    public CodexAuth? CodexAuth { get; private set; }
+
+    /// <summary>Codex's installer. Tests replace it: the real one would install Codex on the machine running them.</summary>
+    internal Func<ICodexInstaller> CodexInstallerFactory { get; set; }
+
+    public ICodexInstaller CreateCodexInstaller() => CodexInstallerFactory();
 
     /// <summary>For tests: Codex tabs' sessions come from <paramref name="factory"/> instead of a real <c>codex</c>.</summary>
     internal void UseCodexSessionFactory(ICodexSessionFactory factory) => CodexSessions = factory;

@@ -14,6 +14,7 @@ using Deventry.App.Views;
 using Deventry.Core;
 using Deventry.Core.Accessibility;
 using Deventry.Core.Development;
+using Deventry.Core.Installation;
 using Deventry.Core.Logging;
 using Deventry.Core.Processes;
 using Deventry.Core.Settings;
@@ -102,6 +103,7 @@ public partial class App : Application
                     : null,
                 loggerFactory: loggers,
                 demo: Demo.DemoMode.FromEnvironment());
+            _services.CodexHome = CodexLocator.HomeFor(Environment.GetEnvironmentVariable("CODEX_HOME"), Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
             if (_services.Demo is not null)
             {
                 // Told apart from the user's own Deventry in the taskbar and the OS's window lists (DESIGN.md §11, "Demo mode").

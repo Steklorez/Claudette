@@ -1,0 +1,62 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:settings="using:Deventry.App.ViewModels.Settings"
+             xmlns:c="using:Deventry.App.Controls"
+             x:Class="Deventry.App.Views.Settings.CodexPageView" ClipToBounds="False"
+             x:DataType="settings:CodexPage">
+  <!-- Codex, in Agents (DESIGN.md §18, "Codex, a second agent") -->
+  <StackPanel Spacing="32">
+    <c:SettingsSection Key="installed">
+      <c:SettingRow Key="codex.found" Description="{Binding Setup.FoundText}">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Button Content="Look again" Command="{Binding Setup.LookAgainCommand}" IsEnabled="{Binding !Setup.IsBusy}" />
+          <Button Content="Install Codex" Command="{Binding Setup.InstallCommand}" IsVisible="{Binding Setup.CanInstall}"
+                  ToolTip.Tip="{Binding Setup.InstallCommandText}" />
+        </StackPanel>
+        <c:SettingRow.Details>
+          <StackPanel Spacing="4" IsVisible="{Binding !Setup.IsFound}">
+            <TextBlock Classes="muted small" TextWrapping="Wrap" Text="{Binding Setup.InstallCommandText, StringFormat='Install Codex runs {0}, which installs it in your home folder with no admin rights.'}" />
+            <TextBlock Classes="small mono" TextWrapping="Wrap" Text="{Binding Setup.InstallOutput}"
+                       IsVisible="{Binding Setup.InstallOutput, Converter={x:Static ObjectConverters.IsNotNull}}" />
+          </StackPanel>
+        </c:SettingRow.Details>
+      </c:SettingRow>
+      <c:SettingRow Key="codex.codexPath" IsStacked="True">
+        <TextBox Classes="mono" Text="{Binding CodexPath, UpdateSourceTrigger=LostFocus}" PlaceholderText="Found by itself" AutomationProperties.Name="Path to codex" />
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <c:SettingsSection Key="account">
+      <c:SettingRow Key="codex.account">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Button Content="Sign in" Command="{Binding Setup.SignInCommand}" IsVisible="{Binding Setup.CanSignIn}" />
+          <Button Content="Sign out" Command="{Binding Setup.SignOutCommand}" IsVisible="{Binding Setup.CanSignOut}" />
+        </StackPanel>
+        <c:SettingRow.Details>
+          <TextBlock Classes="muted small" TextWrapping="Wrap" Text="{Binding Setup.SignInText}" />
+        </c:SettingRow.Details>
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <c:SettingsSection Key="newTabs">
+      <c:SettingRow Key="codex.defaultModel">
+        <TextBox Text="{Binding DefaultModel, UpdateSourceTrigger=LostFocus}" PlaceholderText="Codex's default" MinWidth="200" AutomationProperties.Name="Model" />
+      </c:SettingRow>
+      <c:SettingRow Key="codex.defaultMode">
+        <ComboBox ItemsSource="{Binding ModeChoices}" SelectedItem="{Binding DefaultMode}" AutomationProperties.Name="Mode">
+          <ComboBox.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding Label}" ToolTip.Tip="{Binding Description}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <c:SettingsSection Key="bothAgents">
+      <c:SettingRow Key="codex.offerOtherAgentAtLimit">
+        <ToggleSwitch IsChecked="{Binding OfferOtherAgentAtLimit}" />
+      </c:SettingRow>
+    </c:SettingsSection>
+  </StackPanel>
+</UserControl>

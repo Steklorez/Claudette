@@ -3,6 +3,7 @@ using Deventry.App.Services;
 using Deventry.Core.Agents;
 using Deventry.Core.Codex;
 using Deventry.Core.Sessions;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Deventry.App.ViewModels;
 
@@ -19,6 +20,19 @@ public partial class TabViewModel
 
     /// <summary>What the tab's words call its agent: "Claude", "Codex".</summary>
     public string AgentShortName => Agent.ShortName;
+
+    /// <summary>The agent's icon, by its key in App.axaml (DESIGN.md §18, "Its icon").</summary>
+    public string AgentIconKey => IsCodex ? "IconAgentCodex" : "IconAgentClaudeCode";
+
+    /// <summary>The row shows the agent's icon: while tabs of more than one agent are open, which the shell says.</summary>
+    [ObservableProperty]
+    public partial bool ShowsAgentIcon { get; set; }
+
+    /// <summary>The Claude app reaches the tab's session: Claude Code's alone (DESIGN.md §18, "Remote Control").</summary>
+    public bool OffersRemoteControl => Offers(AgentFeatures.RemoteControl);
+
+    /// <summary>Ultracode, in the effort menu: Claude Code's alone.</summary>
+    public bool OffersUltracode => Offers(AgentFeatures.Ultracode);
 
     /// <summary>What only some agents have, which this tab offers.</summary>
     public bool Offers(AgentFeatures feature) => Agent.Features.HasFlag(feature);
@@ -47,6 +61,7 @@ public partial class TabViewModel
         ErrorMessage = null;
         Status = TabStatus.Starting;
         var settings = _services.Settings;
+        var resume = State.SessionId;
         try
         {
             var mode = CodexModes.Normalize(State.Overrides.PermissionMode ?? settings.Codex.DefaultMode);
@@ -58,7 +73,7 @@ public partial class TabViewModel
                 Start = new CodexStartOptions
                 {
                     WorkingDirectory = Folder,
-                    Resume = State.SessionId,
+                    Resume = resume,
                     Model = State.Overrides.Model ?? settings.Codex.DefaultModel,
                     Effort = State.Overrides.Effort,
                     Mode = mode,
@@ -89,6 +104,17 @@ public partial class TabViewModel
             OnPropertyChanged(nameof(Models));
             OnPropertyChanged(nameof(EffortLevels));
             OnPropertyChanged(nameof(PermissionModeChoices));
+            if (!session.SandboxReady)
+            {
+                // DESIGN.md §18, "Codex's sandbox": none of Codex's Windows sandboxes could be used.
+                _conversation.AddNote("Codex's Windows sandbox isn't ready, so Codex asks before each command and edit. Choose one in Codex's own configuration (windows.sandbox) to let it work on its own.", NoteKind.Warning);
+            }
+            if (resume is not null && !_restoredTranscript)
+            {
+                // Before the session's own events, which wait for the pump.
+                _restoredTranscript = true;
+                await ReplayCodexTurnsAsync(session);
+            }
             Status = TabStatus.Idle;
             _pump = PumpAsync(session);
             _contextRefresh = Context.RefreshUsageAsync(session);
@@ -97,12 +123,68 @@ public partial class TabViewModel
         {
             // Closed: the start's codex, if there was one, is stopped already.
         }
+        catch (CodexThreadMissingException)
+        {
+            // The tab says so and waits: starting a new session is the user's choice, as for Claude Code (DESIGN.md §9,
+            // "Old sessions").
+            _restoredTranscript = true;
+            IsSessionMissing = true;
+            ErrorMessage = "Its earlier conversation is gone";
+            Status = TabStatus.Error;
+        }
         catch (Exception ex)
         {
             ErrorMessage = $"Couldn't start Codex: {ex.Message}";
             Status = TabStatus.Error;
             _conversation.AddNote($"Couldn't start Codex: {ex.Message}", NoteKind.Error);
             NotifyProcessError($"Couldn't start Codex: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// A resumed Codex tab's earlier conversation, which Codex keeps and reads back (DESIGN.md §18, "History"), shown as a
+    /// Claude Code tab's transcript is (<see cref="RestoreTranscriptAsync"/>).
+    /// </summary>
+    private async Task ReplayCodexTurnsAsync(CodexSession session)
+    {
+        IReadOnlyList<(SessionEvent Event, DateTimeOffset? Time)> turns;
+        try
+        {
+            turns = await session.ReadTurnsAsync(_closing.Token);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _conversation.AddNote($"Couldn't read the earlier conversation: {ex.Message}", NoteKind.Warning);
+            return;
+        }
+        Agents.IsReplaying = true;
+        var todoListClosed = State.TodoListClosed;
+        var recallPrompts = _recall.Count == 0;
+        using (Items.DeferNotifications())
+        {
+            foreach (var (sessionEvent, time) in turns)
+            {
+                if (sessionEvent is PromptReplayed { Message: var prompt })
+                {
+                    var text = prompt.PromptText ?? "";
+                    _conversation.ReplayUserMessage(text, [], time, prompt.Uuid);
+                    if (recallPrompts)
+                    {
+                        _recall.Add(text);
+                    }
+                    continue;
+                }
+                _conversation.Replay(sessionEvent, time);
+                ChangedFiles.Record(sessionEvent, live: false, time);
+            }
+        }
+        RestoreChosenPlan();
+        RestoreTodoListClosed(todoListClosed);
+        ChangedFiles.ChangesRead();
+        if (turns.Count > 0)
+        {
+            _titleRequested = true;
+            _conversation.AddNote("Resumed.");
         }
     }
 }

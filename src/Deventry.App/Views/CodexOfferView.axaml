@@ -1,0 +1,22 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Deventry.App.ViewModels"
+             x:Class="Deventry.App.Views.CodexOfferView"
+             x:DataType="vm:CodexSetupViewModel">
+  <!-- Codex, the second agent, offered on the setup and sign-in screens (DESIGN.md §18, "Installing and signing in") -->
+  <StackPanel Spacing="8">
+    <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,4" />
+    <TextBlock Classes="muted small" TextWrapping="Wrap" Text="Codex, OpenAI's coding agent, can also run in tabs of its own." />
+    <TextBlock TextWrapping="Wrap" Text="{Binding Summary}" />
+    <WrapPanel ItemSpacing="8" LineSpacing="8" IsVisible="{Binding CanInstall}">
+      <Button Content="Install Codex" Command="{Binding InstallCommand}" ToolTip.Tip="{Binding InstallCommandText}" />
+    </WrapPanel>
+    <WrapPanel ItemSpacing="8" LineSpacing="8" IsVisible="{Binding CanSignIn}">
+      <Button Content="Sign in to Codex" Command="{Binding SignInCommand}" />
+    </WrapPanel>
+    <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
+    <TextBlock Classes="muted small" TextWrapping="Wrap" Text="{Binding InstallOutput}"
+               IsVisible="{Binding InstallOutput, Converter={x:Static ObjectConverters.IsNotNull}}" />
+    <TextBlock Classes="muted small" TextWrapping="Wrap" Text="{Binding SignInText}" IsVisible="{Binding IsSigningIn}" />
+  </StackPanel>
+</UserControl>

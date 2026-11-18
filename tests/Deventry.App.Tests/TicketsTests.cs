@@ -503,7 +503,7 @@ public class TicketsTests
         Assert.True(settings.Tickets.NameTabs);
         Assert.True(settings.Tickets.IncludeComments);
         Assert.Null(settings.Tickets.Find("github"));
-        Assert.Equal(["Deventry", "Claude", "Your work", "Project tools", "Source control", "Tickets", "Remote clients"],
+        Assert.Equal(["Deventry", "Agents", "Your work", "Project tools", "Source control", "Tickets", "Remote clients"],
             SettingsSidebar.Groups([], [], Services.TicketsService.AllTypes).Select(g => g.Heading));
         Assert.Equal([SettingsCategory.AllTicketProviders, "GitHub", "YouTrack"], SettingsSidebar.Groups([], [], Services.TicketsService.AllTypes)[5].Categories);
     }

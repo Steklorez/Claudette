@@ -6,6 +6,8 @@ using Deventry.App.ViewModels;
 using Deventry.Core.Agents;
 using Deventry.Core.Codex;
 using Deventry.Core.Sessions;
+using Deventry.Core.Settings;
+using Deventry.Usage;
 
 namespace Deventry.App.Tests;
 
@@ -42,6 +44,62 @@ public sealed class CodexTabTests
 
         await TabTestHarness.Eventually(() => tab.Items.OfType<TurnSummaryItem>().Any(), "the turn to end");
         Assert.Equal("pong", tab.Items.OfType<AssistantTextItem>().Last().Text);
+        Assert.Equal(TabStatus.Idle, tab.Status);
+    }
+
+    private static TabViewModel RestoredCodexTab(TabTestHarness h, string thread)
+    {
+        Directory.CreateDirectory(h.WorkFolder);
+        h.Services.State.Tabs = [new TabState { Folder = h.WorkFolder, SessionId = thread, Agent = AgentKinds.Codex }];
+        h.Shell.Restore(null);
+        return h.Shell.AllTabs.Single();
+    }
+
+    [Fact]
+    public async Task A_restored_codex_tab_starts_as_its_shown_and_reads_back_its_conversation()
+    {
+        await using var h = new TabTestHarness();
+        h.Transport.RpcAnswers["thread/turns/list"] = p => new JsonObject
+        {
+            ["data"] = new JsonArray(new JsonObject
+            {
+                ["id"] = "turn-1",
+                ["items"] = new JsonArray(
+                    new JsonObject { ["type"] = "userMessage", ["id"] = "u1", ["content"] = new JsonArray(new JsonObject { ["type"] = "text", ["text"] = "Fix the jump" }) },
+                    new JsonObject { ["type"] = "agentMessage", ["id"] = "m1", ["text"] = "Fixed." }),
+            }),
+            ["nextCursor"] = null,
+        };
+        var tab = RestoredCodexTab(h, "codex-thread-9");
+
+        tab.ReadEarlierConversation();
+
+        await TabTestHarness.Eventually(() => tab.Status == TabStatus.Idle && tab.Items.OfType<NoteItem>().Any(n => n.Text == "Resumed."), "the earlier conversation");
+        Assert.Equal("codex-thread-9", Assert.Single(h.CodexFactory.Launches).Start.Resume);
+        Assert.Equal("Fix the jump", tab.Items.OfType<UserMessageItem>().Single().Text);
+        Assert.Equal("Fixed.", tab.Items.OfType<AssistantTextItem>().Single().Text);
+        Assert.Empty(h.Factory.Launches);
+    }
+
+    [Fact]
+    public async Task A_restored_codex_tab_whose_thread_is_gone_offers_a_new_session()
+    {
+        await using var h = new TabTestHarness();
+        h.Transport.RpcAnswers["thread/read"] = _ => ScriptedTransport.RpcError("no rollout found for thread id codex-thread-9");
+        var tab = RestoredCodexTab(h, "codex-thread-9");
+
+        await tab.EnsureStartedAsync();
+
+        Assert.True(tab.IsSessionMissing);
+        Assert.Equal(TabViewModel.CodexSessionMissingText, tab.SessionMissingMessage);
+        Assert.Equal("Its earlier conversation is gone", tab.RowDetail);
+        h.Transport.RpcAnswers.TryRemove("thread/read", out _);
+
+        await tab.StartNewSessionCommand.ExecuteAsync(null);
+
+        Assert.False(tab.IsSessionMissing);
+        Assert.Null(h.CodexFactory.Launches.Last().Start.Resume);
+        Assert.Equal(ScriptedTransport.CodexThread, tab.State.SessionId);
         Assert.Equal(TabStatus.Idle, tab.Status);
     }
 
@@ -105,5 +163,44 @@ public sealed class CodexTabTests
         Assert.Equal("git status", card.Command);
         Assert.Equal("nothing to commit", card.Output);
         Assert.Equal("IconToolBash", card.IconKey);
+    }
+
+    [Fact]
+    public async Task The_header_shows_the_selected_tabs_agents_plan_with_its_icon_while_both_are_open()
+    {
+        await using var h = new TabTestHarness();
+        var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+        h.Services.UseUsageTracker(tracker);
+        using var header = new UsageViewModel(h.Services, tracker);
+        var claude = await h.OpenTabAsync();
+        Assert.False(h.Shell.HasSeveralAgents);
+        Assert.False(claude.ShowsAgentIcon);
+        var codex = await OpenCodexTabAsync(h);
+
+        h.Transport.Emit(new JsonObject
+        {
+            ["method"] = "account/rateLimits/updated",
+            ["params"] = new JsonObject
+            {
+                ["rateLimits"] = new JsonObject
+                {
+                    ["primary"] = new JsonObject { ["usedPercent"] = 42, ["windowDurationMins"] = 300, ["resetsAt"] = h.Time.GetUtcNow().AddHours(2).ToUnixTimeSeconds() },
+                    ["secondary"] = new JsonObject { ["usedPercent"] = 12, ["windowDurationMins"] = 10080 },
+                },
+            },
+        });
+        await TabTestHarness.Eventually(() => tracker.CodexCurrent is not null, "Codex's limits");
+        InlineDispatcher.Run(() => header.ShowAgent(h.Shell.SelectedAgent));
+
+        Assert.True(h.Shell.HasSeveralAgents);
+        Assert.True(codex.ShowsAgentIcon && claude.ShowsAgentIcon);
+        Assert.Equal("Codex", header.AgentName);
+        Assert.Equal("IconAgentCodex", header.AgentIconKey);
+        Assert.Equal(42, header.Session.Percent);
+        Assert.Equal("12%", Assert.Single(header.Weekly).PercentText);
+
+        InlineDispatcher.Run(() => header.ShowAgent(claude.Agent));
+        Assert.Equal("Claude Code", header.AgentName);
+        Assert.False(header.HasData);
     }
 }

@@ -11,6 +11,9 @@ public sealed partial class ShellViewModel
     /// <summary>The selected tab's account, which the header follows; null for Default.</summary>
     public ClaudeAccount? SelectedAccount => SelectedTab?.Account;
 
+    /// <summary>The selected tab's agent, whose plan the header shows (DESIGN.md §18, "The usage header"); Claude Code with none.</summary>
+    public Core.Agents.IAgentType SelectedAgent => SelectedTab?.Agent ?? Core.Agents.ClaudeCodeAgent.Instance;
+
     /// <summary>A tab moved to another account: the header follows if it's the selected one.</summary>
     internal void OnTabAccountChanged(TabViewModel tab)
     {

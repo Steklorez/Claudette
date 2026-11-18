@@ -202,6 +202,8 @@ internal sealed class SessionOpener
         var state = new TabState
         {
             Folder = FolderHistory.Normalize(folder),
+            // A session is resumed by the agent that ran it (DESIGN.md §18, "Codex, a second agent").
+            Agent = entry.Agent,
             SessionId = entry.SessionId,
             AutoName = record?.AutoName ?? entry.Title,
             UserName = fork ? null : record?.UserName,

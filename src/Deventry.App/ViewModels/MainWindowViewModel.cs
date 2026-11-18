@@ -18,6 +18,12 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
     [ObservableProperty]
     public partial ViewModelBase CurrentPage { get; set; } = new BusyViewModel("Starting…");
 
+    /// <summary>A screen that offered Codex stops following it once it's gone.</summary>
+    partial void OnCurrentPageChanged(ViewModelBase oldValue, ViewModelBase newValue)
+    {
+        (oldValue switch { SetupViewModel setup => setup.Codex, SignInViewModel signIn => signIn.Codex, _ => null })?.Dispose();
+    }
+
     /// <summary>The account menu, the sign-in banner and its dialog, and signing out (DESIGN.md §11).</summary>
     public AccountViewModel Account { get; } = new(services);
 
@@ -203,7 +209,10 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
             var install = result.Problem is ClaudeInstallProblem.NotFound or ClaudeInstallProblem.DesktopApp or ClaudeInstallProblem.UnsupportedLauncher
                 ? new SetupInstall(services.CreateInstaller().CommandText, InstallClaudeAsync)
                 : null;
-            CurrentPage = new SetupViewModel(result, services.Platform, CheckInstallAsync, update, () => CheckInstallAsync(path), install, new Demo.DemoStarter(services));
+            // Codex, the second agent, is offered beside it (DESIGN.md §18, "Installing and signing in").
+            _ = services.LocateCodexAsync();
+            CurrentPage = new SetupViewModel(result, services.Platform, CheckInstallAsync, update, () => CheckInstallAsync(path), install, new Demo.DemoStarter(services),
+                new CodexSetupViewModel(services));
             return;
         }
         if (path != services.Settings.ClaudeCode.ClaudePath)
@@ -298,7 +307,7 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
             }
             else
             {
-                CurrentPage = new SignInViewModel(services, CheckSignInAsync) { Error = message };
+                CurrentPage = new SignInViewModel(services, CheckSignInAsync) { Error = message, Codex = new CodexSetupViewModel(services) };
             }
             return;
         }
@@ -316,7 +325,7 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
             }
             else
             {
-                CurrentPage = new SignInViewModel(services, CheckSignInAsync);
+                CurrentPage = new SignInViewModel(services, CheckSignInAsync) { Codex = new CodexSetupViewModel(services) };
             }
             return;
         }
@@ -338,6 +347,12 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
                 if (e.PropertyName == nameof(ShellViewModel.SelectedAccount))
                 {
                     Spend?.Show(_shell.SelectedAccount);
+                }
+                // And the selected tab's agent: its plan, with its icon while tabs of more than one are open (DESIGN.md §18).
+                if (e.PropertyName is nameof(ShellViewModel.SelectedAgent) or nameof(ShellViewModel.HasSeveralAgents))
+                {
+                    Usage?.ShowAgent(_shell.SelectedAgent);
+                    Usage?.ShowsAgentIcon = _shell.HasSeveralAgents;
                 }
             };
             OnPropertyChanged(nameof(Shell));

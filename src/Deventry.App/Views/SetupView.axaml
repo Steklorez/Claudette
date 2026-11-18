@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Deventry.App.ViewModels"
              xmlns:demo="using:Deventry.App.Demo"
+             xmlns:views="using:Deventry.App.Views"
              x:Class="Deventry.App.Views.SetupView"
              x:DataType="vm:SetupViewModel">
   <Border Classes="card" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="640">
@@ -49,6 +50,7 @@
       </Border>
       <TextBlock Text="{Binding ResultText}" TextWrapping="Wrap"
                  IsVisible="{Binding ResultText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+      <views:CodexOfferView DataContext="{Binding Codex}" IsVisible="{Binding $self.DataContext, Converter={x:Static ObjectConverters.IsNotNull}}" />
     </StackPanel>
   </Border>
 </UserControl>

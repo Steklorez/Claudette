@@ -27,6 +27,8 @@ public static class SettingsCategory
 
     public const string ClaudeCode = "Claude Code";
 
+    public const string Codex = "Codex";
+
     public const string Accounts = "Accounts";
 
     public const string Tabs = "Tabs";
@@ -59,6 +61,9 @@ public static class SettingsCategory
 /// </summary>
 public static class SettingsSidebar
 {
+    /// <summary>The agents' pages, Claude Code's first (DESIGN.md §18, "Codex, a second agent"), with what they share.</summary>
+    public const string Agents = "Agents";
+
     public const string ProjectTools = "Project tools";
 
     public const string SourceControl = "Source control";
@@ -73,7 +78,7 @@ public static class SettingsSidebar
         IEnumerable<ITicketProviderType> providers) =>
     [
         ("Deventry", [SettingsCategory.General, SettingsCategory.Appearance, SettingsCategory.Conversation, SettingsCategory.Notifications, SettingsCategory.Keyboard]),
-        ("Claude", [SettingsCategory.ClaudeCode, SettingsCategory.Accounts, SettingsCategory.Tabs, SettingsCategory.Usage, SettingsCategory.Advanced]),
+        (Agents, [SettingsCategory.ClaudeCode, SettingsCategory.Codex, SettingsCategory.Accounts, SettingsCategory.Tabs, SettingsCategory.Usage, SettingsCategory.Advanced]),
         ("Your work", [SettingsCategory.Sessions, SettingsCategory.Files, SettingsCategory.TimedMessages]),
         (ProjectTools, [SettingsCategory.AllTools, .. types.Select(t => t.Name)]),
         (SourceControl, [SettingsCategory.Git, SettingsCategory.Perforce]),
@@ -94,6 +99,7 @@ public static class SettingsSidebar
         SourceControl => [SourceControl, "version control", "vcs"],
         RemoteClients => [RemoteClients, "remote", "phone", "mobile"],
         Tickets => [Tickets, "issues", "tracker", "bug tracker"],
+        Agents => [Agents, "claude", "agent"],
         _ => [],
     };
 }

@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Deventry.App.ViewModels"
              xmlns:demo="using:Deventry.App.Demo"
+             xmlns:views="using:Deventry.App.Views"
              x:Class="Deventry.App.Views.SignInView"
              x:DataType="vm:SignInViewModel">
   <!-- DESIGN.md §11, "Signing in": the launch screen, and the dialog the sign-in banner opens. -->
@@ -58,6 +59,7 @@
         <TextBlock Classes="muted small" TextWrapping="Wrap" IsVisible="{Binding IsUsingCommand}"
                    Text="Signing in with claude auth login. It opens your browser itself." />
       </StackPanel>
+      <views:CodexOfferView DataContext="{Binding Codex}" IsVisible="{Binding $self.DataContext, Converter={x:Static ObjectConverters.IsNotNull}}" />
     </StackPanel>
   </Border>
 </UserControl>

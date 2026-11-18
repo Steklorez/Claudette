@@ -43,6 +43,7 @@ public sealed class CodexSessionTests
             ["model"] = "gpt-6.1-sol",
             ["reasoningEffort"] = "low",
         };
+        _transport.AutoRespondRpc["thread/read"] = p => new JsonObject { ["thread"] = new JsonObject { ["id"] = p.GetString("threadId") } };
         _transport.AutoRespondRpc["turn/start"] = _ => new JsonObject { ["turn"] = new JsonObject { ["id"] = Turn, ["status"] = "inProgress" } };
         _transport.AutoRespondRpc["thread/settings/update"] = _ => [];
     }
@@ -106,6 +107,86 @@ public sealed class CodexSessionTests
         Assert.Equal("danger-full-access", resume.GetString("sandbox"));
         Assert.DoesNotContain(_transport.Sent, s => s.GetString("method") == "thread/start");
         Assert.Equal(Thread, session.SessionId);
+    }
+
+    [Fact]
+    public async Task A_thread_codex_doesnt_have_is_missing()
+    {
+        _transport.AutoRespondRpc.Remove("thread/read");
+        await using var session = new CodexSession(_transport, _time);
+        var starting = session.StartAsync(new CodexStartOptions { WorkingDirectory = "/repo", Resume = Thread }, Token);
+        var read = await _transport.WaitForSentAsync(s => s.GetString("method") == "thread/read");
+        _transport.EmitJson(new JsonObject { ["id"] = read["id"]!.DeepClone(), ["error"] = new JsonObject { ["code"] = -32600, ["message"] = $"no rollout found for thread id {Thread}" } });
+
+        var missing = await Assert.ThrowsAsync<CodexThreadMissingException>(() => starting);
+        Assert.Equal(Thread, missing.ThreadId);
+        Assert.DoesNotContain(_transport.Sent, s => s.GetString("method") == "thread/resume");
+    }
+
+    [Fact]
+    public async Task A_thread_codex_wont_resume_fails_with_codexs_error()
+    {
+        await using var session = new CodexSession(_transport, _time);
+        var starting = session.StartAsync(new CodexStartOptions { WorkingDirectory = "/repo", Resume = Thread }, Token);
+        var resume = await _transport.WaitForSentAsync(s => s.GetString("method") == "thread/resume");
+        _transport.EmitJson(new JsonObject { ["id"] = resume["id"]!.DeepClone(), ["error"] = new JsonObject { ["code"] = -32600, ["message"] = "model provider mismatch", ["data"] = new JsonObject { ["type"] = "modelProviderMismatch" } } });
+
+        await Assert.ThrowsAsync<CodexRequestException>(() => starting);
+    }
+
+    [Fact]
+    public async Task The_earlier_turns_read_back_as_they_happened()
+    {
+        var page = 0;
+        _transport.AutoRespondRpc["thread/turns/list"] = p => ++page == 1
+            ? new JsonObject
+            {
+                ["data"] = new JsonArray(new JsonObject
+                {
+                    ["id"] = Turn,
+                    ["items"] = new JsonArray(
+                        new JsonObject { ["type"] = "userMessage", ["id"] = "u1", ["clientId"] = "sent-1", ["startedAtMs"] = 1_790_000_000_000, ["content"] = new JsonArray(new JsonObject { ["type"] = "text", ["text"] = "Read the README" }) },
+                        new JsonObject { ["type"] = "reasoning", ["id"] = "r1", ["summary"] = new JsonArray("Looking at it.") },
+                        new JsonObject
+                        {
+                            ["type"] = "commandExecution",
+                            ["id"] = "exec-1",
+                            ["command"] = "cat README.md",
+                            ["commandActions"] = new JsonArray(new JsonObject { ["type"] = "read", ["command"] = "cat README.md", ["name"] = "README.md", ["path"] = "/repo/README.md" }),
+                            ["status"] = "completed",
+                            ["aggregatedOutput"] = "# Starfall\n",
+                            ["exitCode"] = 0,
+                        }),
+                }),
+                ["nextCursor"] = "page-2",
+            }
+            : new JsonObject
+            {
+                ["data"] = new JsonArray(new JsonObject
+                {
+                    ["id"] = "turn-2",
+                    ["items"] = new JsonArray(
+                        new JsonObject { ["type"] = "agentMessage", ["id"] = "m1", ["text"] = "It's about Starfall." },
+                        new JsonObject { ["type"] = "contextCompaction", ["id"] = "c1" }),
+                }),
+                ["nextCursor"] = null,
+            };
+        await using var session = await StartedAsync();
+
+        var turns = await session.ReadTurnsAsync(Token);
+
+        var lists = _transport.Sent.Where(s => s.GetString("method") == "thread/turns/list").Select(s => s["params"]!.AsObject()).ToArray();
+        Assert.Equal([null, "page-2"], lists.Select(l => l.GetString("cursor")));
+        Assert.All(lists, l => Assert.Equal((Thread, "asc", "full"), (l.GetString("threadId"), l.GetString("sortDirection"), l.GetString("itemsView"))));
+        var prompt = Assert.IsType<PromptReplayed>(turns[0].Event);
+        Assert.Equal(("Read the README", "sent-1"), (prompt.Message.PromptText, prompt.Message.Uuid));
+        Assert.Equal(DateTimeOffset.FromUnixTimeMilliseconds(1_790_000_000_000), turns[0].Time);
+        Assert.IsType<ThinkingBlock>(Assert.IsType<AssistantMessageReceived>(turns[1].Event).Message.Content.Single());
+        Assert.Equal(ToolKind.Read, Assert.IsType<ToolUseBlock>(Assert.IsType<AssistantMessageReceived>(turns[2].Event).Message.Content.Single()).Call.Kind);
+        Assert.Equal("# Starfall\n", Assert.IsType<ToolResultBlock>(Assert.IsType<ToolResultsReceived>(turns[3].Event).Message.Content.Single()).Text);
+        Assert.Equal("It's about Starfall.", Assert.IsType<TextBlock>(Assert.IsType<AssistantMessageReceived>(turns[4].Event).Message.Content.Single()).Text);
+        Assert.Equal("compact_boundary", Assert.IsType<SystemNotice>(turns[5].Event).Message.Subtype);
+        Assert.Equal(6, turns.Count);
     }
 
     [Fact]

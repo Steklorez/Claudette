@@ -78,6 +78,7 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
         _tracker = tracker;
         _alerts = new UsageAlerts(services.Time);
         _tracker.Updated += OnUpdated;
+        _tracker.CodexUpdated += _ => Refresh();
         _tracker.TurnRecorded += OnTurnRecorded;
         _tracker.SamplesImported += OnSamplesImported;
         _tracker.TurnsImported += OnTurnsImported;
@@ -92,6 +93,39 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
     }
 
     public MeterViewModel Session { get; } = new("Session", "S");
+
+    /// <summary>
+    /// The agent whose plan the header shows: the selected tab's (DESIGN.md §18, "The usage header follows the selected
+    /// tab's agent"). Claude Code until a Codex tab is selected.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(AgentIconKey), nameof(AgentName))]
+    public partial Core.Agents.IAgentType ShownAgent { get; private set; } = Core.Agents.ClaudeCodeAgent.Instance;
+
+    /// <summary>The meters' agent's icon, before them while more than one agent is in use, so it's clear whose they are.</summary>
+    [ObservableProperty]
+    public partial bool ShowsAgentIcon { get; set; }
+
+    public string AgentIconKey => IsCodexShown ? "IconAgentCodex" : "IconAgentClaudeCode";
+
+    public string AgentName => ShownAgent.Name;
+
+    private bool IsCodexShown => ShownAgent.Kind == Core.Agents.AgentKinds.Codex;
+
+    /// <summary>Shows <paramref name="agent"/>'s plan: the selected tab changed to one of another agent.</summary>
+    public void ShowAgent(Core.Agents.IAgentType agent)
+    {
+        if (agent.Kind == ShownAgent.Kind)
+        {
+            return;
+        }
+        ShownAgent = agent;
+        Weekly.Clear();
+        Refresh();
+    }
+
+    /// <summary>The session readings the sparkline and projection go by: the shown agent's.</summary>
+    private IReadOnlyList<UsagePoint> History => IsCodexShown ? _tracker.CodexHistory : _history;
 
     /// <summary>The weekly limit across all models, then each model-specific weekly limit.</summary>
     public ObservableCollection<MeterViewModel> Weekly { get; } = [];
@@ -233,7 +267,7 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
 
     private BurnProjection? Projection(UsageSnapshot snapshot) =>
         snapshot.Session is { } session
-            ? BurnRate.Project(_history, session.Percent, session.ResetsAt, _services.Time.GetUtcNow(), TimeSpan.FromMinutes(_services.Settings.Usage.BurnRateWindowMinutes))
+            ? BurnRate.Project(History, session.Percent, session.ResetsAt, _services.Time.GetUtcNow(), TimeSpan.FromMinutes(_services.Settings.Usage.BurnRateWindowMinutes))
             : null;
 
     private void Refresh()
@@ -241,10 +275,11 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(WarnPercent));
         OnPropertyChanged(nameof(CriticalPercent));
         OnPropertyChanged(nameof(IsCompact));
-        var snapshot = _tracker.Current;
+        var snapshot = IsCodexShown ? _tracker.CodexCurrent : _tracker.Current;
         HasData = snapshot?.Session is not null || snapshot?.WeeklyAll is not null;
         var now = _services.Time.GetUtcNow();
-        RefreshCredits(snapshot, now);
+        // Usage credits are Claude's plan's (DESIGN.md §6).
+        RefreshCredits(IsCodexShown ? null : snapshot, now);
         if (snapshot is null)
         {
             return;
@@ -261,7 +296,7 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
             HitsLimitBeforeReset = projection.HitsLimitBeforeReset;
             WindowEnd = session.ResetsAt;
             WindowStart = session.ResetsAt - SessionWindow;
-            SessionPoints = _history.Select(p => new ChartPoint(p.Time, p.Percent)).Append(new ChartPoint(now, session.Percent)).ToArray();
+            SessionPoints = History.Select(p => new ChartPoint(p.Time, p.Percent)).Append(new ChartPoint(now, session.Percent)).ToArray();
             SessionProjection = ProjectionLine(projection, session.ResetsAt, now);
         }
         if (Alert is { } alert)
@@ -275,7 +310,7 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
         {
             weekly.Add(all);
         }
-        if (usage.ShowModelMeters && _tracker.ModelLimitsAvailable)
+        if (!IsCodexShown && usage.ShowModelMeters && _tracker.ModelLimitsAvailable)
         {
             weekly.AddRange(snapshot.WeeklyModels);
         }

@@ -84,6 +84,8 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         _services.StateChanged += (_, _) => OnRemovedPastSessionsChanged();
         // An account added, renamed or removed, or a folder's changed: the groups' and tabs' tags and menus follow.
         _services.Accounts.Changed += OnAccountsChanged;
+        // Codex found: a group's menu offers a Codex tab (DESIGN.md §18, "Codex, a second agent").
+        _services.CodexChanged += () => OnPropertyChanged(nameof(IsCodexAvailable));
         _services.Library.LeaseLost += (sessionId, machine) =>
         {
             foreach (var tab in AllTabs.Where(t => t.State.SessionId == sessionId))
@@ -253,7 +255,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     /// (DESIGN.md §18, "Project files").
     /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SelectedTab), nameof(SelectedFiles), nameof(SelectedRun), nameof(SelectedEditorLog), nameof(SelectedLog), nameof(SelectedAccount), nameof(ProjectTab))]
+    [NotifyPropertyChangedFor(nameof(SelectedTab), nameof(SelectedFiles), nameof(SelectedRun), nameof(SelectedEditorLog), nameof(SelectedLog), nameof(SelectedAccount), nameof(SelectedAgent), nameof(ProjectTab))]
     public partial IShellTab? Selected { get; set; }
 
     /// <summary>The focused tab when it's a session's; null while nothing, or a Project Files tab, has the focus.</summary>
@@ -548,6 +550,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         group.Tabs.Insert(index, tab);
         OpenTabs.Add(tab);
         OnPropertyChanged(nameof(HasTabs));
+        RefreshAgentIcons();
         // Its session leaves the group's past sessions (DESIGN.md §4, "Claude Code's projects").
         ApplyClaudeProjects();
         OnTicketTabsChanged();
@@ -557,6 +560,26 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
             var folder = tab.Folder;
             var now = _services.Time.GetUtcNow();
             _ = Task.Run(() => RemoteAttachments.Prune(folder, keep, now));
+        }
+    }
+
+    /// <summary>
+    /// Tabs of more than one agent are open: each row shows its agent's icon (DESIGN.md §18, "Its icon"). With one agent,
+    /// rows look as they always have.
+    /// </summary>
+    public bool HasSeveralAgents { get; private set; }
+
+    private void RefreshAgentIcons()
+    {
+        var several = AllTabs.Select(t => t.Agent.Kind).Distinct().Skip(1).Any();
+        foreach (var tab in AllTabs)
+        {
+            tab.ShowsAgentIcon = several;
+        }
+        if (several != HasSeveralAgents)
+        {
+            HasSeveralAgents = several;
+            OnPropertyChanged(nameof(HasSeveralAgents));
         }
     }
 
@@ -605,6 +628,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
             UpdateGroupLabels();
         }
         OnPropertyChanged(nameof(HasTabs));
+        RefreshAgentIcons();
         // A closed tab's session is a past session again (DESIGN.md §4, "Claude Code's projects").
         ApplyClaudeProjects();
     }

@@ -50,7 +50,46 @@ public sealed class CodexSessionFactory(
 
     public string CodexPath => codexPath;
 
+    /// <summary>
+    /// On Windows, the sandboxes to try, in order (DESIGN.md §18, "Codex's sandbox"): whatever the user's own configuration
+    /// chose, then MXC, then the unelevated one. The elevated one needs an administrator to set up, so it's left to the
+    /// user's configuration.
+    /// </summary>
+    public static IReadOnlyList<string?> WindowsSandboxes { get; } = [null, "mxc", "unelevated"];
+
     public async Task<CodexSession> StartAsync(CodexLaunchOptions options, CancellationToken cancellationToken = default)
+    {
+        if (!OperatingSystem.IsWindows() || options.ConfigOverrides.Any(o => o.StartsWith("windows.sandbox", StringComparison.Ordinal)))
+        {
+            return await StartOnceAsync(options, cancellationToken).ConfigureAwait(false);
+        }
+        foreach (var sandbox in WindowsSandboxes)
+        {
+            var attempt = options with
+            {
+                Start = options.Start with { RequireWindowsSandbox = true },
+                ConfigOverrides = sandbox is null ? options.ConfigOverrides : [.. options.ConfigOverrides, $"windows.sandbox=\"{sandbox}\""],
+            };
+            try
+            {
+                return await StartOnceAsync(attempt, cancellationToken).ConfigureAwait(false);
+            }
+            catch (CodexSandboxNotReadyException)
+            {
+                // The next one, if it's ready.
+            }
+            catch (CodexRequestException) when (sandbox is not null)
+            {
+                // That sandbox can't be chosen here (MXC unavailable, or not allowed): the next one.
+            }
+        }
+        // None is ready: Codex asks before each command and edit, which the tab says (SandboxReady).
+        var session = await StartOnceAsync(options, cancellationToken).ConfigureAwait(false);
+        session.SandboxReady = false;
+        return session;
+    }
+
+    private async Task<CodexSession> StartOnceAsync(CodexLaunchOptions options, CancellationToken cancellationToken)
     {
         var userEnvironment = environment is null ? null : await environment.GetAsync(cancellationToken).ConfigureAwait(false);
         var spec = new ProcessStartSpec(codexPath, CodexArguments.ForAppServer(options))

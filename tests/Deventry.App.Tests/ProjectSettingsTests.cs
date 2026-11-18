@@ -960,12 +960,12 @@ public class ProjectSettingsTests
         await using var h = new TabTestHarness();
         using var settings = new SettingsViewModel(h.Services, null);
 
-        Assert.Equal(["Deventry", "Claude", "Your work", SettingsSidebar.ProjectTools, SettingsSidebar.SourceControl, SettingsSidebar.Tickets, SettingsSidebar.RemoteClients],
+        Assert.Equal(["Deventry", SettingsSidebar.Agents, "Your work", SettingsSidebar.ProjectTools, SettingsSidebar.SourceControl, SettingsSidebar.Tickets, SettingsSidebar.RemoteClients],
             settings.NavEntries.Where(e => e.IsHeading).Select(e => e.Title));
         // About is a window of its own, not a page (DESIGN.md §14, "About").
         Assert.Equal(["General", "Appearance", "Conversation", "Notifications", "Keyboard"], PagesUnder(settings, "Deventry"));
-        // Advanced is the last of Claude's pages: it's mostly about running Claude Code.
-        Assert.Equal(["Claude Code", "Accounts", "Tabs", "Usage", "Advanced"], PagesUnder(settings, "Claude"));
+        // Advanced is the last of the agents' pages: it's mostly about running Claude Code.
+        Assert.Equal(["Claude Code", "Codex", "Accounts", "Tabs", "Usage", "Advanced"], PagesUnder(settings, SettingsSidebar.Agents));
         Assert.Equal(["Sessions", "Files and diffs", "Timed messages"], PagesUnder(settings, "Your work"));
         Assert.Equal(["All tools", "Unreal Engine", "Unity", "Godot"], PagesUnder(settings, SettingsSidebar.ProjectTools));
         Assert.Equal(["Git", "Perforce"], PagesUnder(settings, SettingsSidebar.SourceControl));

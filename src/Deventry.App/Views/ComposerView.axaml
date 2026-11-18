@@ -172,7 +172,7 @@
     <!-- The transcript is gone from here and the library (DESIGN.md §9, "Old sessions") -->
     <Border Classes="codeblock" IsVisible="{Binding IsSessionMissing}">
       <StackPanel Spacing="8">
-        <TextBlock Classes="warning" TextWrapping="Wrap" Text="{x:Static vm:TabViewModel.SessionMissingText}" />
+        <TextBlock Classes="warning" TextWrapping="Wrap" Text="{Binding SessionMissingMessage}" />
         <WrapPanel ItemSpacing="8" LineSpacing="8">
           <Button Classes="accent" Content="Start a new session" Command="{Binding StartNewSessionCommand}" />
           <Button Content="{Binding CloseMissingText}" Command="{Binding UnpinAndCloseCommand}" />
@@ -411,7 +411,7 @@
                       </ItemsControl>
                       <!-- DESIGN.md §5, "Model and effort": ultracode and the output style -->
                       <Separator Margin="0,4" />
-                      <ToggleButton Classes="flat row" IsChecked="{Binding IsUltracode, Mode=OneWay}" Command="{Binding ToggleUltracodeCommand}">
+                      <ToggleButton Classes="flat row" IsChecked="{Binding IsUltracode, Mode=OneWay}" Command="{Binding ToggleUltracodeCommand}" IsVisible="{Binding OffersUltracode}">
                         <StackPanel>
                           <TextBlock Text="Ultracode" />
                           <TextBlock Classes="muted small" TextWrapping="Wrap"

@@ -10,6 +10,22 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Deventry.Core.Codex;
 
+/// <summary>Codex's Windows sandbox isn't ready with the configuration it started with (<c>windowsSandbox/readiness</c>).</summary>
+public sealed class CodexSandboxNotReadyException(string status) : Exception($"Codex's Windows sandbox is {status}.")
+{
+    public string Status { get; } = status;
+}
+
+/// <summary>
+/// Codex has no thread to resume (<c>thread/read</c> failed): it's gone, or Codex can't read it. A thread Codex has but
+/// won't resume (a required MCP server that didn't start, another model provider) fails with Codex's own error instead.
+/// </summary>
+public sealed class CodexThreadMissingException(string threadId, CodexRequestException inner)
+    : Exception($"Codex couldn't resume its earlier conversation: {inner.Message}", inner)
+{
+    public string ThreadId { get; } = threadId;
+}
+
 /// <summary>The rate limits Codex reported for the signed-in account (<c>account/rateLimits/updated</c>), for the usage header.</summary>
 public sealed record RateLimitsReported(JsonObject RateLimits) : SessionEvent;
 
@@ -80,6 +96,12 @@ public sealed class CodexSession : IAgentSession
     /// <summary>Codex's version, from the user agent it reported (<c>deventry/0.169.0 (…)</c>).</summary>
     public string? Version { get; private set; }
 
+    /// <summary>
+    /// False when Codex's Windows sandbox wasn't ready (DESIGN.md §18, "Codex's sandbox"): its commands and edits ask,
+    /// whatever the mode says. True otherwise, and everywhere but Windows.
+    /// </summary>
+    public bool SandboxReady { get; internal set; } = true;
+
     /// <summary>The session file Codex keeps the thread in, which the session library copies (DESIGN.md §9).</summary>
     public string? ThreadPath { get; private set; }
 
@@ -109,6 +131,28 @@ public sealed class CodexSession : IAgentSession
         }, StartTimeout, cancellationToken).ConfigureAwait(false);
         Version = VersionFrom(initialize.GetString("userAgent"));
         await _rpc.NotifyAsync("initialized", null, cancellationToken).ConfigureAwait(false);
+        if (options.RequireWindowsSandbox)
+        {
+            JsonObject? readiness;
+            try
+            {
+                readiness = await RequestAsync("windowsSandbox/readiness", [], DefaultTimeout, cancellationToken).ConfigureAwait(false);
+            }
+            catch (CodexRequestException ex) when (ex.IsUnknownMethod)
+            {
+                // A Codex that can't say: taken as ready, as it was before it could.
+                readiness = null;
+            }
+            catch (CodexRequestException ex)
+            {
+                // The sandbox chosen can't be used here (MXC where it's unavailable or not allowed).
+                throw new CodexSandboxNotReadyException(ex.Message);
+            }
+            if (readiness?.GetString("status") is { } status && status != "ready")
+            {
+                throw new CodexSandboxNotReadyException(status);
+            }
+        }
 
         var models = await TryRequestAsync("model/list", [], cancellationToken).ConfigureAwait(false);
         var account = await TryRequestAsync("account/read", new JsonObject { ["refreshToken"] = false }, cancellationToken).ConfigureAwait(false);
@@ -132,6 +176,14 @@ public sealed class CodexSession : IAgentSession
         {
             thread["threadId"] = resume;
             thread["excludeTurns"] = true;
+            try
+            {
+                await RequestAsync("thread/read", new JsonObject { ["threadId"] = resume }, StartTimeout, cancellationToken).ConfigureAwait(false);
+            }
+            catch (CodexRequestException ex)
+            {
+                throw new CodexThreadMissingException(resume, ex);
+            }
             started = await RequestAsync("thread/resume", thread, StartTimeout, cancellationToken).ConfigureAwait(false);
         }
         else
@@ -292,6 +344,65 @@ public sealed class CodexSession : IAgentSession
         await _lifetime.CancelAsync().ConfigureAwait(false);
         await _transport.DisposeAsync().ConfigureAwait(false);
         _lifetime.Dispose();
+    }
+
+    /// <summary>
+    /// The thread's earlier conversation, oldest first, as the events a live turn reports (DESIGN.md §18, "Codex, a second
+    /// agent", "History"): each prompt as <see cref="PromptReplayed"/>, each reply, reasoning and call as the session
+    /// reports them, with when it happened. Codex keeps it; <c>thread/turns/list</c> reads it back, a page at a time.
+    /// </summary>
+    public async Task<IReadOnlyList<(SessionEvent Event, DateTimeOffset? Time)>> ReadTurnsAsync(CancellationToken cancellationToken = default)
+    {
+        var events = new List<(SessionEvent, DateTimeOffset?)>();
+        string? cursor = null;
+        do
+        {
+            var parameters = new JsonObject { ["threadId"] = SessionId, ["sortDirection"] = "asc", ["itemsView"] = "full", ["limit"] = 50 };
+            if (cursor is not null)
+            {
+                parameters["cursor"] = cursor;
+            }
+            var page = await RequestAsync("thread/turns/list", parameters, DefaultTimeout, cancellationToken).ConfigureAwait(false);
+            foreach (var item in page.GetArray("data")?.OfType<JsonObject>().SelectMany(t => t.GetArray("items")?.OfType<JsonObject>() ?? []) ?? [])
+            {
+                var time = item["startedAtMs"].AsWholeNumber() is { } ms ? DateTimeOffset.FromUnixTimeMilliseconds(ms) : (DateTimeOffset?)null;
+                foreach (var replayed in ReplayOf(item))
+                {
+                    events.Add((replayed, time));
+                }
+            }
+            cursor = page.GetString("nextCursor");
+        }
+        while (cursor is not null);
+        return events;
+    }
+
+    /// <summary>A stored item as the events its live counterpart reported.</summary>
+    private IEnumerable<SessionEvent> ReplayOf(JsonObject item)
+    {
+        switch (item.GetString("type"))
+        {
+            case "userMessage":
+                yield return PromptOf(item);
+                yield break;
+            case "contextCompaction":
+                yield return CompactionNotice();
+                yield break;
+            case "agentMessage" or "reasoning":
+                if (ReplyOf(item) is { } reply)
+                {
+                    yield return reply;
+                }
+                yield break;
+        }
+        if (CallsOf(item) is { } calls)
+        {
+            yield return calls;
+        }
+        if (ResultsOf(item) is { } results)
+        {
+            yield return results;
+        }
     }
 
     /// <summary>Sends any request and returns Codex's result.</summary>
@@ -459,13 +570,10 @@ public sealed class CodexSession : IAgentSession
 
     private void OnItemStarted(JsonObject item)
     {
-        var calls = CodexItems.CallsOf(item);
-        if (calls.Count == 0)
+        if (CallsOf(item) is { } calls)
         {
-            return;
+            Publish(calls);
         }
-        var content = calls.Select(c => (ContentBlock)new ToolUseBlock(c.Id, c.Name, c.Input, new JsonObject { ["type"] = "tool_use", ["id"] = c.Id }) { Call = c.Call }).ToArray();
-        Publish(new AssistantMessageReceived(new AssistantMessage(item.GetString("id"), Model, content, null, null, ItemRaw(item))));
     }
 
     private void OnItemCompleted(JsonObject item)
@@ -473,43 +581,60 @@ public sealed class CodexSession : IAgentSession
         switch (item.GetString("type"))
         {
             case "agentMessage":
-                var text = item.GetString("text") ?? "";
-                _lastReply = text;
-                if (text.Length > 0)
+                _lastReply = item.GetString("text") ?? "";
+                if (ReplyOf(item) is { } reply)
                 {
-                    Publish(new AssistantMessageReceived(new AssistantMessage(item.GetString("id"), Model, [new TextBlock(text, [])], null, null, ItemRaw(item))));
+                    Publish(reply);
                 }
                 return;
             case "reasoning":
-                var summary = string.Join("\n\n", item.GetStringList("summary"));
-                if (summary.Length > 0)
+                if (ReplyOf(item) is { } thinking)
                 {
-                    Publish(new AssistantMessageReceived(new AssistantMessage(item.GetString("id"), Model, [new ThinkingBlock(summary, [])], null, null, ItemRaw(item))));
+                    Publish(thinking);
                 }
                 return;
             case "userMessage":
-                OnUserMessage(item);
+                Publish(PromptOf(item));
                 return;
             case "contextCompaction":
-                Publish(new SystemNotice(new SystemMessage("compact_boundary", new JsonObject
-                {
-                    ["type"] = "system",
-                    ["subtype"] = "compact_boundary",
-                    ["compact_metadata"] = new JsonObject { ["trigger"] = "manual" },
-                })));
+                Publish(CompactionNotice());
                 return;
         }
-        var results = CodexItems.ResultsOf(item);
-        if (results.Count == 0)
+        if (ResultsOf(item) is { } results)
         {
-            return;
+            Publish(results);
         }
-        var blocks = results.Select(r => (ContentBlock)new ToolResultBlock(r.Id, r.Text, r.IsError, new JsonObject { ["type"] = "tool_result", ["tool_use_id"] = r.Id }) { ExitCode = r.ExitCode }).ToArray();
-        Publish(new ToolResultsReceived(new UserMessage(blocks, null, null, ItemRaw(item))));
+    }
+
+    /// <summary>An item's calls, as Claude Code's tool uses; null when it isn't a call.</summary>
+    private AssistantMessageReceived? CallsOf(JsonObject item)
+    {
+        var calls = CodexItems.CallsOf(item);
+        return calls.Count == 0 ? null : new AssistantMessageReceived(new AssistantMessage(item.GetString("id"), Model,
+            [.. calls.Select(c => (ContentBlock)new ToolUseBlock(c.Id, c.Name, c.Input, new JsonObject { ["type"] = "tool_use", ["id"] = c.Id }) { Call = c.Call })],
+            null, null, ItemRaw(item)));
+    }
+
+    /// <summary>A finished call's results, as Claude Code's tool results; null when it has none.</summary>
+    private static ToolResultsReceived? ResultsOf(JsonObject item)
+    {
+        var results = CodexItems.ResultsOf(item);
+        return results.Count == 0 ? null : new ToolResultsReceived(new UserMessage(
+            [.. results.Select(r => (ContentBlock)new ToolResultBlock(r.Id, r.Text, r.IsError, new JsonObject { ["type"] = "tool_result", ["tool_use_id"] = r.Id }) { ExitCode = r.ExitCode })],
+            null, null, ItemRaw(item)));
+    }
+
+    /// <summary>A reply or its reasoning's summary; null when it's empty.</summary>
+    private AssistantMessageReceived? ReplyOf(JsonObject item)
+    {
+        ContentBlock? block = item.GetString("type") == "reasoning"
+            ? string.Join("\n\n", item.GetStringList("summary")) is { Length: > 0 } summary ? new ThinkingBlock(summary, []) : null
+            : item.GetString("text") is { Length: > 0 } text ? new TextBlock(text, []) : null;
+        return block is null ? null : new AssistantMessageReceived(new AssistantMessage(item.GetString("id"), Model, [block], null, null, ItemRaw(item)));
     }
 
     /// <summary>A message Deventry sent, echoed with the id it was sent with, as Claude Code echoes one (DESIGN.md §5, "Rewind and branch").</summary>
-    private void OnUserMessage(JsonObject item)
+    private static PromptReplayed PromptOf(JsonObject item)
     {
         var text = string.Join("\n", item.GetArray("content")?.OfType<JsonObject>().Where(c => c.GetString("type") == "text").Select(c => c.GetString("text")).OfType<string>() ?? []);
         var raw = new JsonObject
@@ -519,8 +644,16 @@ public sealed class CodexSession : IAgentSession
             ["isReplay"] = true,
             ["message"] = new JsonObject { ["role"] = "user", ["content"] = text },
         };
-        Publish(new PromptReplayed(new UserMessage([new TextBlock(text, [])], null, null, raw)));
+        return new PromptReplayed(new UserMessage([new TextBlock(text, [])], null, null, raw));
     }
+
+    /// <summary>Codex compacted the thread, as Claude Code's notice of it.</summary>
+    private static SystemNotice CompactionNotice() => new(new SystemMessage("compact_boundary", new JsonObject
+    {
+        ["type"] = "system",
+        ["subtype"] = "compact_boundary",
+        ["compact_metadata"] = new JsonObject { ["trigger"] = "manual" },
+    }));
 
     private void OnTokenUsage(JsonObject? usage)
     {

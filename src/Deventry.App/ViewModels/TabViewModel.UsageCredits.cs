@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using Deventry.App.Conversation;
+using Deventry.Core.Agents;
 using Deventry.Core.Sessions;
 using Deventry.Usage;
 using CommunityToolkit.Mvvm.Input;
@@ -24,7 +25,7 @@ public sealed partial class TabViewModel
     public bool UsesUsageCredits => State.Overrides.UseUsageCredits ?? _services.Settings.Usage.UseUsageCredits;
 
     /// <summary>Only the Default account's plan has usage credits: an API key pays for every request (DESIGN.md §4, "Accounts").</summary>
-    public bool HasUsageCreditsMenu => Account is null;
+    public bool HasUsageCreditsMenu => Account is null && Offers(AgentFeatures.UsageCredits);
 
     public const string UsageCreditsMenuTip =
         "Once your session or weekly limit is used up, carry on with your plan's usage credits. Off, the tab stops and waits for the limit to reset.";
