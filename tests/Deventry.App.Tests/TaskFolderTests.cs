@@ -93,9 +93,9 @@ public class TaskFolderTests
         WriteTask(h, "7", "Someone else's");
         Update(h, "u1", "1", "in_progress");
 
-        await TabTestHarness.Eventually(() => tab.TaskFolderRead is null, "the folder left alone");
+        // The read #1's answer started can find #7 and leave the folder alone before the update arrives.
+        await TabTestHarness.Eventually(() => tab.TaskFolderRead is null && tab.TodoList.Items.SingleOrDefault()?.IsActive == true, "the folder left alone, and #1 started");
         Assert.Equal(["#1 Fix the config"], tab.TodoList.Items.Select(i => i.Title));
-        Assert.True(tab.TodoList.Items[0].IsActive);
         Assert.Empty(h.FolderWatcher.Folders);
     }
 

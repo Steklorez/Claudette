@@ -75,12 +75,21 @@ public sealed class CodexHooksTests
     }
 
     [Fact]
+    public async Task Its_pipe_fits_in_a_macos_socket_path()
+    {
+        await using var pipe = new CodexHookPipe((_, _) => Task.FromResult(new JsonObject()));
+
+        // A pipe on macOS is a socket in its TMPDIR, whose path can be 104 characters at most.
+        Assert.InRange($"/var/folders/q2/p1t6rgxj5fj32g1dc7dmd49r0000gn/T/CoreFxPipe_{pipe.Name}".Length, 1, 104);
+    }
+
+    [Fact]
     public async Task Without_a_tab_to_ask_the_helper_lets_the_patch_go_on()
     {
         Assert.Equal(CodexHooks.Continue, await CodexHooks.RelayAsync("{}", null, TimeProvider.System, Token));
 
         var time = new FakeTimeProvider();
-        var relay = CodexHooks.RelayAsync("{}", $"deventry-codex-hook-{Guid.NewGuid():N}", time, Token);
+        var relay = CodexHooks.RelayAsync("{}", $"deventry-codex-{Guid.NewGuid().ToString("N")[..16]}", time, Token);
         // Its deadline is set before it first waits, so the clock can move at once.
         time.Advance(CodexHooks.Timeout);
 

@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.VisualTree;
+using Deventry.App.Controls;
 using Deventry.App.Services;
 using Deventry.App.Tests.Support;
 using Deventry.App.ViewModels;
@@ -50,9 +51,7 @@ public class AccountsUiTests
         window.Show();
         UiText.Settle(window);
 
-        var page = window.GetVisualDescendants().OfType<ScrollViewer>().First(s => Grid.GetColumn(s) == 1);
-
-        await Verify(UiText.Describe(page, (h.Root, "{root}")));
+        await Verify(DescribeAccounts(window, h));
     }
 
     [AvaloniaFact]
@@ -70,10 +69,15 @@ public class AccountsUiTests
         window.Show();
         UiText.Settle(window);
 
-        var page = window.GetVisualDescendants().OfType<ScrollViewer>().First(s => Grid.GetColumn(s) == 1);
-
-        await Verify(UiText.Describe(page, (h.Root, "{root}")));
+        await Verify(DescribeAccounts(window, h));
     }
+
+    /// <summary>
+    /// The Claude Code page's Accounts and Add an account, without the rest of the page, whose Starting a session has a
+    /// setting only macOS and Linux show.
+    /// </summary>
+    private static string DescribeAccounts(Window window, TabTestHarness h) => string.Concat(window.GetVisualDescendants().OfType<SettingsSection>()
+        .Where(s => s.Key is "accounts" or "addAccount").Select(s => UiText.Describe(s, (h.Root, "{root}"))));
 
     private static Border Tag(Window window, string name) =>
         window.GetVisualDescendants().OfType<Border>().Single(b => b.Name == name && b.FindAncestorOfType<ScrollViewer>()?.IsVisible == true);

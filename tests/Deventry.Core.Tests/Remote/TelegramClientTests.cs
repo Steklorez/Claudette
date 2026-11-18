@@ -219,6 +219,7 @@ public sealed class TelegramClientTests : IAsyncLifetime
         _telegram.Files["shot"] = Png;
         await StartAsync();
         await TargetAsync("Grappling");
+        var before = _telegram.Sent.Count;
 
         _telegram.Message(Me, "Is the rope too long here?", Now, photo: "shot");
 
@@ -229,7 +230,8 @@ public sealed class TelegramClientTests : IAsyncLifetime
         Assert.Equal(Png, files[0].Data);
         // Downloaded by its largest size.
         Assert.Equal("shot", (string)_telegram.Of("getFile").Single()["file_id"]!);
-        Assert.Equal("Sent to <b>Grappling hook</b>, with 1 image.", Text(_telegram.Sent[^1]).Split('\n')[0]);
+        // The reply goes once the tab has the message.
+        Assert.Equal("Sent to <b>Grappling hook</b>, with 1 image.", Text(await NextSentAsync(before + 1)).Split('\n')[0]);
     }
 
     [Fact]

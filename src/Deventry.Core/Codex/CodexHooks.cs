@@ -160,8 +160,11 @@ public sealed class CodexHookPipe : IAsyncDisposable
         _listening = Task.Run(ListenAsync);
     }
 
-    /// <summary>The pipe's name, for <see cref="CodexHooks.PipeVariable"/>.</summary>
-    public string Name { get; } = $"deventry-codex-hook-{Guid.NewGuid():N}";
+    /// <summary>
+    /// The pipe's name, for <see cref="CodexHooks.PipeVariable"/>. On macOS and Linux the pipe is a socket at
+    /// <c>$TMPDIR/CoreFxPipe_&lt;name&gt;</c>, whose path macOS keeps to 104 characters, and its <c>TMPDIR</c> takes 49.
+    /// </summary>
+    public string Name { get; } = $"deventry-codex-{Guid.NewGuid().ToString("N")[..16]}";
 
     private async Task ListenAsync()
     {
