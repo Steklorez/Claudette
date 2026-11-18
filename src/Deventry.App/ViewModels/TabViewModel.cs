@@ -631,6 +631,20 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     [NotifyPropertyChangedFor(nameof(StatusTip), nameof(RowDetail), nameof(InfoRows))]
     public partial string? ErrorMessage { get; private set; }
 
+    /// <summary>
+    /// The session ended mid-turn, with no result to say what the turn spent (DESIGN.md §4, "Accounts"): its calls, priced
+    /// as the turn running was, are recorded as its, and counted in the tab's tokens.
+    /// </summary>
+    private void RecordCutShortTurn()
+    {
+        if (Tokens.CutShort() is not { } turn || turn.Usage.IsEmpty)
+        {
+            return;
+        }
+        State.Tokens.Add(turn.Usage);
+        _services.Usage?.OnTurnCutShort(Id, DisplayName, turn.Usage, turn.Log, State.SessionId, Folder, Account?.Id, Account?.Name, State.Tokens.Turns);
+    }
+
     /// <summary>The last line Claude Code wrote to standard error, or the exit code when it wrote nothing.</summary>
     internal static string ExitErrorMessage(TransportExit exit)
     {
@@ -2537,6 +2551,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 break;
             case SessionExited exited:
                 _session = null;
+                RecordCutShortTurn();
                 Tokens.OnSessionEnded();
                 SetCompacting(false);
                 _claudeName = null;

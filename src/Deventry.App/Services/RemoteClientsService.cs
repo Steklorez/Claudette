@@ -617,7 +617,7 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
             {
                 try
                 {
-                    var spent = await Task.Run(() => tracker.Store.GetSpend(account.Id, today, account.Name), cancellationToken).ConfigureAwait(false);
+                    var spent = await Task.Run(() => tracker.GetSpend(account.Id, today, account.Name), cancellationToken).ConfigureAwait(false);
                     spend.Add(new RemoteSpend(account.Name, Core.Formats.Dollars(spent)));
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)

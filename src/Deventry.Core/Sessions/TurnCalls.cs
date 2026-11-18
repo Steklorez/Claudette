@@ -89,6 +89,20 @@ public sealed record Compaction(DateTimeOffset At, string? Trigger, long? PreTok
 public sealed record TurnCallLog(IReadOnlyList<ModelCall> Calls, IReadOnlyList<ToolStep> Steps, IReadOnlyList<Compaction> Compactions, TimeSpan? IdleBefore)
 {
     public static readonly TurnCallLog Empty = new([], [], [], null);
+
+    /// <summary>
+    /// A turn cut short, with no result to price it (DESIGN.md §18, "Prices"): its calls each at <paramref name="price"/>
+    /// (none for a call it can't price), and the usage by model they add up to, as a result's would be.
+    /// </summary>
+    public (TurnCallLog Log, ModelUsageTotals Usage) Priced(Func<ModelCall, double?> price)
+    {
+        var calls = Calls.Select(c => c with { CostUsd = price(c) ?? 0 }).ToList();
+        var models = calls.GroupBy(c => c.Model, StringComparer.Ordinal).ToDictionary(g => g.Key, g => new UsageCounts(
+            g.Sum(c => c.Tokens.Input), g.Sum(c => c.Tokens.Output), g.Sum(c => c.Tokens.CacheWrite), g.Sum(c => c.Tokens.CacheRead), g.Sum(c => c.CostUsd)),
+            StringComparer.Ordinal);
+        var counted = models.Where(m => !m.Value.IsZero).ToDictionary(m => m.Key, m => m.Value, StringComparer.Ordinal);
+        return (this with { Calls = calls }, counted.Count == 0 ? ModelUsageTotals.Empty : new ModelUsageTotals(counted));
+    }
 }
 
 /// <summary>

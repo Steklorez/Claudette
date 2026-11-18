@@ -9,8 +9,9 @@ namespace Deventry.App.ViewModels;
 /// <summary>
 /// The header while the selected tab runs under an API key or a cloud provider (DESIGN.md §4, "Accounts"): the account,
 /// and its estimated spend today, this week and this month, from Claude Code's own per-turn estimates on this machine,
-/// and other machines' under an account of the same name while they share their usage. The plan meters are the Default
-/// account's, so they make way.
+/// and other machines' under an account of the same name while they share their usage, with the turns running under it
+/// as they go, estimated from their calls until their own figures come. The plan meters are the Default account's, so
+/// they make way.
 /// </summary>
 public sealed partial class AccountSpendViewModel : ViewModelBase, IDisposable
 {
@@ -25,6 +26,9 @@ public sealed partial class AccountSpendViewModel : ViewModelBase, IDisposable
     /// <summary>Bumped by each read, so an older read finishing late doesn't show.</summary>
     private int _reads;
 
+    /// <summary>The recorded spend, as last read: the turns running are added to it as they go, without reading it again.</summary>
+    private (double Today, double Week, double Month) _recorded;
+
     public AccountSpendViewModel(AppServices services, UsageTracker tracker)
     {
         _services = services;
@@ -32,12 +36,14 @@ public sealed partial class AccountSpendViewModel : ViewModelBase, IDisposable
         _logger = services.Loggers.CreateLogger("Accounts");
         _ticker = new UiTicker(services.Time, services.Dispatcher, RefreshInterval, () => _ = RefreshAsync());
         tracker.SpendRecorded += OnSpendRecorded;
+        tracker.RunningSpendChanged += OnRunningSpendChanged;
         tracker.TurnsImported += OnTurnsImported;
     }
 
     public void Dispose()
     {
         _tracker.SpendRecorded -= OnSpendRecorded;
+        _tracker.RunningSpendChanged -= OnRunningSpendChanged;
         _tracker.TurnsImported -= OnTurnsImported;
         _ticker.Dispose();
     }
@@ -68,7 +74,7 @@ public sealed partial class AccountSpendViewModel : ViewModelBase, IDisposable
         (_services.Settings.Usage.ShareThroughLibrary
             ? $"Estimated spend on this {SpendSubject} from this machine's tabs, and other machines' tabs that sync to the session library under an account of the same name"
             : $"Estimated spend on this {SpendSubject} from this machine's tabs")
-        + ": Claude Code's own estimates at list price, not your bill. Click for usage details.";
+        + ", with the turns running counted as they go: Claude Code's own estimates at list price, not your bill. Click for usage details.";
 
     private string SpendSubject => Account?.Provider is { } provider ? $"{provider.Name} account" : "API key";
 
@@ -83,6 +89,8 @@ public sealed partial class AccountSpendViewModel : ViewModelBase, IDisposable
             TodayText = WeekText = MonthText = "";
             return;
         }
+        // Until it's read, the account's turns running aren't added to the last account's spend.
+        _recorded = default;
         _ = RefreshAsync();
     }
 
@@ -92,6 +100,22 @@ public sealed partial class AccountSpendViewModel : ViewModelBase, IDisposable
         {
             _ = RefreshAsync();
         }
+    }
+
+    /// <summary>A turn running under the account spent more: added to what was recorded, without reading it again.</summary>
+    private void OnRunningSpendChanged(string accountId)
+    {
+        if (Account?.Id == accountId && _reads > 0)
+        {
+            Show(_recorded, _tracker.RunningSpend(accountId));
+        }
+    }
+
+    private void Show((double Today, double Week, double Month) recorded, double running)
+    {
+        TodayText = Formats.Dollars(recorded.Today + running);
+        WeekText = Formats.Dollars(recorded.Week + running);
+        MonthText = Formats.Dollars(recorded.Month + running);
     }
 
     /// <summary>Another machine's turns under an account of this one's name count toward its spend.</summary>
@@ -132,9 +156,8 @@ public sealed partial class AccountSpendViewModel : ViewModelBase, IDisposable
             {
                 return;
             }
-            TodayText = Formats.Dollars(today);
-            WeekText = Formats.Dollars(week);
-            MonthText = Formats.Dollars(month);
+            _recorded = (today, week, month);
+            Show(_recorded, _tracker.RunningSpend(account.Id));
         });
     }
 }

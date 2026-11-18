@@ -255,6 +255,29 @@ public class TurnCallsTests
         Assert.Empty(calls.SoFar().Calls);
     }
 
+    /// <summary>
+    /// A turn cut short has no result to price it (DESIGN.md §4, "Accounts"): each call goes at the price given, one it
+    /// can't price at nothing, and they add up by model as a result's usage would.
+    /// </summary>
+    [Fact]
+    public void A_turn_cut_short_is_priced_call_by_call_and_adds_up_by_model()
+    {
+        var calls = new TurnCalls();
+        calls.Add(Assistant("msg_1", input: 1_000, output: 100, cacheRead: 9_000), Start);
+        calls.Add(Assistant("msg_2", input: 2_000, output: 200, cacheRead: 0), Start.AddSeconds(5));
+        calls.Add(Assistant("msg_3", input: 500, output: 50, cacheRead: 0, model: Haiku), Start.AddSeconds(9));
+
+        // Opus at $4 a million fresh input tokens; Haiku without a price.
+        var (log, usage) = calls.SoFar().Priced(call => call.Model == Opus ? call.Tokens.Weighted * 0.000004 : null);
+
+        // 1,000 + 9,000 × 0.1 + 100 × 5 = 2,400 weighted; 2,000 + 200 × 5 = 3,000.
+        Assert.Equal([0.0096, 0.012, 0], log.Calls.Select(c => Math.Round(c.CostUsd, 9)));
+        Assert.Equal(2, usage.Models.Count);
+        var opus = usage.Models[Opus];
+        Assert.Equal((3_000L, 300L, 0L, 9_000L, 0.0216), (opus.Input, opus.Output, opus.CacheWrite, opus.CacheRead, Math.Round(opus.CostUsd, 9)));
+        Assert.Equal(new UsageCounts(500, 50, 0, 0, 0), usage.Models[Haiku]);
+    }
+
     private static ModelUsageTotals Usage(params (string Model, UsageCounts Counts)[] models) =>
         new(models.ToDictionary(m => m.Model, m => m.Counts));
 

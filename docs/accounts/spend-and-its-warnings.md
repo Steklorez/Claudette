@@ -16,9 +16,10 @@ An API key or a cloud provider has no plan limits, so there's nothing for the us
 It shows the account's name and color with *API key, estimated*, or the provider's name for a cloud provider account, such as *Amazon Bedrock, estimated*, then **Today**, **This week** and **This month**. Hover over it for what's counted, and click it to open [the Usage window](../usage/the-usage-window.md). When you select a tab on the Default account again, the meters, the trendline and the chevron for the [detailed header](../usage/the-detailed-header.md) come back.
 
 - **It's an estimate.** The amounts are Claude Code's own estimates at Anthropic's list price, added up over each turn, not your bill. Your actual bill is in the Claude Console, or your cloud provider's.
+- **A turn counts as it runs.** Claude Code says what a turn cost only when it ends, so Deventry estimates each of its model calls as it comes, from what the tab's earlier turns cost, or Anthropic's list price before there are any. When the turn ends, Claude Code's own figure takes the estimate's place. A turn that never ends, because Claude Code stopped in the middle of it, keeps its estimate.
 - **Whose turns.** Turns from this machine's tabs, and, while [usage sharing](../usage/sharing-usage-across-machines.md) is on, other machines' tabs that sync to the session library under an account of the same name.
 - **The week** starts on the first day of the week in your language and region settings, and the day and month start at local midnight.
-- It updates after each turn, and again every 15 minutes, so a new day starts from nothing.
+- It updates as each turn goes, and again every 15 minutes, so a new day starts from nothing.
 
 ## Spend warnings
 

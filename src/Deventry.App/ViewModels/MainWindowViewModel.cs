@@ -382,6 +382,8 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
             tracker.TurnRecorded += id => _shell?.OnTurnRecorded(id);
             // An API key's spend warnings (DESIGN.md §4, "Accounts").
             tracker.SpendRecorded += id => _ = services.Accounts.OnSpendRecordedAsync(id);
+            // A turn running can pass a warning before it ends: checked at most once a minute an account as it goes.
+            tracker.RunningSpendChanged += id => services.Accounts.OnRunningSpendChanged(id);
             // Other machines' turns under an account of the same name count toward its warnings (DESIGN.md §6).
             tracker.TurnsImported += names => _ = services.Accounts.OnTurnsImportedAsync(names);
             Usage = usage;

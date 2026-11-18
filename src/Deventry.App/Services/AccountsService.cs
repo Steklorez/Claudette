@@ -255,13 +255,21 @@ public sealed class AccountsService(AppServices services, ICredentialStore crede
     }
 
     /// <summary>
-    /// A turn of <paramref name="accountId"/>'s was recorded: warns once a day and once a month when its estimated spend
-    /// passes what Settings → Accounts says. The spend counts other machines' turns under an account of the same name
-    /// (DESIGN.md §6, "Sharing across machines"). Reads the usage history off the UI thread.
+    /// A turn of <paramref name="accountId"/>'s was recorded, or one running under it spent more: warns once a day and once
+    /// a month when its estimated spend passes what Settings → Accounts says. The spend counts other machines' turns under
+    /// an account of the same name (DESIGN.md §6, "Sharing across machines"), and the turns running here as they go. Reads
+    /// the usage history off the UI thread.
     /// </summary>
     public async Task OnSpendRecordedAsync(string accountId)
     {
         if (Find(accountId) is not { } account || account is { DailySpendAlert: null, MonthlySpendAlert: null } || services.Usage is not { } usage)
+        {
+            return;
+        }
+        // Both sent already: nothing to read.
+        var sentFor = services.Time.GetLocalNow();
+        if ((account.DailySpendAlert is null || account.DailyAlertSentFor == sentFor.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture))
+            && (account.MonthlySpendAlert is null || account.MonthlyAlertSentFor == sentFor.ToString("yyyy-MM", CultureInfo.InvariantCulture)))
         {
             return;
         }
@@ -271,7 +279,7 @@ public sealed class AccountsService(AppServices services, ICredentialStore crede
         double spentToday, spentThisMonth;
         try
         {
-            (spentToday, spentThisMonth) = await Task.Run(() => (usage.Store.GetSpend(account.Id, today, name), usage.Store.GetSpend(account.Id, month, name))).ConfigureAwait(false);
+            (spentToday, spentThisMonth) = await Task.Run(() => (usage.GetSpend(account.Id, today, name), usage.GetSpend(account.Id, month, name))).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -297,6 +305,27 @@ public sealed class AccountsService(AppServices services, ICredentialStore crede
                     $"The estimated spend on {SpendOn(account)} passed {Formats.Dollars((double)monthly)} this month.");
             }
         });
+    }
+
+    /// <summary>How often a turn running checks its account's spend warnings as it goes.</summary>
+    internal static readonly TimeSpan RunningCheckInterval = TimeSpan.FromMinutes(1);
+
+    /// <summary>When each account's warnings were last checked for a turn running, by its id.</summary>
+    private readonly Dictionary<string, DateTimeOffset> _runningChecked = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// A turn running under <paramref name="accountId"/> spent more (on the UI thread): its warnings are checked, at most
+    /// once a minute, so a long turn passes one as it does rather than when it ends.
+    /// </summary>
+    public void OnRunningSpendChanged(string accountId)
+    {
+        var now = services.Time.GetUtcNow();
+        if (_runningChecked.TryGetValue(accountId, out var last) && now - last < RunningCheckInterval)
+        {
+            return;
+        }
+        _runningChecked[accountId] = now;
+        _ = OnSpendRecordedAsync(accountId);
     }
 
     /// <summary>What a spend warning says the spend is on: "Work's API key", "Studio's Amazon Bedrock account".</summary>

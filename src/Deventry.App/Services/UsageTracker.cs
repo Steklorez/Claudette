@@ -101,6 +101,12 @@ public sealed class UsageTracker : IAsyncDisposable
     /// </summary>
     public event Action<string>? SpendRecorded;
 
+    /// <summary>
+    /// Raised on the UI thread when a turn running under an account other than Default has spent more, with the account's
+    /// id (<see cref="SetRunningSpend"/>).
+    /// </summary>
+    public event Action<string>? RunningSpendChanged;
+
     /// <summary>Raised on the UI thread after readings another machine shared were added to the history.</summary>
     public event Action? SamplesImported;
 
@@ -388,49 +394,143 @@ public sealed class UsageTracker : IAsyncDisposable
     public void OnTurnCompleted(string tabId, string tabName, TurnCompleted turn, string? project = null, string? account = null, string? accountName = null,
         string? turnId = null, int? index = null)
     {
-        var records = TurnRecord.From(turn.Usage, turn.Result.SessionId, tabId, _services.Time.GetUtcNow(), project, account);
+        Record(tabId, tabName, turn.Usage, turn.Calls, turn.Result.SessionId, project, account, accountName, turnId, index);
+        _poller.NotifyTurnCompleted();
+    }
+
+    /// <summary>
+    /// A tab's turn was cut short, its session gone with no result (DESIGN.md §4, "Accounts"): record what its calls spent,
+    /// each at its model's price as the turn running was estimated, as Claude Code would have. The transcript, read later,
+    /// finds them by their messages' ids, so they aren't added twice.
+    /// </summary>
+    /// <param name="usage">What the calls add up to by model (<see cref="TurnCallLog.Priced"/>).</param>
+    public void OnTurnCutShort(string tabId, string tabName, ModelUsageTotals usage, TurnCallLog calls, string? sessionId, string? project = null,
+        string? account = null, string? accountName = null, int? index = null) =>
+        Record(tabId, tabName, usage, calls, sessionId, project, account, accountName, null, index);
+
+    private void Record(string tabId, string tabName, ModelUsageTotals usage, TurnCallLog calls, string? sessionId, string? project, string? account,
+        string? accountName, string? turnId, int? index)
+    {
+        var records = TurnRecord.From(usage, sessionId, tabId, _services.Time.GetUtcNow(), project, account);
         // Its calls, tools' results and compactions, which point to it by its id (DESIGN.md §18, "What's recorded").
         turnId ??= Guid.NewGuid().ToString("N");
         var detail = new TurnDetail(
-            CallRecord.From(turn.Calls, turnId, tabId, turn.Result.SessionId),
-            StepRecord.From(turn.Calls, turnId),
-            UsageEvent.From(turn.Calls, turnId, tabId, turn.Result.SessionId));
+            CallRecord.From(calls, turnId, tabId, sessionId),
+            StepRecord.From(calls, turnId),
+            UsageEvent.From(calls, turnId, tabId, sessionId));
         // Which plan the Default account's turn used, so only machines on the same one count it (DESIGN.md §6).
         var plan = account is null && _services.RemoteControl.Account is { } signedIn ? UsageSharing.AccountKey(signedIn.Email, signedIn.OrganizationName) : null;
-        if (records.Count > 0)
+        // The turn's estimate gives way to its record, unless the tab's next turn has started since.
+        var running = RunningOf(tabId);
+        if (records.Count == 0)
         {
-            WriteHistory(() =>
-            {
-                try
-                {
-                    var (projectKey, projectName) = project is null ? default : ProjectOf(project);
-                    Store.AddTurns(records.Select(r => r with
-                    {
-                        ProjectKey = projectKey,
-                        ProjectName = projectName,
-                        AccountName = accountName?.Trim(),
-                        Plan = plan,
-                        Turn = turnId,
-                        IdleBefore = turn.Calls.IdleBefore,
-                        Index = index,
-                    }), detail);
-                    Store.SetTabName(tabId, tabName);
-                    _services.Dispatcher.Post(() =>
-                    {
-                        TurnRecorded?.Invoke(tabId);
-                        if (account is not null)
-                        {
-                            SpendRecorded?.Invoke(account);
-                        }
-                    });
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Couldn't record a turn's tokens.");
-                }
-            });
+            ClearRunning(tabId, running);
+            return;
         }
-        _poller.NotifyTurnCompleted();
+        WriteHistory(() =>
+        {
+            try
+            {
+                var (projectKey, projectName) = project is null ? default : ProjectOf(project);
+                Store.AddTurns(records.Select(r => r with
+                {
+                    ProjectKey = projectKey,
+                    ProjectName = projectName,
+                    AccountName = accountName?.Trim(),
+                    Plan = plan,
+                    Turn = turnId,
+                    IdleBefore = calls.IdleBefore,
+                    Index = index,
+                }), detail);
+                Store.SetTabName(tabId, tabName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Couldn't record a turn's tokens.");
+            }
+            finally
+            {
+                _services.Dispatcher.Post(() =>
+                {
+                    // Its record, or nothing: the estimate goes either way, and the spend is read again.
+                    ClearRunning(tabId, running);
+                    TurnRecorded?.Invoke(tabId);
+                    if (account is not null)
+                    {
+                        SpendRecorded?.Invoke(account);
+                    }
+                });
+            }
+        });
+    }
+
+    // ---- The turns running (DESIGN.md §4, "Accounts": the spend counts them as they go) ---------------------------------
+
+    /// <summary>What a tab's turn running has spent so far, estimated, under an account other than Default.</summary>
+    private sealed record RunningTurn(string Account, double CostUsd, int Version);
+
+    private readonly Lock _runningLock = new();
+    private readonly Dictionary<string, RunningTurn> _running = new(StringComparer.Ordinal);
+    private int _runningVersion;
+
+    /// <summary>
+    /// A tab's turn running under <paramref name="accountId"/> has spent <paramref name="costUsd"/> so far, estimated from
+    /// its calls: the account's spend counts it until the turn's own figure is recorded (DESIGN.md §4, "Accounts").
+    /// </summary>
+    public void SetRunningSpend(string tabId, string accountId, double costUsd)
+    {
+        string? before;
+        lock (_runningLock)
+        {
+            var now = _running.GetValueOrDefault(tabId);
+            if (now is not null && now.Account == accountId && now.CostUsd.Equals(costUsd))
+            {
+                return;
+            }
+            before = now?.Account;
+            _running[tabId] = new RunningTurn(accountId, costUsd, ++_runningVersion);
+        }
+        if (before is not null && before != accountId)
+        {
+            RunningSpendChanged?.Invoke(before);
+        }
+        RunningSpendChanged?.Invoke(accountId);
+    }
+
+    /// <summary>What the turns running under <paramref name="accountId"/> have spent so far, estimated.</summary>
+    public double RunningSpend(string accountId)
+    {
+        lock (_runningLock)
+        {
+            return _running.Values.Where(r => r.Account == accountId).Sum(r => r.CostUsd);
+        }
+    }
+
+    /// <summary>
+    /// An account's estimated spend since <paramref name="from"/>: its recorded turns, other machines' under an account of
+    /// <paramref name="name"/> while they share their usage, and the turns running under it here. Reads the usage history:
+    /// call it off the UI thread.
+    /// </summary>
+    public double GetSpend(string accountId, DateTimeOffset from, string? name) => Store.GetSpend(accountId, from, name) + RunningSpend(accountId);
+
+    private int? RunningOf(string tabId)
+    {
+        lock (_runningLock)
+        {
+            return _running.GetValueOrDefault(tabId)?.Version;
+        }
+    }
+
+    /// <summary>A tab's turn running is recorded: its estimate goes, unless the tab's next turn has started since.</summary>
+    private void ClearRunning(string tabId, int? version)
+    {
+        lock (_runningLock)
+        {
+            if (version is not null && _running.TryGetValue(tabId, out var running) && running.Version == version)
+            {
+                _running.Remove(tabId);
+            }
+        }
     }
 
     /// <summary>

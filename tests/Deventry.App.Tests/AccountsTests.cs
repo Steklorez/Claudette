@@ -309,6 +309,91 @@ public class AccountsTests
         List<Platform.Notifications.OsNotification> Warnings() => [.. h.Notifier.Shown.Where(n => n.Title.StartsWith("Work:", StringComparison.Ordinal))];
     }
 
+    /// <summary>
+    /// A turn running counts toward its account's spend as it goes, estimated from its calls, and its own figure takes the
+    /// estimate's place when it ends (DESIGN.md §4, "Accounts"). A model the tab has had no result for yet goes at list price.
+    /// </summary>
+    [Fact]
+    public async Task The_header_counts_a_turn_as_it_runs_and_takes_its_own_figure_when_it_ends()
+    {
+        await using var h = new TabTestHarness();
+        UseKeys(h);
+        await using var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+        h.Services.UseUsageTracker(tracker);
+        tracker.RunningSpendChanged += h.Services.Accounts.OnRunningSpendChanged;
+        using var spend = new AccountSpendViewModel(h.Services, tracker);
+        var work = await h.Services.Accounts.AddApiKeyAccountAsync("Work", "sk-ant-work");
+        work.DailySpendAlert = 3m;
+        h.Services.Accounts.NewFolderAccount = work.Id;
+        var tab = await h.OpenTabAsync();
+        spend.Show(tab.Account);
+        await TabTestHarness.Eventually(() => spend.TodayText == "$0.00", "the spend, before any turn");
+
+        // A million tokens of fresh input on Opus 5.5, at its list price of $4 a million; and its warning, at $3, as it runs.
+        h.Transport.Emit(Call("m1", input: 1_000_000));
+        await TabTestHarness.Eventually(() => spend.TodayText == "$4.00", "the turn running, estimated");
+        await TabTestHarness.Eventually(() => h.Notifier.Shown.Any(n => n.Title == "Work: $4.00 today"), "the warning, before the turn ends");
+
+        // Claude Code's own figure for the turn takes the estimate's place.
+        h.Transport.Emit(Result(input: 1_000_000, cost: 3.5));
+        await TabTestHarness.Eventually(() => spend.TodayText == "$3.50", "the turn's own figure");
+        Assert.Equal(3.5, tracker.Store.GetSpend(work.Id, DateTimeOffset.MinValue), 6);
+    }
+
+    /// <summary>A turn whose session ends before its result is recorded at what it was estimated to spend (DESIGN.md §4, "Accounts").</summary>
+    [Fact]
+    public async Task A_turn_cut_short_is_recorded_at_its_estimate()
+    {
+        await using var h = new TabTestHarness();
+        UseKeys(h);
+        await using var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+        h.Services.UseUsageTracker(tracker);
+        using var spend = new AccountSpendViewModel(h.Services, tracker);
+        var work = await h.Services.Accounts.AddApiKeyAccountAsync("Work", "sk-ant-work");
+        h.Services.Accounts.NewFolderAccount = work.Id;
+        var tab = await h.OpenTabAsync();
+        spend.Show(tab.Account);
+        h.Transport.Emit(Call("m1", input: 500_000));
+        await TabTestHarness.Eventually(() => spend.TodayText == "$2.00", "the turn running, estimated");
+
+        h.Transport.Exit(1, "claude crashed");
+        await TabTestHarness.Eventually(() => tracker.Store.GetSpend(work.Id, DateTimeOffset.MinValue) > 0, "the turn, recorded");
+
+        Assert.Equal(2.0, tracker.Store.GetSpend(work.Id, DateTimeOffset.MinValue), 6);
+        Assert.Equal(1, tab.State.Tokens.Turns);
+        await TabTestHarness.Eventually(() => spend.TodayText == "$2.00", "the spend, from the record");
+        Assert.Equal(0, tracker.RunningSpend(work.Id));
+    }
+
+    /// <summary>An <c>assistant</c> message on Opus 5.5 with its call's usage.</summary>
+    private static JsonObject Call(string id, long input) => new()
+    {
+        ["type"] = "assistant",
+        ["message"] = new JsonObject
+        {
+            ["id"] = id,
+            ["model"] = "claude-opus-5-5",
+            ["content"] = new JsonArray(new JsonObject { ["type"] = "text", ["text"] = "working" }),
+            ["usage"] = new JsonObject { ["input_tokens"] = input, ["output_tokens"] = 0, ["cache_read_input_tokens"] = 0, ["cache_creation_input_tokens"] = 0 },
+        },
+    };
+
+    private static JsonObject Result(long input, double cost) => new()
+    {
+        ["type"] = "result",
+        ["subtype"] = "success",
+        ["is_error"] = false,
+        ["result"] = "done",
+        ["session_id"] = "s1",
+        ["modelUsage"] = new JsonObject
+        {
+            ["claude-opus-5-5"] = new JsonObject
+            {
+                ["inputTokens"] = input, ["outputTokens"] = 0, ["cacheReadInputTokens"] = 0, ["cacheCreationInputTokens"] = 0, ["costUSD"] = cost,
+            },
+        },
+    };
+
     [Fact]
     public async Task The_usage_panel_lists_each_accounts_tokens_and_spend()
     {

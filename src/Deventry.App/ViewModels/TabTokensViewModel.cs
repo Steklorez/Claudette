@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using Deventry.App.Controls;
 using Deventry.App.Services;
 using Deventry.Core;
+using Deventry.Core.Accounts;
 using Deventry.Core.Protocol;
 using Deventry.Core.Sessions;
 using Deventry.Usage;
@@ -135,12 +136,35 @@ public sealed partial class TabTokensViewModel : ObservableObject
             default:
                 return;
         }
+        if (sessionEvent is not TurnCompleted)
+        {
+            ReportRunning();
+        }
         if (IsWanted)
         {
             BuildRunning();
             BuildTiles();
         }
     }
+
+    /// <summary>
+    /// What the turn running has spent so far, while the tab runs under an account besides Default: the account's spend in
+    /// the header counts it until the turn's own figure is recorded (DESIGN.md §4, "Accounts").
+    /// </summary>
+    private void ReportRunning()
+    {
+        if (IsRunning && _services.Usage is { } usage && _tab.Account is { } account)
+        {
+            usage.SetRunningSpend(_tab.Id, account.Id, _live.SoFar().Calls.Sum(c => Cost(c) ?? 0));
+        }
+    }
+
+    /// <summary>
+    /// The turn running when the session ended without its result, its calls priced as they were while it ran; null when
+    /// none was running.
+    /// </summary>
+    internal (TurnCallLog Log, ModelUsageTotals Usage)? CutShort() =>
+        IsRunning && _live.SoFar() is { Calls.Count: > 0 } log ? log.Priced(Cost) : null;
 
     /// <summary>The session ended or was replaced: what was running isn't any more.</summary>
     internal void OnSessionEnded()
@@ -466,7 +490,7 @@ public sealed partial class TabTokensViewModel : ObservableObject
 
     private static KindValues Kinds(CallTokens tokens) => new(tokens.CacheRead, tokens.CacheWrite, tokens.Input, tokens.Output);
 
-    /// <summary>A call of the turn running at its model's price, from the tab's earlier turns; null before it has had one.</summary>
+    /// <summary>A call of the turn running at its model's price, from the tab's earlier turns or the list's; null for a model with neither.</summary>
     private double? Cost(ModelCall call) => PriceOf(call.Model) is { } input
         ? input * (call.Tokens.Input + (call.Tokens.CacheRead * TokenPrices.Read) + (call.Tokens.Write5m * TokenPrices.Write5m)
             + (call.Tokens.Write1h * TokenPrices.Write1h) + (call.Tokens.Output * TokenPrices.Output))
@@ -474,7 +498,8 @@ public sealed partial class TabTokensViewModel : ObservableObject
 
     /// <summary>
     /// A model's price for fresh input: from the tab's breakdown when it has been read, or else from the tab's own totals,
-    /// whose writes weigh as five minutes'.
+    /// whose writes weigh as five minutes', or else, before the model has had a result in the tab, Anthropic's list price
+    /// (DESIGN.md §18, "Prices").
     /// </summary>
     private double? PriceOf(string model)
     {
@@ -485,9 +510,12 @@ public sealed partial class TabTokensViewModel : ObservableObject
         if (_tab.State.Tokens.Models.TryGetValue(model, out var totals))
         {
             var weight = totals.Input + (totals.CacheRead * TokenPrices.Read) + (totals.CacheWrite * TokenPrices.Write5m) + (totals.Output * TokenPrices.Output);
-            return weight > 0 && totals.EstimatedCostUsd > 0 ? totals.EstimatedCostUsd / weight : null;
+            if (weight > 0 && totals.EstimatedCostUsd > 0)
+            {
+                return totals.EstimatedCostUsd / weight;
+            }
         }
-        return null;
+        return ListPrices.Input(model);
     }
 
     /// <summary>A turn's row, a finding's link or the popup's chart: the tab's breakdown, on that turn.</summary>

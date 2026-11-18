@@ -38,8 +38,9 @@ public class TabTokensTests
         Assert.True(tab.Tokens.IsRunning);
         Assert.True(tab.Tokens.HasCalls);
         Assert.Equal("Turn 1", tab.Tokens.RunningTitle);
-        // No result has priced the model yet: tokens alone.
-        Assert.Equal($"{Formats.Tokens(20_343)} tokens", tab.Tokens.RunningSummary);
+        // No result has priced the model yet: Opus 5.5 at its list price, $4 a million fresh input tokens, the rest weighted
+        // from it (3 + 20,000 × 0.1 + 300 × 2 + 40 × 5 = 2,803).
+        Assert.Equal($"{Formats.Tokens(20_343)} tokens · {Formats.Dollars(2_803 * 0.000004)} so far", tab.Tokens.RunningSummary);
 
         h.Transport.Emit(new JsonObject
         {
