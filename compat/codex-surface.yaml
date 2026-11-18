@@ -207,6 +207,25 @@ items:
     usedIn: src/Deventry.Core/Codex/CodexSession.cs
     docs: https://learn.chatgpt.com/docs/app-server
     test: CodexSessionTests, FakeCodexTests
+  - id: item/tool/requestUserInput
+    kind: control
+    status: experimental
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+    fallback: "Codex's questions, in Plan mode, are a question card answered by each question's id; dismissed, it's answered with none. If it changes, Codex's questions are refused as an unknown request, and Codex goes on with its best judgment."
+  - id: turn/plan/updated
+    kind: message
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests, CodexTabTests
+  - id: "plan item (proposed plan text in Plan mode)"
+    kind: field
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests, CodexTabTests
   - id: "commandExecution.commandActions"
     kind: field
     status: documented

@@ -327,6 +327,121 @@ public sealed class CodexSessionTests
     }
 
     [Fact]
+    public async Task A_question_is_a_question_card_answered_by_its_id()
+    {
+        await using var session = await StartedAsync(CodexModes.Plan);
+        TurnStarted();
+
+        _transport.EmitJson(new JsonObject
+        {
+            ["method"] = "item/tool/requestUserInput",
+            ["id"] = 8,
+            ["params"] = new JsonObject
+            {
+                ["threadId"] = Thread,
+                ["turnId"] = Turn,
+                ["itemId"] = "ask-1",
+                ["isBlocking"] = true,
+                ["questions"] = new JsonArray(
+                    new JsonObject
+                    {
+                        ["id"] = "levels",
+                        ["header"] = "Scope",
+                        ["question"] = "Which levels?",
+                        ["options"] = new JsonArray(new JsonObject { ["label"] = "All", ["description"] = "Every level" }, new JsonObject { ["label"] = "Two", ["description"] = "Level two" }),
+                    },
+                    new JsonObject { ["id"] = "name", ["header"] = "Name", ["question"] = "What's it called?", ["isOther"] = true }),
+            },
+        });
+        var (requested, _) = await session.ReadUntilAsync<PermissionRequested>();
+        var request = requested.Request;
+        Assert.Equal((CodexSession.QuestionTool, ToolKind.Question), (request.ToolName, request.Call.Kind));
+        var questions = request.Input["questions"]!.AsArray();
+        Assert.Equal(["Which levels?", "What's it called?"], questions.Select(q => q!["question"]!.GetValue<string>()));
+        Assert.Equal(["All", "Two"], questions[0]!["options"]!.AsArray().Select(o => o!["label"]!.GetValue<string>()));
+
+        var answered = (JsonObject)request.Input.DeepClone();
+        answered["answers"] = new JsonObject { ["Which levels?"] = "Two", ["What's it called?"] = "Grapple" };
+        request.Allow(answered);
+
+        var response = await _transport.WaitForSentAsync(s => s["id"]?.ToJsonString() == "8" && s["result"] is not null);
+        Assert.Equal("Two", response["result"]!["answers"]!["levels"]!["answers"]![0]!.GetValue<string>());
+        Assert.Equal("Grapple", response["result"]!["answers"]!["name"]!["answers"]![0]!.GetValue<string>());
+    }
+
+    [Theory]
+    [InlineData("auto", CodexModes.Auto)]
+    [InlineData("default", CodexModes.ReadOnly)]
+    public async Task A_plan_is_a_plan_card_and_approving_it_carries_it_out_in_the_mode_chosen(string chosen, string mode)
+    {
+        await using var session = await StartedAsync(CodexModes.Plan);
+        TurnStarted();
+
+        Item("item/completed", new JsonObject { ["type"] = "plan", ["id"] = "plan-1", ["text"] = "1. Add the hook\n2. Test it" });
+        var (requested, _) = await session.ReadUntilAsync<PermissionRequested>();
+        Assert.Equal((CodexSession.PlanTool, "1. Add the hook\n2. Test it"), (requested.Request.ToolName, requested.Request.Input["plan"]!.GetValue<string>()));
+        TurnCompleted();
+        await session.ReadUntilAsync<TurnCompleted>();
+
+        requested.Request.AllowAndSetMode(chosen);
+
+        var start = await _transport.WaitForSentAsync(s => s.GetString("method") == "turn/start");
+        Assert.Equal(CodexSession.ImplementPlan, start["params"]!["input"]![0]!["text"]!.GetValue<string>());
+        Assert.Equal(mode, session.PermissionMode);
+        var update = _transport.Sent.Last(s => s.GetString("method") == "thread/settings/update")["params"]!.AsObject();
+        Assert.Equal(CodexModes.SandboxPolicy(mode)["type"]!.GetValue<string>(), update["sandboxPolicy"]!["type"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task A_plan_sent_back_with_feedback_sends_it_and_a_new_message_withdraws_one_still_waiting()
+    {
+        await using var session = await StartedAsync(CodexModes.Plan);
+        TurnStarted();
+        Item("item/completed", new JsonObject { ["type"] = "plan", ["id"] = "plan-1", ["text"] = "1. Add the hook" });
+        var (first, _) = await session.ReadUntilAsync<PermissionRequested>();
+        TurnCompleted();
+        await session.ReadUntilAsync<TurnCompleted>();
+
+        first.Request.Deny("The user wants to keep planning and said: Test it too.");
+
+        var start = await _transport.WaitForSentAsync(s => s.GetString("method") == "turn/start");
+        Assert.Equal("Test it too.", start["params"]!["input"]![0]!["text"]!.GetValue<string>());
+        Assert.Equal(CodexModes.Plan, session.PermissionMode);
+
+        TurnStarted();
+        Item("item/completed", new JsonObject { ["type"] = "plan", ["id"] = "plan-2", ["text"] = "1. Add the hook\n2. Test it" });
+        var (second, _) = await session.ReadUntilAsync<PermissionRequested>();
+        TurnCompleted();
+        await session.ReadUntilAsync<TurnCompleted>();
+        await session.SendUserMessageAsync("Actually, do the wall jump first", Token);
+        var (withdrawn, _) = await session.ReadUntilAsync<PermissionCancelled>();
+        Assert.Equal(second.Request.RequestId, withdrawn.RequestId);
+    }
+
+    [Fact]
+    public async Task The_turns_steps_are_the_to_do_list_as_claude_codes_are()
+    {
+        await using var session = await StartedAsync();
+        TurnStarted();
+
+        Notify("turn/plan/updated", new JsonObject
+        {
+            ["threadId"] = Thread,
+            ["turnId"] = Turn,
+            ["plan"] = new JsonArray(
+                new JsonObject { ["step"] = "Read the code", ["status"] = "completed" },
+                new JsonObject { ["step"] = "Add the hook", ["status"] = "inProgress" },
+                new JsonObject { ["step"] = "Test it", ["status"] = "pending" }),
+        });
+
+        var (results, seen) = await session.ReadUntilAsync<ToolResultsReceived>();
+        var use = seen.OfType<AssistantMessageReceived>().Single().Message.Content.OfType<ToolUseBlock>().Single();
+        Assert.Equal((CodexSession.TodoTool, ToolKind.Todo), (use.Name, use.Call.Kind));
+        Assert.Equal(["completed", "in_progress", "pending"], use.Input["todos"]!.AsArray().Select(t => t!["status"]!.GetValue<string>()));
+        Assert.Equal(use.Id, results.Message.Content.OfType<ToolResultBlock>().Single().ToolUseId);
+    }
+
+    [Fact]
     public async Task An_approval_Codex_withdraws_takes_its_card_away()
     {
         await using var session = await StartedAsync();

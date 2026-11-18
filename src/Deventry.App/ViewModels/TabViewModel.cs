@@ -145,6 +145,9 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         };
         // A prompt the phone answered is withdrawn by Claude Code (DESIGN.md §18, "Remote Control").
         _conversation.WithdrawnOutcome = RemoteControl.WithdrawnPromptOutcome;
+        // The cards name the tab's agent, and offer its modes (DESIGN.md §18, "Codex, a second agent").
+        _conversation.AgentName = AgentShortName;
+        _conversation.OffersAcceptingEdits = !IsCodex;
         // In Plan mode Claude's Write or Edit to a Markdown file is the plan's draft (DESIGN.md §5, "Tasks").
         _conversation.IsInPlanMode = () => PermissionMode == "plan";
         TodoList.PropertyChanged += OnTodoListChanged;

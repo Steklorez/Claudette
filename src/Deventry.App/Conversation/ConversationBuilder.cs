@@ -218,6 +218,20 @@ public sealed class ConversationBuilder
     /// What a prompt Claude Code withdraws says: "Answered in the Claude app" while the tab is connected to it (DESIGN.md
     /// §18, "Remote Control"). Null, or no function, keeps <see cref="PromptItem.WithdrawnOutcome"/>.
     /// </summary>
+    /// <summary>What the prompt cards call the agent: "Claude", "Codex" (DESIGN.md §18, "Words").</summary>
+    public string AgentName
+    {
+        get => _prompts.AgentName;
+        set => _prompts.AgentName = value;
+    }
+
+    /// <summary>A plan card offers <b>Approve, accept edits</b>, a mode only Claude Code has.</summary>
+    public bool OffersAcceptingEdits
+    {
+        get => _prompts.OffersAcceptingEdits;
+        set => _prompts.OffersAcceptingEdits = value;
+    }
+
     public Func<string?>? WithdrawnOutcome
     {
         get => _prompts.WithdrawnOutcome;

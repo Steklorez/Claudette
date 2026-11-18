@@ -25,6 +25,9 @@ public abstract partial class PromptItem(PermissionRequest request) : Conversati
 {
     public PermissionRequest Request { get; } = request;
 
+    /// <summary>What the card calls the agent asking: "Claude", "Codex" (DESIGN.md §18, "Words").</summary>
+    public string AgentName { get; init; } = "Claude";
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsPending), nameof(HasOutcome), nameof(PositionText), nameof(HasPosition))]
     public partial PermissionState State { get; set; } = PermissionState.Pending;
@@ -447,7 +450,7 @@ public sealed partial class QuestionItem : PromptItem
 
     public ObservableCollection<QuestionEntry> Questions { get; } = [];
 
-    public string Title => Questions.Count == 1 ? "Claude has a question" : "Claude has some questions";
+    public string Title => Questions.Count == 1 ? $"{AgentName} has a question" : $"{AgentName} has some questions";
 
     private bool CanSubmit() => IsPending && Questions.Count > 0 && Questions.All(q => q.Answer is not null);
 
@@ -534,7 +537,21 @@ public sealed partial class PlanItem : PromptItem
     public partial int VersionNumber { get; private set; }
 
     /// <summary>"Claude's plan", or "Claude's plan · v2" from the second version on.</summary>
-    public string Title => VersionNumber > 1 ? $"Claude's plan · v{VersionNumber}" : "Claude's plan";
+    public string Title => VersionNumber > 1 ? $"{AgentName}'s plan · v{VersionNumber}" : $"{AgentName}'s plan";
+
+    /// <summary>What the card says for a plan with no text.</summary>
+    public string ReadyText => $"{AgentName} has finished planning and is ready to start making changes.";
+
+    /// <summary>
+    /// <b>Approve, accept edits</b> is offered: Claude Code's mode for it. A Codex tab's Auto already makes edits in the
+    /// workspace without asking (DESIGN.md §18, "Modes").
+    /// </summary>
+    public bool OffersAcceptingEdits { get; init; } = true;
+
+    /// <summary>What <b>Approve, auto mode</b> says it does.</summary>
+    public string AutoModeTip => OffersAcceptingEdits
+        ? "Start working in auto mode: a safety check reviews actions and blocks risky ones"
+        : $"Start working in Auto: {AgentName} works in the project without asking, and asks for anything outside it";
 
     /// <summary>This plan as a line diff against the version before it; null for the first.</summary>
     [ObservableProperty]
@@ -585,7 +602,7 @@ public sealed partial class PlanItem : PromptItem
     private void ApproveAcceptingEdits() => Approve("acceptEdits", "Approved. Edits are accepted automatically");
 
     [RelayCommand]
-    private void ApproveAskingForEdits() => Approve("default", "Approved. Claude will ask before each edit");
+    private void ApproveAskingForEdits() => Approve("default", $"Approved. {AgentName} will ask before each edit");
 
     private void Approve(string mode, string outcome)
     {

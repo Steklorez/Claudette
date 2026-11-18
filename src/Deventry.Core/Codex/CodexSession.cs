@@ -224,6 +224,8 @@ public sealed class CodexSession : IAgentSession
 
     public async ValueTask SendUserMessageAsync(string text, IReadOnlyList<MessageImage> images, string? suffix, MessageStamp? stamp, CancellationToken cancellationToken = default)
     {
+        // A new message moves Codex on from a plan still waiting.
+        WithdrawPlans();
         var input = new JsonArray();
         var whole = suffix is { Length: > 0 } ? $"{text}\n\n{suffix}" : text;
         input.Add(new JsonObject { ["type"] = "text", ["text"] = whole });
@@ -396,6 +398,10 @@ public sealed class CodexSession : IAgentSession
             case "contextCompaction":
                 yield return CompactionNotice();
                 yield break;
+            case "plan" when item.GetString("text") is { Length: > 0 } plan:
+                // Read back, a plan is its text: its card was answered then.
+                yield return new AssistantMessageReceived(new AssistantMessage(item.GetString("id"), Model, [new TextBlock(plan, [])], null, null, ItemRaw(item)));
+                yield break;
             case "agentMessage" or "reasoning":
                 if (ReplyOf(item) is { } reply)
                 {
@@ -552,6 +558,9 @@ public sealed class CodexSession : IAgentSession
             case "thread/tokenUsage/updated" when IsOwnThread(parameters):
                 OnTokenUsage(parameters.GetObject("tokenUsage"));
                 break;
+            case "turn/plan/updated" when IsOwnThread(parameters):
+                OnPlanUpdated(parameters);
+                break;
             case "account/rateLimits/updated":
                 if (parameters.GetObject("rateLimits") is { } limits)
                 {
@@ -572,6 +581,36 @@ public sealed class CodexSession : IAgentSession
                 // Notifications Deventry doesn't use: the thread's status, names, warnings, diffs, MCP servers' startup.
                 break;
         }
+    }
+
+    /// <summary>The name a to-do list's update goes by, as Claude Code's does.</summary>
+    public const string TodoTool = "TodoWrite";
+
+    /// <summary>
+    /// Codex's steps for the turn (<c>turn/plan/updated</c>): the whole list each time, as Claude Code's TodoWrite gives
+    /// it, so the pinned to-do list follows it (DESIGN.md §18, "To-do list, plan").
+    /// </summary>
+    private void OnPlanUpdated(JsonObject parameters)
+    {
+        var todos = new JsonArray([.. (parameters.GetArray("plan")?.OfType<JsonObject>() ?? []).Select(step => (JsonNode)new JsonObject
+        {
+            ["content"] = step.GetString("step"),
+            ["activeForm"] = step.GetString("step"),
+            ["status"] = step.GetString("status") switch
+            {
+                "inProgress" => "in_progress",
+                "completed" => "completed",
+                _ => "pending",
+            },
+        })]);
+        var id = $"plan-{Guid.NewGuid():N}";
+        var raw = new JsonObject { ["type"] = "codex_plan", ["uuid"] = id };
+        var use = new ToolUseBlock(id, TodoTool, new JsonObject { ["todos"] = todos }, new JsonObject { ["type"] = "tool_use", ["id"] = id })
+        {
+            Call = new ToolCall(ToolKind.Todo, TodoTool),
+        };
+        Publish(new AssistantMessageReceived(new AssistantMessage(id, Model, [use], null, null, raw)));
+        Publish(new ToolResultsReceived(new UserMessage([new ToolResultBlock(id, "Updated the to-do list.", false, new JsonObject { ["type"] = "tool_result", ["tool_use_id"] = id })], null, null, raw)));
     }
 
     private bool IsOwnThread(JsonObject parameters) => parameters.GetString("threadId") is not { } thread || thread == SessionId;
@@ -606,6 +645,9 @@ public sealed class CodexSession : IAgentSession
                 return;
             case "contextCompaction":
                 Publish(CompactionNotice());
+                return;
+            case "plan" when item.GetString("text") is { Length: > 0 } plan:
+                OfferPlan(item.GetString("id"), plan);
                 return;
         }
         if (ResultsOf(item) is { } results)
@@ -706,6 +748,9 @@ public sealed class CodexSession : IAgentSession
             case "item/commandExecution/requestApproval" or "item/fileChange/requestApproval" or "execCommandApproval" or "applyPatchApproval":
                 AskPermission(id, method, parameters);
                 break;
+            case "item/tool/requestUserInput":
+                AskQuestions(id, parameters);
+                break;
             default:
                 // Not something Deventry answers yet: refused, so Codex doesn't wait for it.
                 _logger.LogWarning("Unsupported request '{Method}' from Codex.", method);
@@ -755,6 +800,155 @@ public sealed class CodexSession : IAgentSession
             _ => "decline",
         };
         await RespondSafelyAsync(() => _rpc.RespondAsync(id, new JsonObject { ["decision"] = answer }, _lifetime.Token)).ConfigureAwait(false);
+    }
+
+    /// <summary>The name a question card goes by, as Claude Code's clarifying questions do.</summary>
+    public const string QuestionTool = "AskUserQuestion";
+
+    /// <summary>The name a plan card goes by, as Claude Code's plan to approve does.</summary>
+    public const string PlanTool = "ExitPlanMode";
+
+    /// <summary>What a plan the user approved is carried out with, as Codex's own app says it.</summary>
+    public const string ImplementPlan = "Implement the plan.";
+
+    /// <summary>
+    /// Codex's questions, in Plan mode (<c>item/tool/requestUserInput</c>): a question card, as Claude Code's clarifying
+    /// questions are, whose answers go back by each question's id (DESIGN.md §18, "Modes").
+    /// </summary>
+    private void AskQuestions(JsonNode id, JsonObject parameters)
+    {
+        var requestId = id.ToJsonString();
+        var questions = parameters.GetArray("questions")?.OfType<JsonObject>().ToArray() ?? [];
+        var input = new JsonObject
+        {
+            ["questions"] = new JsonArray([.. questions.Select(q => (JsonNode)new JsonObject
+            {
+                ["id"] = q.GetString("id"),
+                ["question"] = q.GetString("question"),
+                ["header"] = q.GetString("header"),
+                ["multiSelect"] = false,
+                ["options"] = new JsonArray([.. (q.GetArray("options")?.OfType<JsonObject>() ?? []).Select(o => (JsonNode)new JsonObject
+                {
+                    ["label"] = o.GetString("label"),
+                    ["description"] = o.GetString("description"),
+                })]),
+            })]),
+        };
+        var request = new PermissionRequest(requestId, QuestionTool, parameters.GetString("itemId"), input, new ToolCall(ToolKind.Question, "Question"), null);
+        _pendingPermissions[requestId] = request;
+        Publish(new PermissionRequested(request));
+        _ = AnswerQuestionsAsync(id, request, questions);
+    }
+
+    private async Task AnswerQuestionsAsync(JsonNode id, PermissionRequest request, IReadOnlyList<JsonObject> questions)
+    {
+        PermissionDecision decision;
+        try
+        {
+            decision = await request.Decision.ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        if (!_pendingPermissions.TryRemove(request.RequestId, out _))
+        {
+            return;
+        }
+        // The card answers by each question's text; Codex wants them by its id. Dismissed, none is answered.
+        var answers = new JsonObject();
+        if (decision is AllowDecision { UpdatedInput: var given } && given["answers"] is JsonObject byText)
+        {
+            foreach (var question in questions)
+            {
+                if (question.GetString("id") is { } questionId && question.GetString("question") is { } text && byText.GetString(text) is { } answer)
+                {
+                    answers[questionId] = new JsonObject { ["answers"] = new JsonArray(answer) };
+                }
+            }
+        }
+        await RespondSafelyAsync(() => _rpc.RespondAsync(id, new JsonObject { ["answers"] = answers }, _lifetime.Token)).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Codex's plan, in Plan mode (a <c>plan</c> item): a plan card, as Claude Code's is (DESIGN.md §18, "Modes").
+    /// Approving it switches to the mode the card says and starts the turn that carries it out; sending it back with
+    /// feedback sends the feedback, in Plan mode still. Codex asks nothing itself: its turn ends with the plan.
+    /// </summary>
+    private void OfferPlan(string? itemId, string plan)
+    {
+        var requestId = $"plan:{itemId ?? Guid.NewGuid().ToString("N")}";
+        var request = new PermissionRequest(requestId, PlanTool, itemId, new JsonObject { ["plan"] = plan }, new ToolCall(ToolKind.Plan, "Plan"), null);
+        _pendingPermissions[requestId] = request;
+        Publish(new PermissionRequested(request));
+        _ = AnswerPlanAsync(request);
+    }
+
+    private async Task AnswerPlanAsync(PermissionRequest request)
+    {
+        PermissionDecision decision;
+        try
+        {
+            decision = await request.Decision.ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        if (!_pendingPermissions.TryRemove(request.RequestId, out _))
+        {
+            return;
+        }
+        try
+        {
+            switch (decision)
+            {
+                case AllowDecision allow:
+                    await SetPermissionModeAsync(ModeAfterPlan(allow), _lifetime.Token).ConfigureAwait(false);
+                    await SendUserMessageAsync(ImplementPlan, [], null, new MessageStamp(Guid.NewGuid().ToString(), FromUser: true), _lifetime.Token).ConfigureAwait(false);
+                    break;
+                case DenyDecision deny when FeedbackOf(deny.Message) is { } feedback:
+                    await SendUserMessageAsync(feedback, [], null, new MessageStamp(Guid.NewGuid().ToString(), FromUser: true), _lifetime.Token).ConfigureAwait(false);
+                    break;
+            }
+        }
+        catch (Exception ex) when (ex is CodexRequestException or TimeoutException or IOException or ObjectDisposedException or OperationCanceledException or InvalidOperationException)
+        {
+            _logger.LogWarning(ex, "Couldn't carry on after Codex's plan.");
+        }
+    }
+
+    /// <summary>
+    /// The mode a plan card's approval asks for, in Codex's: auto mode and accepting edits are Auto, asking before each
+    /// edit is Read only, which asks before every change.
+    /// </summary>
+    internal static string ModeAfterPlan(AllowDecision allow) =>
+        allow.UpdatedPermissions?.OfType<JsonObject>().FirstOrDefault(p => p.GetString("type") == "setMode")?.GetString("mode") switch
+        {
+            "default" => CodexModes.ReadOnly,
+            "bypassPermissions" => CodexModes.FullAccess,
+            _ => CodexModes.Auto,
+        };
+
+    /// <summary>What the user said sending a plan back (the card's "…and said: …"); null for nothing.</summary>
+    private static string? FeedbackOf(string message)
+    {
+        const string Said = "and said: ";
+        var at = message.IndexOf(Said, StringComparison.Ordinal);
+        return at < 0 || message[(at + Said.Length)..] is not { Length: > 0 } feedback ? null : feedback;
+    }
+
+    /// <summary>A new message moved Codex on from a plan still waiting: its card goes.</summary>
+    private void WithdrawPlans()
+    {
+        foreach (var requestId in _pendingPermissions.Keys.Where(k => k.StartsWith("plan:", StringComparison.Ordinal)).ToArray())
+        {
+            if (_pendingPermissions.TryRemove(requestId, out var plan))
+            {
+                plan.Cancel();
+                Publish(new PermissionCancelled(requestId));
+            }
+        }
     }
 
     /// <summary>Codex answered or withdrew one of its requests itself, as a turn ended: its card goes.</summary>

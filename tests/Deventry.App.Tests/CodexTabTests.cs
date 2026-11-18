@@ -275,4 +275,45 @@ public sealed class CodexTabTests
         Assert.Equal("Codex's own sign-in", tab.AccountName);
         Assert.Empty(h.CodexFactory.Launches.Single().EnvironmentOverrides);
     }
+
+    [Fact]
+    public async Task Codexs_plan_is_a_plan_card_and_its_steps_are_the_to_do_list()
+    {
+        await using var h = new TabTestHarness(s => s.Codex.DefaultMode = CodexModes.Plan);
+        var tab = await OpenCodexTabAsync(h);
+        tab.ComposerText = "Plan the grappling hook";
+        await tab.SendCommand.ExecuteAsync(null);
+        await TabTestHarness.Eventually(() => h.Transport.SentRpcMethods.Contains("turn/start"), "the message");
+        JsonObject Note(string method, JsonObject parameters) => new() { ["method"] = method, ["params"] = parameters };
+        h.Transport.Emit(Note("turn/started", new JsonObject { ["threadId"] = ScriptedTransport.CodexThread, ["turn"] = new JsonObject { ["id"] = ScriptedTransport.CodexTurn } }));
+        h.Transport.Emit(Note("turn/plan/updated", new JsonObject
+        {
+            ["threadId"] = ScriptedTransport.CodexThread,
+            ["turnId"] = ScriptedTransport.CodexTurn,
+            ["plan"] = new JsonArray(new JsonObject { ["step"] = "Read the movement code", ["status"] = "completed" }, new JsonObject { ["step"] = "Write the plan", ["status"] = "inProgress" }),
+        }));
+        h.Transport.Emit(Note("item/completed", new JsonObject
+        {
+            ["threadId"] = ScriptedTransport.CodexThread,
+            ["turnId"] = ScriptedTransport.CodexTurn,
+            ["item"] = new JsonObject { ["type"] = "plan", ["id"] = "plan-1", ["text"] = "1. Add the hook\n2. Test it" },
+        }));
+        h.Transport.Emit(Note("turn/completed", new JsonObject { ["threadId"] = ScriptedTransport.CodexThread, ["turn"] = new JsonObject { ["id"] = ScriptedTransport.CodexTurn, ["status"] = "completed" } }));
+
+        // Waiting for the user, as for Claude Code's plan.
+        await TabTestHarness.Eventually(() => tab.Items.OfType<PlanItem>().Any() && tab.Status == TabStatus.NeedsInput, "the plan card");
+        var plan = tab.Items.OfType<PlanItem>().Single();
+        Assert.Equal("Codex's plan", plan.Title);
+        Assert.False(plan.OffersAcceptingEdits);
+        Assert.Equal(["Read the movement code", "Write the plan"], tab.TodoList.Items.Select(t => t.Content));
+        Assert.Equal(["completed", "in_progress"], tab.TodoList.Items.Select(t => t.Status));
+
+        InlineDispatcher.Run(() => plan.ApproveInAutoModeCommand.Execute(null));
+
+        await TabTestHarness.Eventually(() => h.Transport.SentRpcMethods.Count(m => m == "turn/start") == 2, "the plan to be carried out");
+        var start = h.Transport.Sent.Last(m => m["method"]?.GetValue<string>() == "turn/start");
+        Assert.Equal(CodexSession.ImplementPlan, start["params"]!["input"]![0]!["text"]!.GetValue<string>());
+        h.Transport.Emit(Note("turn/started", new JsonObject { ["threadId"] = ScriptedTransport.CodexThread, ["turn"] = new JsonObject { ["id"] = "codex-turn-2" } }));
+        await TabTestHarness.Eventually(() => tab.PermissionModeName == "Auto", "the mode to leave Plan");
+    }
 }
