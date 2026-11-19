@@ -30,6 +30,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Fixed
 
+- **A tab that hasn't started has its model picker.** A restored tab, or one unloaded while idle, showed an empty **Model** under the message box with nothing to pick until its first message. It now lists the models Claude Code last offered, says **Default** when none was chosen, and picking one starts the tab in that model.
 - **An API key's spend in the header counts the turn running.** It counted a turn only once it ended, so a long turn kept most of a day's spend out of it. Now each of a turn's model calls is estimated as it comes, and Claude Code's own figure takes the estimate's place when the turn ends. A spend warning comes when a turn passes it, rather than when the turn ends, and a turn that never ends, because Claude Code stopped in the middle of it, keeps its estimate. See [Spend and its warnings](https://deventry.app/accounts/spend-and-its-warnings/).
 - **Refresh in a project's menu stays as it is when the menu opens.** It greyed out for a moment while the menu looked at the project's files again, and pointing at it then left **Actions** or **Links** open beside it.
 - **An API-key account's tabs use its key** even when your Claude Code settings turn on a cloud provider, such as after `/setup-bedrock`, or set a key of their own. Those used to take over from the account's key. See [API-key accounts](https://deventry.app/accounts/api-key-accounts/#what-an-accounts-tabs-share).
