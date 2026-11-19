@@ -72,10 +72,6 @@ public sealed partial class AdvancedPage : SettingsPage
     /// <summary>Each remote client's state, how many accounts are paired, and why it isn't connected (DESIGN.md §18). Never a token or a message.</summary>
     public string RemoteClientsText => Services.RemoteClients.Describe();
 
-    /// <summary>
-    /// How Claude Code is signed in, as far as its models go: a token from the environment, which can't see the plan
-    /// (DESIGN.md §11, "Detecting"), or not; or that no tab has said yet.
-    /// </summary>
     public string ClaudeSignInText => Services.ClaudeEnvironmentToken is { } variable ? AccountViewModel.TokenNoteFor(variable)
         : Services.ClaudeSignInReported ? "Not with a token from the environment, as the last tab that started said."
         : "Known once a Claude Code tab has started.";

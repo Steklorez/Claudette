@@ -2881,14 +2881,10 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         return models.FirstOrDefault(m => m.Value == id)
             ?? models.Where(m => m.Value != "default").FirstOrDefault(m => m.ResolvedModel == id)
             ?? models.Where(m => m.Value != "default").FirstOrDefault(m => m.ResolvedModel is { } r && Base(r) == Base(id))
-            // The model a family's alias runs, which Claude Code didn't list (DESIGN.md §5, "Model & effort").
             ?? models.FirstOrDefault(m => m.IsNewestAlias && m.Value == ModelAliases.FamilyOf(id));
     }
 
-    /// <summary>
-    /// "Opus (1M context)" for <c>claude-opus-5-5[1m]</c>, or the id itself if Claude Code didn't list it. The model a
-    /// family's alias runs is named from its id ("Fable 5.2"), or as the alias's entry when the id doesn't say.
-    /// </summary>
+    /// <summary>"Opus (1M context)" for <c>claude-opus-5-5[1m]</c>, or the id itself if Claude Code didn't list it.</summary>
     private string? ModelDisplayName(string? id) => id is null ? null
         : FindModel(id) is not { } model ? id
         : model.IsNewestAlias && model.Value != id ? ModelAliases.NameOf(id) ?? model.DisplayName

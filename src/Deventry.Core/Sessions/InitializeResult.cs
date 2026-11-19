@@ -22,10 +22,7 @@ public sealed record ModelInfo(
     /// <summary>The effort Codex starts this model at (<c>defaultReasoningEffort</c>); Claude Code doesn't say.</summary>
     public string? DefaultEffort { get; init; }
 
-    /// <summary>
-    /// Deventry added this entry: a family's alias (<c>fable</c>), which Claude Code offered only as pinned models, so the
-    /// picker has the family's newest model (<see cref="ModelAliases.WithFamilyAliases"/>). Claude Code resolves it.
-    /// </summary>
+    /// <summary>Added by <see cref="ModelAliases.WithFamilyAliases"/>, not offered by Claude Code.</summary>
     public bool IsNewestAlias { get; init; }
 }
 
@@ -52,14 +49,9 @@ public sealed record SlashCommandInfo(string Name, string? Description, string? 
 
 public sealed record AccountInfo(string? Email, string? Organization, string? SubscriptionType, string? TokenSource, string? ApiProvider)
 {
-    /// <summary>The variable Claude Code reads a long-lived token from (<c>claude setup-token</c>).</summary>
     public const string OAuthTokenVariable = "CLAUDE_CODE_OAUTH_TOKEN";
 
-    /// <summary>
-    /// The environment variable Claude Code is signed in with, such as <c>CLAUDE_CODE_OAUTH_TOKEN</c>, when its
-    /// <c>initialize</c> reply says no email or plan: Claude Code can't see the plan then, and its list of models can lag
-    /// behind (DESIGN.md §11, "Detecting"). Null for any other sign-in.
-    /// </summary>
+    /// <summary><c>CLAUDE_CODE_OAUTH_TOKEN</c> when Claude Code signed in with it and can't see the plan; null otherwise.</summary>
     public string? EnvironmentToken =>
         TokenSource is { } source && source.StartsWith(OAuthTokenVariable, StringComparison.Ordinal)
         && string.IsNullOrEmpty(Email) && string.IsNullOrEmpty(SubscriptionType)
@@ -81,10 +73,6 @@ public sealed record InitializeResult(
     /// <summary>The output styles the session can use (<c>available_output_styles</c>), built-in and the user's own.</summary>
     public IReadOnlyList<string> AvailableOutputStyles => Raw.GetStringList("available_output_styles");
 
-    /// <summary>
-    /// Reads Claude Code's reply. Its models get each family's alias where it offers a family only as pinned models (a
-    /// first-party sign-in that can't see the plan, DESIGN.md §5), so everything that lists them offers the newest one.
-    /// </summary>
     public static InitializeResult Parse(JsonObject response)
     {
         var models = response.GetArray("models")?.OfType<JsonObject>()
@@ -104,7 +92,7 @@ public sealed record InitializeResult(
         var commands = SlashCommandInfo.ParseList(response.GetArray("commands"));
 
         var account = response.GetObject("account") ?? [];
-        // A cloud provider's models are its own, pinned by its account on purpose; aliases are Claude's API's.
+        // Cloud providers pin their models on purpose.
         if (account.GetString("apiProvider") is null or "firstParty")
         {
             models = [.. ModelAliases.WithFamilyAliases(models)];
