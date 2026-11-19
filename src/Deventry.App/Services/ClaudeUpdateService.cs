@@ -43,11 +43,7 @@ public sealed class ClaudeUpdateService : IAsyncDisposable
     /// <summary>How the last <b>Update now</b> (or the update at launch) went.</summary>
     public ClaudeUpdateResult? LastResult { get; private set; }
 
-    /// <summary>
-    /// The version <b>Update now</b> last found nothing newer than, or null. A native install can't say whether a newer
-    /// version is out without running its update, so until the next scheduled check or <b>Check now</b> the button isn't
-    /// offered again for the version it just found up to date.
-    /// </summary>
+    /// <summary>The version <b>Update now</b> last found up to date; a native install can't say so before it runs.</summary>
     public Version? UpToDateVersion { get; private set; }
 
     /// <summary><b>Update on next launch</b> is waiting for the next start.</summary>
@@ -85,10 +81,6 @@ public sealed class ClaudeUpdateService : IAsyncDisposable
     }
 
     /// <summary>Checks now. A check already under way is shared rather than started twice.</summary>
-    /// <param name="offerUpdateAgain">
-    /// A check of its own (at launch, on schedule, or <b>Check now</b>) offers <b>Update now</b> again; the one right after
-    /// an update doesn't, so a version just found up to date isn't offered at once.
-    /// </param>
     public Task CheckNowAsync(bool offerUpdateAgain = true)
     {
         lock (_checkLock)
@@ -174,7 +166,6 @@ public sealed class ClaudeUpdateService : IAsyncDisposable
         {
             InstalledVersion = version;
         }
-        // It ran and the version didn't change: nothing newer was out.
         UpToDateVersion = result.Succeeded && result.Version == before ? before : null;
         Changed?.Invoke();
         await CheckNowAsync(offerUpdateAgain: false);

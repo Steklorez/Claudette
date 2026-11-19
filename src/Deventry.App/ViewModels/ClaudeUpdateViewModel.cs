@@ -146,7 +146,6 @@ public sealed partial class ClaudeUpdateViewModel : ViewModelBase, IDisposable
         }
 
         var tabRunning = running.Count > 0;
-        // Update now just found nothing newer for this version, and no check has said otherwise since.
         var upToDate = _updates.UpToDateVersion == installed && !(check?.AvailableVersion > installed);
         Plan = plan;
         IsBusy = _updates.IsChecking || _updates.IsUpdating;
