@@ -26,6 +26,7 @@
         <TextBlock Text="{Binding MinimumVersionText}" />
       </c:SettingRow>
       <c:SettingRow Title="Login shell environment" Description="{Binding LoginShellText}" />
+      <c:SettingRow Title="Claude Code sign-in" Description="{Binding ClaudeSignInText}" />
       <c:SettingRow Title="Keeping the computer awake" Description="{Binding KeepAwakeText}" />
       <c:SettingRow Title="Timed messages" Description="{Binding TimedMessagesText}" />
       <c:SettingRow Title="Remote clients" Description="{Binding RemoteClientsText}" />

@@ -153,6 +153,7 @@
           <StackPanel Spacing="8" DataContext="{Binding Account}" x:DataType="vm:AccountViewModel">
             <TextBlock Classes="muted small" Text="Signing out affects Claude Code everywhere on this computer, and every tab stops working until you sign in again."
                        TextWrapping="Wrap" IsVisible="{Binding IsSignedIn}" />
+            <TextBlock Classes="muted small" Text="{Binding TokenNote, FallbackValue=''}" TextWrapping="Wrap" IsVisible="{Binding HasTokenNote}" />
             <TextBlock Classes="small error" Text="{Binding SignOutError}" TextWrapping="Wrap" IsVisible="{Binding HasSignOutError}" />
             <Border Classes="settingsnote" IsVisible="{Binding HasSignOutConfirmation}">
               <StackPanel Spacing="8" DataContext="{Binding SignOutConfirmation}" x:DataType="vm:ConfirmationViewModel">

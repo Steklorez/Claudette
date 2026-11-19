@@ -21,6 +21,10 @@ The question warns, with the model's name, that *Switching to Haiku resets this 
 
 The conversation itself is kept. Claude Code switches the model in place, even in the middle of a turn.
 
+## Each family's newest model
+
+Signed in with a token from `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`), Claude Code can't see your plan, and its list can offer a family, such as Fable, only as an older version. The menu then adds the family's newest model just above it, such as **Fable (newest)**, which runs whichever Fable is newest. Once you've switched to it, the composer names the model it runs, such as *Fable 5.2*. The older one stays in the menu. With an ordinary sign-in the list is Claude Code's as it is. [Your Claude sign-in](../accounts/your-claude-sign-in.md#signed-in-with-a-token) says how the account menu shows this sign-in.
+
 ## Set the effort
 
 Click the effort, such as **High ▾**, and pick a level. The menu offers the levels the current model supports, and **Default**, which leaves the choice to Claude Code. It applies from the next turn, with no question.

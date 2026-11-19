@@ -25,7 +25,7 @@ public sealed partial class AccountViewModel(AppServices services) : ViewModelBa
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSignedIn), nameof(IsSignedOut), nameof(Email), nameof(PlanText), nameof(Organization), nameof(Summary), nameof(SettingsText), nameof(CanBeginSignIn))]
     [NotifyPropertyChangedFor(nameof(BillingUrl), nameof(HasBilling), nameof(BillingText), nameof(BillingTip), nameof(HeaderName), nameof(HeaderPlan))]
-    [NotifyPropertyChangedFor(nameof(HeaderPlanUrl), nameof(HeaderPlanTip), nameof(HeaderPlanName))]
+    [NotifyPropertyChangedFor(nameof(HeaderPlanUrl), nameof(HeaderPlanTip), nameof(HeaderPlanName), nameof(TokenNote), nameof(HasTokenNote))]
     [NotifyCanExecuteChangedFor(nameof(SignOutCommand))]
     public partial AuthStatus? Status { get; set; }
 
@@ -47,6 +47,27 @@ public sealed partial class AccountViewModel(AppServices services) : ViewModelBa
     public string Summary => IsSignedIn
         ? string.Join(" · ", new[] { Email, PlanText }.Where(s => !string.IsNullOrEmpty(s))) is { Length: > 0 } text ? text : "Signed in"
         : "Not signed in";
+
+    // ---- A token from the environment (DESIGN.md §11, "Detecting") ------------------------------------------------
+
+    /// <summary>
+    /// The account menu's and Settings' note when Claude Code is signed in with a token from the environment
+    /// (<c>CLAUDE_CODE_OAUTH_TOKEN</c>), as a tab's <c>initialize</c> said; null otherwise.
+    /// </summary>
+    public string? TokenNote => IsSignedIn && services.ClaudeEnvironmentToken is { } variable ? TokenNoteFor(variable) : null;
+
+    public bool HasTokenNote => TokenNote is not null;
+
+    /// <summary>What the note says for <paramref name="variable"/>; Diagnostics says it too.</summary>
+    internal static string TokenNoteFor(string variable) =>
+        $"Signed in with a token from {variable}. Claude Code can't see your plan this way, so its list of models can lag behind; Deventry adds each family's newest model to the picker.";
+
+    /// <summary>A tab said how Claude Code is signed in: the note follows.</summary>
+    public void OnEnvironmentTokenChanged()
+    {
+        OnPropertyChanged(nameof(TokenNote));
+        OnPropertyChanged(nameof(HasTokenNote));
+    }
 
     // ---- Plan and billing (DESIGN.md §11, "Detecting") ------------------------------------------------------------
 

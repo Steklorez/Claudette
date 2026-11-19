@@ -72,6 +72,14 @@ public sealed partial class AdvancedPage : SettingsPage
     /// <summary>Each remote client's state, how many accounts are paired, and why it isn't connected (DESIGN.md §18). Never a token or a message.</summary>
     public string RemoteClientsText => Services.RemoteClients.Describe();
 
+    /// <summary>
+    /// How Claude Code is signed in, as far as its models go: a token from the environment, which can't see the plan
+    /// (DESIGN.md §11, "Detecting"), or not; or that no tab has said yet.
+    /// </summary>
+    public string ClaudeSignInText => Services.ClaudeEnvironmentToken is { } variable ? AccountViewModel.TokenNoteFor(variable)
+        : Services.ClaudeSignInReported ? "Not with a token from the environment, as the last tab that started said."
+        : "Known once a Claude Code tab has started.";
+
     /// <summary>What Claude Code has sent this run that Deventry doesn't know, in words.</summary>
     public string DiagnosticsText => DiagnosticsReport(includeHeader: false);
 
@@ -85,6 +93,7 @@ public sealed partial class AdvancedPage : SettingsPage
         OnPropertyChanged(nameof(KeepAwakeText));
         OnPropertyChanged(nameof(TimedMessagesText));
         OnPropertyChanged(nameof(RemoteClientsText));
+        OnPropertyChanged(nameof(ClaudeSignInText));
     }
 
     [RelayCommand]
@@ -102,6 +111,7 @@ public sealed partial class AdvancedPage : SettingsPage
             lines.Add($"Claude Code: {InstalledVersionText}{(Services.Install is { } install ? $" at {install.Path}" : "")}");
             lines.Add($"Minimum supported Claude Code: {MinimumVersionText}");
             lines.Add($"Login shell environment: {LoginShellText}");
+            lines.Add($"Claude Code sign-in: {ClaudeSignInText}");
             lines.Add($"Claude app (Remote Control): new tabs {(_claudeCode.ConnectNewTabsToClaudeApp ? "connect" : "don't connect")}; "
                 + (_claudeCode.RemoteControlUnavailableText ?? "available for this account") + ".");
             lines.Add($"Keeping the computer awake: {KeepAwakeText}");

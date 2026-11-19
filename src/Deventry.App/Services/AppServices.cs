@@ -645,6 +645,33 @@ public sealed class AppServices : IAsyncDisposable
         }
     });
 
+    /// <summary>
+    /// The variable Claude Code's Default account is signed in with when it's a token from the environment
+    /// (<c>CLAUDE_CODE_OAUTH_TOKEN</c>), as the last Claude Code tab on Default that started said (<c>initialize</c>'s
+    /// <c>account</c>): Claude Code can't see the plan then, which the account menu, Settings and Diagnostics say
+    /// (DESIGN.md §11, "Detecting"). Null for any other sign-in, and until a tab has started.
+    /// </summary>
+    public string? ClaudeEnvironmentToken { get; private set; }
+
+    /// <summary>A Claude Code tab on Default has started: <see cref="ClaudeEnvironmentToken"/> is known.</summary>
+    public bool ClaudeSignInReported { get; private set; }
+
+    /// <summary><see cref="ClaudeEnvironmentToken"/> changed (on the UI thread).</summary>
+    public event Action? ClaudeEnvironmentTokenChanged;
+
+    /// <summary>A Claude Code tab on the Default account said how Claude Code is signed in.</summary>
+    internal void UseClaudeAccount(AccountInfo account) => Dispatcher.Post(() =>
+    {
+        var token = account.EnvironmentToken;
+        var changed = token != ClaudeEnvironmentToken || !ClaudeSignInReported;
+        ClaudeEnvironmentToken = token;
+        ClaudeSignInReported = true;
+        if (changed)
+        {
+            ClaudeEnvironmentTokenChanged?.Invoke();
+        }
+    });
+
     /// <summary>Codex's installer. Tests replace it: the real one would install Codex on the machine running them.</summary>
     internal Func<ICodexInstaller> CodexInstallerFactory { get; set; }
 
