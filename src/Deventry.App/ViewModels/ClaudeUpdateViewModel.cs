@@ -146,10 +146,12 @@ public sealed partial class ClaudeUpdateViewModel : ViewModelBase, IDisposable
         }
 
         var tabRunning = running.Count > 0;
+        // Update now just found nothing newer for this version, and no check has said otherwise since.
+        var upToDate = _updates.UpToDateVersion == installed && !(check?.AvailableVersion > installed);
         Plan = plan;
         IsBusy = _updates.IsChecking || _updates.IsUpdating;
-        CanUpdateNow = plan is { CanRun: true } && !(plan.NeedsClaudeStopped && tabRunning);
-        CanUpdateOnNextLaunch = plan is { CanRun: true, NeedsClaudeStopped: true } && tabRunning;
+        CanUpdateNow = plan is { CanRun: true } && !(plan.NeedsClaudeStopped && tabRunning) && !upToDate;
+        CanUpdateOnNextLaunch = plan is { CanRun: true, NeedsClaudeStopped: true } && tabRunning && !upToDate;
         IsUpdateScheduled = _updates.IsUpdateScheduled;
         ManualCommand = plan is { Kind: ClaudeUpdateKind.Manual } ? plan.CommandText : null;
         Note = CanUpdateOnNextLaunch

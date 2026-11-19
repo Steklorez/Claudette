@@ -43,6 +43,13 @@ public sealed class ClaudeUpdateService : IAsyncDisposable
     /// <summary>How the last <b>Update now</b> (or the update at launch) went.</summary>
     public ClaudeUpdateResult? LastResult { get; private set; }
 
+    /// <summary>
+    /// The version <b>Update now</b> last found nothing newer than, or null. A native install can't say whether a newer
+    /// version is out without running its update, so until the next scheduled check or <b>Check now</b> the button isn't
+    /// offered again for the version it just found up to date.
+    /// </summary>
+    public Version? UpToDateVersion { get; private set; }
+
     /// <summary><b>Update on next launch</b> is waiting for the next start.</summary>
     public bool IsUpdateScheduled => _services.State.UpdateClaudeOnNextLaunch;
 
@@ -56,7 +63,7 @@ public sealed class ClaudeUpdateService : IAsyncDisposable
     {
         if (_services.Settings.ClaudeCode.CheckForUpdates)
         {
-            _timer ??= _services.Time.CreateTimer(_ => _ = CheckNowAsync(), null, TimeSpan.Zero, CheckInterval);
+            _timer ??= _services.Time.CreateTimer(_ => _ = CheckNowAsync(offerUpdateAgain: true), null, TimeSpan.Zero, CheckInterval);
         }
         else
         {
@@ -78,15 +85,19 @@ public sealed class ClaudeUpdateService : IAsyncDisposable
     }
 
     /// <summary>Checks now. A check already under way is shared rather than started twice.</summary>
-    public Task CheckNowAsync()
+    /// <param name="offerUpdateAgain">
+    /// A check of its own (at launch, on schedule, or <b>Check now</b>) offers <b>Update now</b> again; the one right after
+    /// an update doesn't, so a version just found up to date isn't offered at once.
+    /// </param>
+    public Task CheckNowAsync(bool offerUpdateAgain = true)
     {
         lock (_checkLock)
         {
-            return _checking is { IsCompleted: false } running ? running : _checking = RunCheckAsync();
+            return _checking is { IsCompleted: false } running ? running : _checking = RunCheckAsync(offerUpdateAgain);
         }
     }
 
-    private async Task RunCheckAsync()
+    private async Task RunCheckAsync(bool offerUpdateAgain)
     {
         _services.Dispatcher.Post(() =>
         {
@@ -109,6 +120,10 @@ public sealed class ClaudeUpdateService : IAsyncDisposable
         _services.Dispatcher.Post(() =>
         {
             IsChecking = false;
+            if (offerUpdateAgain)
+            {
+                UpToDateVersion = null;
+            }
             if (check is not null)
             {
                 LatestCheck = check;
@@ -139,6 +154,7 @@ public sealed class ClaudeUpdateService : IAsyncDisposable
         }
         IsUpdating = true;
         Changed?.Invoke();
+        var before = InstalledVersion;
         ClaudeUpdateResult result;
         try
         {
@@ -158,8 +174,10 @@ public sealed class ClaudeUpdateService : IAsyncDisposable
         {
             InstalledVersion = version;
         }
+        // It ran and the version didn't change: nothing newer was out.
+        UpToDateVersion = result.Succeeded && result.Version == before ? before : null;
         Changed?.Invoke();
-        await CheckNowAsync();
+        await CheckNowAsync(offerUpdateAgain: false);
         return result;
     }
 
