@@ -593,10 +593,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
 
     // ---- Model, effort and mode (DESIGN.md §5, "Model & effort") ------------------------------------------
 
-    /// <summary>
-    /// The models to pick from: what the tab's agent offered when it started, or, before it has, what it last offered on
-    /// this machine, so a tab that hasn't started yet still has its picker (DESIGN.md §5, "Model &amp; effort").
-    /// </summary>
+    /// <summary>Before the tab starts, the models its agent last offered on this machine.</summary>
     public IReadOnlyList<ModelInfo> Models => _session?.Initialization?.Models.Where(m => m.Value != "default").ToArray()
         ?? _services.KnownModels(Agent);
 
@@ -632,7 +629,6 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             return;
         }
         Effort = State.Overrides.Effort ?? DefaultEffortSetting;
-        // Nothing chosen: Claude Code's own default, which the picker says rather than an empty "Model".
         ModelName = model is null ? "Default" : known.FirstOrDefault(m => m.Value == model)?.DisplayName ?? model;
     }
 
@@ -873,8 +869,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         }
         if (_session is null)
         {
-            // Not started: there's no cached context to lose, so no question. Choosing starts the tab in it, as choosing
-            // a mode does.
+            // No cached context to lose yet.
             _ = SwitchModelAsync(model);
             return;
         }
