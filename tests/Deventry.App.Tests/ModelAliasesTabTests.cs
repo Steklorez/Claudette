@@ -59,12 +59,20 @@ public class ModelAliasesTabTests
     }
 
     [Fact]
-    public async Task A_normal_sign_in_gets_the_list_as_Claude_Code_sent_it()
+    public async Task Any_other_sign_in_gets_the_list_as_Claude_Code_sent_it()
     {
         await using var h = new TabTestHarness();
+        // An API key's, or a gateway's: Fable only pinned may be what it serves.
+        h.Transport.Answers["initialize"] = _ =>
+        {
+            var reply = JsonNode.Parse(TokenSignInReply)!.AsObject();
+            reply["account"] = new JsonObject { ["apiProvider"] = "firstParty" };
+            return reply;
+        };
         var tab = await h.OpenTabAsync();
 
-        Assert.Equal(["opus", "haiku"], tab.Models.Select(m => m.Value));
+        Assert.Equal(["sonnet", "claude-fable-5-1[1m]", "opus", "haiku"], tab.Models.Select(m => m.Value));
+        await TabTestHarness.Eventually(() => h.Services.ClaudeSignInReported, "the tab's sign-in");
         Assert.Null(h.Services.ClaudeEnvironmentToken);
     }
 

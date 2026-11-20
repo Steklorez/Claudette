@@ -92,20 +92,22 @@ public sealed record InitializeResult(
         var commands = SlashCommandInfo.ParseList(response.GetArray("commands"));
 
         var account = response.GetObject("account") ?? [];
-        // Cloud providers pin their models on purpose.
-        if (account.GetString("apiProvider") is null or "firstParty")
+        var signedIn = new AccountInfo(
+            account.GetString("email"),
+            account.GetString("organization"),
+            account.GetString("subscriptionType"),
+            account.GetString("tokenSource"),
+            account.GetString("apiProvider"));
+        // Only the token's list lags for want of the plan. Anywhere else a pinned model can be on purpose: a cloud
+        // provider's, a gateway's that doesn't serve the newest, or a modelPicker lineup's.
+        if (signedIn.EnvironmentToken is not null && signedIn.ApiProvider is null or "firstParty")
         {
             models = [.. ModelAliases.WithFamilyAliases(models)];
         }
         return new InitializeResult(
             models,
             commands,
-            new AccountInfo(
-                account.GetString("email"),
-                account.GetString("organization"),
-                account.GetString("subscriptionType"),
-                account.GetString("tokenSource"),
-                account.GetString("apiProvider")),
+            signedIn,
             response.GetString("current_permission_mode"),
             response);
     }

@@ -130,6 +130,23 @@ public sealed class ModelAliasesTests
     }
 
     [Theory]
+    // An API key, or a gateway through ANTHROPIC_BASE_URL: Claude Code 2.1.285 listed claude-fable-5-1 without fable.
+    [InlineData("""{"apiProvider":"firstParty"}""")]
+    [InlineData("""{"tokenSource":"claude.ai","email":"me@example.com","subscriptionType":"max","apiProvider":"firstParty"}""")]
+    [InlineData("""{"tokenSource":"CLAUDE_CODE_OAUTH_TOKEN","email":"me@example.com","subscriptionType":"max","apiProvider":"firstParty"}""")]
+    // Signed out, as the signed-out fixture's reply.
+    [InlineData("{}")]
+    public void Any_other_sign_ins_pinned_models_are_left_as_they_are(string account)
+    {
+        var reply = JsonNode.Parse(TokenSignInReply)!.AsObject();
+        reply["account"] = JsonNode.Parse(account);
+
+        var result = InitializeResult.Parse(reply);
+
+        Assert.Equal(["default", "sonnet", "claude-fable-5-1[1m]", "opus", "haiku"], result.Models.Select(m => m.Value));
+    }
+
+    [Theory]
     [InlineData("CLAUDE_CODE_OAUTH_TOKEN", null, null, "CLAUDE_CODE_OAUTH_TOKEN")]
     [InlineData("CLAUDE_CODE_OAUTH_TOKEN", "me@example.com", "max", null)]
     [InlineData("claude.ai", null, null, null)]
