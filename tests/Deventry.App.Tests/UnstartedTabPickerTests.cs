@@ -9,7 +9,7 @@ namespace Deventry.App.Tests;
 /// <summary>
 /// A tab that hasn't started yet still has its model picker (DESIGN.md §5, "Model &amp; effort"): the models Claude Code
 /// last offered on this machine, Claude Code's own default named rather than left empty, and a choice that asks about the
-/// cache only while there's one to lose.
+/// cache only while there's one to lose, and is the model it starts in rather than a reason to start.
 /// </summary>
 public class UnstartedTabPickerTests
 {
@@ -51,12 +51,20 @@ public class UnstartedTabPickerTests
         Assert.Equal(["opus", "haiku"], tab.Models.Select(m => m.Value));
         Assert.Equal("Default", tab.ModelName);
 
-        // Its cache expired an hour ago: there's nothing to lose, so no question.
         InlineDispatcher.Run(() => tab.ChooseModelCommand.Execute(tab.Models[1]));
-        Assert.False(tab.ModelSwitch.IsOpen);
 
-        await TabTestHarness.Eventually(() => tab.State.Overrides.Model == "haiku", "the switch");
-        Assert.Contains("set_model", h.Transport.SentControlSubtypes);
+        // Its cache expired an hour ago: there's nothing to lose, so no question, and nothing starts for it.
+        Assert.False(tab.ModelSwitch.IsOpen);
+        Assert.Equal(TabStatus.NotStarted, tab.Status);
+        Assert.Equal("haiku", tab.State.Overrides.Model);
+        Assert.Equal("Haiku", tab.ModelName);
+        Assert.Empty(h.Factory.Launches);
+
+        // It starts in that model.
+        h.Start(tab);
+        await TabTestHarness.Eventually(() => tab.Status == TabStatus.Idle && tab.IsSettled, "the start");
+        Assert.Equal("haiku", h.Factory.Launches.Single().Model);
+        Assert.DoesNotContain("set_model", h.Transport.SentControlSubtypes);
         Assert.Equal("Haiku", tab.ModelName);
     }
 
@@ -71,8 +79,11 @@ public class UnstartedTabPickerTests
         Assert.True(tab.ModelSwitch.IsOpen);
         Assert.Equal(TabStatus.NotStarted, tab.Status);
         await InlineDispatcher.RunAsync(() => tab.ModelSwitch.ConfirmCommand.ExecuteAsync(null));
-        Assert.Contains("set_model", h.Transport.SentControlSubtypes);
         Assert.Equal("haiku", tab.State.Overrides.Model);
+        Assert.Equal(TabStatus.NotStarted, tab.Status);
+        Assert.Empty(h.Factory.Launches);
+        // Its next message goes to another model, which has a cache of its own.
+        Assert.False(tab.IsPromptCacheShown);
     }
 
     [Fact]
@@ -87,5 +98,23 @@ public class UnstartedTabPickerTests
         Assert.False(tab.ModelSwitch.IsOpen);
         Assert.Equal(TabStatus.NotStarted, tab.Status);
         Assert.True(tab.IsPromptCacheShown);
+    }
+
+    [Fact]
+    public async Task Choosing_a_model_after_the_tab_stopped_doesnt_start_it_again()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        h.Transport.Exit(1);
+        await TabTestHarness.Eventually(() => tab.CanRestart, "the exit");
+
+        InlineDispatcher.Run(() => tab.ChooseModelCommand.Execute(tab.Models.Single(m => m.Value == "haiku")));
+
+        Assert.Equal("haiku", tab.State.Overrides.Model);
+        Assert.Equal("Haiku", tab.ModelName);
+        Assert.Single(h.Factory.Launches);
+        await tab.RestartCommand.ExecuteAsync(null);
+        await TabTestHarness.Eventually(() => h.Factory.Launches.Count == 2 && tab.Status == TabStatus.Idle && tab.IsSettled, "the restart");
+        Assert.Equal("haiku", h.Factory.Launches[1].Model);
     }
 }

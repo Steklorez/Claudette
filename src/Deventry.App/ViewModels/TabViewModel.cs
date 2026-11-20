@@ -885,6 +885,12 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
 
     private async Task SwitchModelAsync(ModelInfo model)
     {
+        if (_session is null && _starting is null)
+        {
+            ChooseStartingModel(model);
+            return;
+        }
+        // A start under way: the switch follows it.
         await EnsureStartedAsync();
         if (_session is null)
         {
@@ -910,6 +916,23 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         {
             _conversation.AddNote($"Couldn't switch model: {ex.Message}", NoteKind.Error);
         }
+    }
+
+    /// <summary>
+    /// A tab that isn't running starts in the model chosen, with its next message, rather than starting for it (DESIGN.md
+    /// §5, "Model &amp; effort").
+    /// </summary>
+    private void ChooseStartingModel(ModelInfo model)
+    {
+        State.Overrides.Model = model.Value;
+        if (State.Overrides.Effort is { } effort && !model.SupportedEffortLevels.Contains(effort))
+        {
+            State.Overrides.Effort = null;
+        }
+        ShowStartingModel();
+        ForgetPromptCache();
+        OnPropertyChanged(nameof(HasOverrides));
+        _services.SaveState();
     }
 
     [RelayCommand]
