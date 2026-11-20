@@ -211,9 +211,9 @@ public sealed partial class ClaudeUpdateViewModel : ViewModelBase, IDisposable
             _output.AppendLine(line);
             Output = _output.ToString();
         });
-        ResultText = result.Succeeded
-            ? $"{result.Message} New tabs use it."
-            : result.Message;
+        ResultText = !result.Succeeded ? result.Message
+            : _updates.UpToDateVersion is { } upToDate ? $"Claude Code {upToDate} is up to date."
+            : $"{result.Message} New tabs use it.";
         if (!result.Succeeded && Plan is { NeedsClaudeStopped: true })
         {
             // A WinGet upgrade fails while claude is running; offer the next launch instead.

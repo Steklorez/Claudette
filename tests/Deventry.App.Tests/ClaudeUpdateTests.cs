@@ -293,7 +293,7 @@ public class ClaudeUpdateTests
     public async Task Update_now_goes_once_it_finds_the_version_up_to_date_until_the_next_check()
     {
         // A native install can't say whether a newer version is out until its update runs.
-        var updater = new FakeClaudeUpdater(New);
+        var updater = new FakeClaudeUpdater(New) { UpdateOutput = ["Claude Code is up to date (2.1.290)"] };
         await using var h = new TabTestHarness(updater: updater);
         var updates = Updates(h);
         await h.Services.ClaudeUpdates!.CheckNowAsync();
@@ -304,6 +304,7 @@ public class ClaudeUpdateTests
         Assert.Single(updater.Updates);
         Assert.Equal(New, h.Services.InstalledClaudeVersion);
         Assert.False(updates.CanUpdateNow);
+        Assert.Equal("Claude Code 2.1.290 is up to date.", updates.ResultText);
 
         // Check now, or the next scheduled check, offers it again.
         await updates.CheckNowCommand.ExecuteAsync(null);
