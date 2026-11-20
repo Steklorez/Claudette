@@ -21,6 +21,8 @@ The question warns, with the model's name, that *Switching to Haiku resets this 
 
 The conversation itself is kept. Claude Code switches the model in place, even in the middle of a turn.
 
+A tab whose Claude Code hasn't started yet, such as one Deventry reopened, lists the models Claude Code last offered on this computer, and says **Default** until you pick one. Picking one starts the tab in it. The question comes only while the tab's conversation is still in the [prompt cache](../usage/the-prompt-cache.md): otherwise there's nothing cached to lose.
+
 ## Set the effort
 
 Click the effort, such as **High ▾**, and pick a level. The menu offers the levels the current model supports, and **Default**, which leaves the choice to Claude Code. It applies from the next turn, with no question.
