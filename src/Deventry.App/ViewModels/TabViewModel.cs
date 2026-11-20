@@ -867,9 +867,9 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         {
             return;
         }
-        if (_session is null)
+        if (_session is null && !IsPromptCacheWarm)
         {
-            // No cached context to lose yet.
+            // No cached context to lose: the tab hasn't started, and its conversation isn't in the cache.
             _ = SwitchModelAsync(model);
             return;
         }

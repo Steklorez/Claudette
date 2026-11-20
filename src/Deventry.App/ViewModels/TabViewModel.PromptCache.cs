@@ -56,6 +56,9 @@ public sealed partial class TabViewModel
     [ObservableProperty]
     public partial bool IsPromptCacheExpired { get; private set; }
 
+    /// <summary>The next message would read the conversation from the cache, which a switch to another model loses.</summary>
+    private bool IsPromptCacheWarm => PromptCacheLifetime is { } lifetime && PromptCacheClock.Countdown(lifetime.Lifetime) is { IsExpired: false };
+
     /// <summary>How long the cache lasts for the tab's next request, and why; null when Claude Code doesn't cache its prompts.</summary>
     internal PromptCacheTtl? PromptCacheLifetime =>
         PromptCache.Resolve(_promptCacheConfig, _modelId, PromptCacheClock.ReportedLifetime, PromptCacheBilling);
