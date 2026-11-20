@@ -184,7 +184,6 @@ public sealed partial class ShellViewModel
         }
         OrderProjectGroups();
         UpdateGroupLabels();
-        OnPropertyChanged(nameof(HasTabs));
     }
 
     /// <summary>How many removals the sidebar was last laid out with, so a change to them from elsewhere lays it out again.</summary>

@@ -37,6 +37,8 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         Layout = new ShellLayout(services.State, services.SaveState);
         // The pinned groups' band follows the groups as they come, go and move (DESIGN.md §4, "Pinning a group").
         Groups.CollectionChanged += (_, _) => MarkPinnedBand();
+        // Whatever opens or closes a tab, the card to start a session follows (a Files tab brought back alone, say).
+        OpenTabs.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasTabs));
         ToolWindows = new ToolDockViewModel(services.State, services.SaveState);
         WatchToolWindows();
         // Panes fold away as the window narrows, and come back as it widens (DESIGN.md §18, "Split panes").
@@ -547,7 +549,6 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         tab.State.NewWorktree = null;
         AddTab(tab);
         UpdateGroupLabels();
-        OnPropertyChanged(nameof(HasTabs));
         SelectedTab = selected;
         FolderHistory.Touch(_services.State, normalized, _services.Time.GetUtcNow(), _services.Settings.NewTabs.RecentFolderLimit);
         SaveTabs();
@@ -561,7 +562,6 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         var index = tab.IsPinned ? group.Tabs.Count(t => t.IsPinned) : group.Tabs.Count;
         group.Tabs.Insert(index, tab);
         OpenTabs.Add(tab);
-        OnPropertyChanged(nameof(HasTabs));
         RefreshAgentIcons();
         // Its session leaves the group's past sessions (DESIGN.md §4, "Claude Code's projects").
         ApplyClaudeProjects();
@@ -616,7 +616,6 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         // A pinned group goes up among the pinned ones, and the others keep their place.
         OrderGroups();
         UpdateGroupLabels();
-        OnPropertyChanged(nameof(HasTabs));
         return group;
     }
 
@@ -639,7 +638,6 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
             Groups.Remove(group);
             UpdateGroupLabels();
         }
-        OnPropertyChanged(nameof(HasTabs));
         RefreshAgentIcons();
         // A closed tab's session is a past session again (DESIGN.md §4, "Claude Code's projects").
         ApplyClaudeProjects();
@@ -1277,7 +1275,6 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         _services.State.PaneTabIds = panes;
         Groups.Clear();
         OpenTabs.Clear();
-        OnPropertyChanged(nameof(HasTabs));
         await Task.WhenAll(files.Select(f => f.DisposeAsync().AsTask()));
         await Task.WhenAll(tickets.Select(t => t.DisposeAsync().AsTask()));
         // A turn is left as it is, not interrupted, so Claude Code can carry it on after the restart.

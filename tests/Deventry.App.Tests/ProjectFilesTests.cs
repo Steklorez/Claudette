@@ -1176,6 +1176,28 @@ public class ProjectFilesTests
     }
 
     [Fact]
+    public async Task A_Files_tab_brought_back_alone_takes_the_place_of_the_card_to_start_a_session()
+    {
+        await using var h = new TabTestHarness();
+        h.Services.State.ProjectFiles = [new ProjectFilesState { Folder = h.WorkFolder }];
+        // What the window shows: HasTabs as last announced.
+        var shown = h.Shell.HasTabs;
+        h.Shell.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(ShellViewModel.HasTabs))
+            {
+                shown = h.Shell.HasTabs;
+            }
+        };
+
+        InlineDispatcher.Run(() => h.Shell.Restore(null));
+
+        Assert.IsType<ProjectFilesViewModel>(h.Shell.Selected);
+        Assert.Empty(h.Shell.AllTabs);
+        Assert.True(shown);
+    }
+
+    [Fact]
     public async Task Unsaved_edits_come_back_after_a_restart()
     {
         await using var h = new TabTestHarness();
