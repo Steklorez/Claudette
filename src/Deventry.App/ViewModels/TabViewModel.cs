@@ -593,7 +593,9 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
 
     // ---- Model, effort and mode (DESIGN.md §5, "Model & effort") ------------------------------------------
 
-    public IReadOnlyList<ModelInfo> Models => _session?.Initialization?.Models.Where(m => m.Value != "default").ToArray() ?? [];
+    /// <summary>Before the tab starts, the models its agent last offered on this machine.</summary>
+    public IReadOnlyList<ModelInfo> Models => _session?.Initialization?.Models.Where(m => m.Value != "default").ToArray()
+        ?? _services.KnownModels(Agent);
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ModelBadge), nameof(InfoRows), nameof(EffortLevels), nameof(PermissionModeChoices), nameof(IsAutoModeAvailable), nameof(RowDetail))]
@@ -627,7 +629,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             return;
         }
         Effort = State.Overrides.Effort ?? DefaultEffortSetting;
-        ModelName = model is null ? null : known.FirstOrDefault(m => m.Value == model)?.DisplayName ?? model;
+        ModelName = model is null ? "Default" : known.FirstOrDefault(m => m.Value == model)?.DisplayName ?? model;
     }
 
     /// <summary>The model Settings starts a new tab of the tab's agent with; null for the agent's own default.</summary>
@@ -861,8 +863,15 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     [RelayCommand]
     private void ChooseModel(ModelInfo? model)
     {
-        if (model is null || model == CurrentModelInfo)
+        // Before the tab starts, the model it starts in is the current one.
+        if (model is null || model == CurrentModelInfo || _session is null && model.Value == (State.Overrides.Model ?? DefaultModelSetting))
         {
+            return;
+        }
+        if (_session is null && !IsPromptCacheWarm)
+        {
+            // No cached context to lose: the tab hasn't started, and its conversation isn't in the cache.
+            _ = SwitchModelAsync(model);
             return;
         }
         var message = $"Switching to {model.DisplayName} resets this tab's cached context. The new model has to re-read the whole conversation, so your next message will use more of your limits.";
@@ -876,6 +885,13 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
 
     private async Task SwitchModelAsync(ModelInfo model)
     {
+        if (_session is null && _starting is null)
+        {
+            ChooseStartingModel(model);
+            return;
+        }
+        // A start under way: the switch follows it.
+        await EnsureStartedAsync();
         if (_session is null)
         {
             return;
@@ -900,6 +916,23 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         {
             _conversation.AddNote($"Couldn't switch model: {ex.Message}", NoteKind.Error);
         }
+    }
+
+    /// <summary>
+    /// A tab that isn't running starts in the model chosen, with its next message, rather than starting for it (DESIGN.md
+    /// §5, "Model &amp; effort").
+    /// </summary>
+    private void ChooseStartingModel(ModelInfo model)
+    {
+        State.Overrides.Model = model.Value;
+        if (State.Overrides.Effort is { } effort && !model.SupportedEffortLevels.Contains(effort))
+        {
+            State.Overrides.Effort = null;
+        }
+        ShowStartingModel();
+        ForgetPromptCache();
+        OnPropertyChanged(nameof(HasOverrides));
+        _services.SaveState();
     }
 
     [RelayCommand]
