@@ -1928,6 +1928,10 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             _ = LoadTaskListAsync();
             _services.RememberModels(Agent, session.Initialization?.Models);
             CheckAccountProvider(session.Initialization?.Account.ApiProvider);
+            if (Account is null && session.Initialization?.Account is { } signedIn)
+            {
+                _services.UseClaudeAccount(signedIn);
+            }
             State.SessionStartedAt ??= _services.Time.GetUtcNow();
             // The installed version is what just started; system/init confirms it with the first turn.
             SetRunningVersion(_services.InstalledClaudeVersion);
@@ -2876,11 +2880,15 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         static string Base(string m) => m.Split('[')[0];
         return models.FirstOrDefault(m => m.Value == id)
             ?? models.Where(m => m.Value != "default").FirstOrDefault(m => m.ResolvedModel == id)
-            ?? models.Where(m => m.Value != "default").FirstOrDefault(m => m.ResolvedModel is { } r && Base(r) == Base(id));
+            ?? models.Where(m => m.Value != "default").FirstOrDefault(m => m.ResolvedModel is { } r && Base(r) == Base(id))
+            ?? models.FirstOrDefault(m => m.IsNewestAlias && m.Value == ModelAliases.FamilyOf(id));
     }
 
     /// <summary>"Opus (1M context)" for <c>claude-opus-5-5[1m]</c>, or the id itself if Claude Code didn't list it.</summary>
-    private string? ModelDisplayName(string? id) => id is null ? null : FindModel(id)?.DisplayName ?? id;
+    private string? ModelDisplayName(string? id) => id is null ? null
+        : FindModel(id) is not { } model ? id
+        : model.IsNewestAlias && model.Value != id ? ModelAliases.NameOf(id) ?? model.DisplayName
+        : model.DisplayName;
 
     /// <summary>Cuts text to about <paramref name="max"/> characters, at a word boundary where there is one.</summary>
     private static string Shorten(string text, int max)

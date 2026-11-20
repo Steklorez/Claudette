@@ -25,7 +25,7 @@ public sealed partial class AccountViewModel(AppServices services) : ViewModelBa
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSignedIn), nameof(IsSignedOut), nameof(Email), nameof(PlanText), nameof(Organization), nameof(Summary), nameof(SettingsText), nameof(CanBeginSignIn))]
     [NotifyPropertyChangedFor(nameof(BillingUrl), nameof(HasBilling), nameof(BillingText), nameof(BillingTip), nameof(HeaderName), nameof(HeaderPlan))]
-    [NotifyPropertyChangedFor(nameof(HeaderPlanUrl), nameof(HeaderPlanTip), nameof(HeaderPlanName))]
+    [NotifyPropertyChangedFor(nameof(HeaderPlanUrl), nameof(HeaderPlanTip), nameof(HeaderPlanName), nameof(TokenNote), nameof(HasTokenNote))]
     [NotifyCanExecuteChangedFor(nameof(SignOutCommand))]
     public partial AuthStatus? Status { get; set; }
 
@@ -47,6 +47,19 @@ public sealed partial class AccountViewModel(AppServices services) : ViewModelBa
     public string Summary => IsSignedIn
         ? string.Join(" · ", new[] { Email, PlanText }.Where(s => !string.IsNullOrEmpty(s))) is { Length: > 0 } text ? text : "Signed in"
         : "Not signed in";
+
+    public string? TokenNote => IsSignedIn && services.ClaudeEnvironmentToken is { } variable ? TokenNoteFor(variable) : null;
+
+    public bool HasTokenNote => TokenNote is not null;
+
+    internal static string TokenNoteFor(string variable) =>
+        $"Signed in with a token from {variable}. Claude Code can't see your plan this way, so its list of models can lag behind; Deventry adds each family's newest model to the picker.";
+
+    public void OnEnvironmentTokenChanged()
+    {
+        OnPropertyChanged(nameof(TokenNote));
+        OnPropertyChanged(nameof(HasTokenNote));
+    }
 
     // ---- Plan and billing (DESIGN.md §11, "Detecting") ------------------------------------------------------------
 

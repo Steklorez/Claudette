@@ -19,6 +19,10 @@ Click your email at the header's right to open the account menu. It shows:
 
 When Claude Code is signed out, the menu says *Claude Code isn't signed in.* and offers **Sign in**.
 
+## Signed in with a token
+
+If Claude Code is signed in with a token from `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`), the header says *OAuth token*, with no email or plan, since Claude Code isn't told them. Once a tab has started, the menu adds *Signed in with a token from CLAUDE_CODE_OAUTH_TOKEN. Claude Code can't see your plan this way, so its list of models can lag behind; Deventry adds each family's newest model to the picker.* Settings → Agents → Claude Code's account says the same, and so does Settings → Advanced → Diagnostics under **Claude Code sign-in**. See [Each family's newest model](../composer/model-effort-and-output-style.md#each-familys-newest-model).
+
 ## The plan beside your email
 
 The plan in the header, such as *Max plan*, is a link too. It opens your plan's usage on claude.ai. For an API key or Console account it opens the Console's billing page.

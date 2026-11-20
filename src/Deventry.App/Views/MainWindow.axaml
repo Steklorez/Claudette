@@ -490,6 +490,7 @@
                         <TextBlock Classes="muted small" Text="{Binding Organization, FallbackValue=''}" TextWrapping="Wrap"
                                    IsVisible="{Binding Organization, Converter={x:Static ObjectConverters.IsNotNull}}" />
                       </StackPanel>
+                      <TextBlock Classes="muted small" Text="{Binding TokenNote, FallbackValue=''}" TextWrapping="Wrap" IsVisible="{Binding HasTokenNote}" />
                       <TextBlock Text="Claude Code isn't signed in." IsVisible="{Binding IsSignedOut}" />
                       <TextBlock Classes="error small" Text="{Binding SignOutError}" TextWrapping="Wrap" IsVisible="{Binding HasSignOutError}" />
                       <Button Classes="flat" Content="{Binding BillingText}" Command="{Binding OpenBillingCommand}" IsVisible="{Binding HasBilling}"
