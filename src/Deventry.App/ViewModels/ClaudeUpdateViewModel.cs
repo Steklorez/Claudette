@@ -146,10 +146,11 @@ public sealed partial class ClaudeUpdateViewModel : ViewModelBase, IDisposable
         }
 
         var tabRunning = running.Count > 0;
+        var upToDate = _updates.UpToDateVersion == installed && !(check?.AvailableVersion > installed);
         Plan = plan;
         IsBusy = _updates.IsChecking || _updates.IsUpdating;
-        CanUpdateNow = plan is { CanRun: true } && !(plan.NeedsClaudeStopped && tabRunning);
-        CanUpdateOnNextLaunch = plan is { CanRun: true, NeedsClaudeStopped: true } && tabRunning;
+        CanUpdateNow = plan is { CanRun: true } && !(plan.NeedsClaudeStopped && tabRunning) && !upToDate;
+        CanUpdateOnNextLaunch = plan is { CanRun: true, NeedsClaudeStopped: true } && tabRunning && !upToDate;
         IsUpdateScheduled = _updates.IsUpdateScheduled;
         ManualCommand = plan is { Kind: ClaudeUpdateKind.Manual } ? plan.CommandText : null;
         Note = CanUpdateOnNextLaunch
@@ -210,9 +211,9 @@ public sealed partial class ClaudeUpdateViewModel : ViewModelBase, IDisposable
             _output.AppendLine(line);
             Output = _output.ToString();
         });
-        ResultText = result.Succeeded
-            ? $"{result.Message} New tabs use it."
-            : result.Message;
+        ResultText = !result.Succeeded ? result.Message
+            : _updates.UpToDateVersion is { } upToDate ? $"Claude Code {upToDate} is up to date."
+            : $"{result.Message} New tabs use it.";
         if (!result.Succeeded && Plan is { NeedsClaudeStopped: true })
         {
             // A WinGet upgrade fails while claude is running; offer the next launch instead.

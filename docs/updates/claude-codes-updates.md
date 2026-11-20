@@ -18,7 +18,7 @@ A small badge appears at the foot of the sidebar: *Claude Code 2.1.290 is ready*
 
 Choose it to open a card with the current and the new version, **What's new in Claude Code** (a link to Claude Code's changelog), and the actions that apply:
 
-- **Update now** runs the update and shows its output in the card. When it works, the card reports the new version.
+- **Update now** runs the update and shows its output in the card. When it works, the card reports the new version. When nothing newer was out, it says Claude Code is up to date, and **Update now** isn't offered again until the next check, or until **Check now** in Settings runs one.
 - **Update on next launch**, for installs that can't be replaced while a tab runs them (see the table). It runs the update the next time Deventry starts, before any tab starts. **Don't update on next launch** takes it back.
 - **Dismiss** hides the badge until a newer version comes along. It stays hidden across restarts, and goes away by itself once no open tab runs an older version.
 
