@@ -180,6 +180,7 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
         // From launch, before Claude Code is found or signed in: an incident can be why those fail.
         services.ServiceStatus.Start();
         Account.CheckSignIn = CheckSignInAsync;
+        services.ClaudeEnvironmentTokenChanged += Account.OnEnvironmentTokenChanged;
         // Signed out from the account menu or Settings: the tabs wait for the next sign-in (DESIGN.md §11), and the
         // utility session starts again when next needed, without the old account.
         Account.SignedOut += () =>
@@ -684,6 +685,7 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
             closing?.Advance();
         }
         services.Notifications.Activated -= OnNotificationActivated;
+        services.ClaudeEnvironmentTokenChanged -= Account.OnEnvironmentTokenChanged;
         ServiceStatus.Dispose();
         RemoteClients.Dispose();
         Usage?.Dispose();

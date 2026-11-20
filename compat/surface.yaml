@@ -1774,6 +1774,33 @@ items:
     fallback: "Missing or empty: no check. An unknown value on a cloud account's tab is reported as another provider than the account's, by its word."
     # initialize's account.apiProvider: firstParty, bedrock, mantle, vertex, foundry, anthropicAws or anthropicGoogleCloud,
     # which are Deventry's account kinds' words; claude auth status reports it too.
+  - id: "tokenSource"
+    kind: field
+    status: undocumented
+    usedIn: src/Deventry.Core/Sessions/InitializeResult.cs, src/Deventry.App/Services/AppServices.cs, src/Deventry.App/ViewModels/AccountViewModel.cs
+    test: ModelAliasesTests, ModelAliasesTabTests
+    fallback: "Missing or another value: no note, and no family aliases added: the models list is Claude Code's as it is, as before Deventry read it."
+    # initialize's account.tokenSource names where the sign-in comes from. Signed in with claude setup-token's token, it's
+    # CLAUDE_CODE_OAUTH_TOKEN (seen on 2.1.328), with no email, organization or subscriptionType: Claude Code can't see the
+    # plan, and its models list can offer a family only as an older pinned model. The account menu, Settings and
+    # Diagnostics say so (DESIGN.md §11, "Detecting").
+  - id: "CLAUDE_CODE_OAUTH_TOKEN"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Sessions/InitializeResult.cs
+    docs: https://code.claude.com/docs/en/authentication
+    test: ModelAliasesTests
+    # Only its name, as account.tokenSource reports it; Deventry never reads or sets the variable, which passes through to
+    # claude as user configuration.
+  - id: "model aliases fable, opus, sonnet, haiku"
+    kind: behavior
+    status: documented
+    usedIn: src/Deventry.Core/Claude/ModelAliases.cs, src/Deventry.Core/Sessions/InitializeResult.cs, src/Deventry.App/ViewModels/TabViewModel.cs
+    docs: https://code.claude.com/docs/en/model-config
+    test: ModelAliasesTests, ModelAliasesTabTests
+    fallback: "Where initialize's models offer a first-party family only as pinned ids (claude-fable-5-1[1m]), the picker adds the family's alias before them, sent with set_model or --model as any entry's value. If an alias stops resolving, set_model fails and the tab says so; the pinned entries are still offered. Only signed in with the token (tokenSource): nothing is added for any other sign-in, where a pinned model can be on purpose (a gateway, a modelPicker lineup, a cloud provider), or when the alias is listed."
+    # Each documented alias runs its family's newest model. The model the tab then runs, from system/init, is named from
+    # its id ("Fable 5.2" for claude-fable-5-2).
 
   # --- Plan usage (DESIGN.md §6) ------------------------------------------------------------------------
   - id: "rate_limits_available"

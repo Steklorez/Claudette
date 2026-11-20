@@ -645,6 +645,25 @@ public sealed class AppServices : IAsyncDisposable
         }
     });
 
+    /// <summary>The variable the Default account's token comes from (<c>CLAUDE_CODE_OAUTH_TOKEN</c>), or null.</summary>
+    public string? ClaudeEnvironmentToken { get; private set; }
+
+    public bool ClaudeSignInReported { get; private set; }
+
+    public event Action? ClaudeEnvironmentTokenChanged;
+
+    internal void UseClaudeAccount(AccountInfo account) => Dispatcher.Post(() =>
+    {
+        var token = account.EnvironmentToken;
+        var changed = token != ClaudeEnvironmentToken || !ClaudeSignInReported;
+        ClaudeEnvironmentToken = token;
+        ClaudeSignInReported = true;
+        if (changed)
+        {
+            ClaudeEnvironmentTokenChanged?.Invoke();
+        }
+    });
+
     /// <summary>Codex's installer. Tests replace it: the real one would install Codex on the machine running them.</summary>
     internal Func<ICodexInstaller> CodexInstallerFactory { get; set; }
 

@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using Deventry.Core.Claude;
 using Deventry.Core.Protocol;
 
 namespace Deventry.Core.Sessions;
@@ -20,6 +21,9 @@ public sealed record ModelInfo(
 
     /// <summary>The effort Codex starts this model at (<c>defaultReasoningEffort</c>); Claude Code doesn't say.</summary>
     public string? DefaultEffort { get; init; }
+
+    /// <summary>Added by <see cref="ModelAliases.WithFamilyAliases"/>, not offered by Claude Code.</summary>
+    public bool IsNewestAlias { get; init; }
 }
 
 /// <summary>A slash command, as <c>initialize</c> and <c>system/commands_changed</c> list them (DESIGN.md §5, "Composer").</summary>
@@ -43,7 +47,17 @@ public sealed record SlashCommandInfo(string Name, string? Description, string? 
             .ToArray() ?? [];
 }
 
-public sealed record AccountInfo(string? Email, string? Organization, string? SubscriptionType, string? TokenSource, string? ApiProvider);
+public sealed record AccountInfo(string? Email, string? Organization, string? SubscriptionType, string? TokenSource, string? ApiProvider)
+{
+    public const string OAuthTokenVariable = "CLAUDE_CODE_OAUTH_TOKEN";
+
+    /// <summary><c>CLAUDE_CODE_OAUTH_TOKEN</c> when Claude Code signed in with it and can't see the plan; null otherwise.</summary>
+    public string? EnvironmentToken =>
+        TokenSource is { } source && source.StartsWith(OAuthTokenVariable, StringComparison.Ordinal)
+        && string.IsNullOrEmpty(Email) && string.IsNullOrEmpty(SubscriptionType)
+            ? source
+            : null;
+}
 
 /// <summary>Claude Code's reply to the <c>initialize</c> control request.</summary>
 public sealed record InitializeResult(
@@ -78,15 +92,22 @@ public sealed record InitializeResult(
         var commands = SlashCommandInfo.ParseList(response.GetArray("commands"));
 
         var account = response.GetObject("account") ?? [];
+        var signedIn = new AccountInfo(
+            account.GetString("email"),
+            account.GetString("organization"),
+            account.GetString("subscriptionType"),
+            account.GetString("tokenSource"),
+            account.GetString("apiProvider"));
+        // Only the token's list lags for want of the plan. Anywhere else a pinned model can be on purpose: a cloud
+        // provider's, a gateway's that doesn't serve the newest, or a modelPicker lineup's.
+        if (signedIn.EnvironmentToken is not null && signedIn.ApiProvider is null or "firstParty")
+        {
+            models = [.. ModelAliases.WithFamilyAliases(models)];
+        }
         return new InitializeResult(
             models,
             commands,
-            new AccountInfo(
-                account.GetString("email"),
-                account.GetString("organization"),
-                account.GetString("subscriptionType"),
-                account.GetString("tokenSource"),
-                account.GetString("apiProvider")),
+            signedIn,
             response.GetString("current_permission_mode"),
             response);
     }
