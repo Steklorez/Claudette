@@ -73,8 +73,8 @@ public sealed partial class AdvancedPage : SettingsPage
     public string RemoteClientsText => Services.RemoteClients.Describe();
 
     public string ClaudeSignInText => Services.ClaudeEnvironmentToken is { } variable ? AccountViewModel.TokenNoteFor(variable)
-        : Services.ClaudeSignInReported ? "Not with a token from the environment, as the last tab that started said."
-        : "Known once a Claude Code tab has started.";
+        : Services.ClaudeSignInReported ? "Not with a token from the environment, when a tab on the Default account last started."
+        : "Known once a Claude Code tab on the Default account has started.";
 
     /// <summary>What Claude Code has sent this run that Deventry doesn't know, in words.</summary>
     public string DiagnosticsText => DiagnosticsReport(includeHeader: false);
