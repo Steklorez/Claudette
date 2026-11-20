@@ -74,4 +74,18 @@ public class UnstartedTabPickerTests
         Assert.Contains("set_model", h.Transport.SentControlSubtypes);
         Assert.Equal("haiku", tab.State.Overrides.Model);
     }
+
+    [Fact]
+    public async Task Choosing_the_model_a_tab_will_start_in_leaves_it_as_it_is()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await RestoreAsync(h, "2026-09-28T11:40:00Z", model: "opus");
+        Assert.Equal("Opus", tab.ModelName);
+
+        InlineDispatcher.Run(() => tab.ChooseModelCommand.Execute(tab.Models[0]));
+
+        Assert.False(tab.ModelSwitch.IsOpen);
+        Assert.Equal(TabStatus.NotStarted, tab.Status);
+        Assert.True(tab.IsPromptCacheShown);
+    }
 }

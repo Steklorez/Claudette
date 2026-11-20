@@ -863,7 +863,8 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     [RelayCommand]
     private void ChooseModel(ModelInfo? model)
     {
-        if (model is null || model == CurrentModelInfo)
+        // Before the tab starts, the model it starts in is the current one.
+        if (model is null || model == CurrentModelInfo || _session is null && model.Value == (State.Overrides.Model ?? DefaultModelSetting))
         {
             return;
         }
