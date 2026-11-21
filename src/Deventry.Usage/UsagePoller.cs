@@ -314,9 +314,13 @@ public sealed class UsagePoller : IDisposable, IAsyncDisposable
         }
 
         HashSet<string> fromEvents;
+        var now = _time.GetUtcNow();
         lock (_lock)
         {
             _modelLimitsAvailable = false;
+            // A model no longer used, or withdrawn, stops reporting: its reading goes once its week is over.
+            var ended = _current?.WeeklyModels.Where(l => l.ResetsAt is { } resets && resets <= now).Select(l => l.Label) ?? [];
+            _modelsFromEvents.ExceptWith(ended);
             fromEvents = [.. _modelsFromEvents];
         }
         // Model readings from an earlier poll would go stale: drop them rather than show old numbers, but keep the ones

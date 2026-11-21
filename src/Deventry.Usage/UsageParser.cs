@@ -257,8 +257,10 @@ public static partial class UsageParser
         {
             return null;
         }
-        var bare = model.Split('[')[0].ToLowerInvariant();
-        var family = bare.Split('-', '.', '/', ':', '@', '_').FirstOrDefault(s => s is "fable" or "opus" or "sonnet" or "haiku");
+        var segments = model.Split('[')[0].ToLowerInvariant().Split('-', '.', '/', ':', '@', '_');
+        var family = segments.FirstOrDefault(s => s is "fable" or "opus" or "sonnet" or "haiku")
+            // A family that came later: the first word after "claude".
+            ?? segments.SkipWhile(s => s != "claude").Skip(1).FirstOrDefault(s => s.Length > 0 && !s.All(char.IsAsciiDigit));
         return family is null ? null : char.ToUpperInvariant(family[0]) + family[1..];
     }
 

@@ -174,6 +174,11 @@ public sealed class UsagePollerTests : IAsyncDisposable
 
         Assert.True(_poller.ModelLimitsAvailable);
         Assert.Equal("Fable", Assert.Single(_poller.Current!.WeeklyModels).Label);
+
+        // Fable no longer reports, as when it's withdrawn: its reading goes once its week is over.
+        _time.Advance(UsageFixtures.WeekResetsAt - _time.GetUtcNow() + TimeSpan.FromMinutes(1));
+        Assert.Empty(_poller.Current!.WeeklyModels);
+        Assert.False(_poller.ModelLimitsAvailable);
     }
 
     [Fact]

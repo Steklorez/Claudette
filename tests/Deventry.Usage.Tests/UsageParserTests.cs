@@ -180,6 +180,7 @@ public sealed class UsageParserTests
     [InlineData("fable", "Fable")]
     [InlineData("claude-opus-5-5", "Opus")]
     [InlineData("claude-3-5-sonnet-20241022", "Sonnet")]
+    [InlineData("claude-lyric-6-0", "Lyric")]
     [InlineData("default", null)]
     [InlineData(null, null)]
     public void Model_family_name(string? model, string? expected) => Assert.Equal(expected, UsageParser.ModelFamilyName(model));
