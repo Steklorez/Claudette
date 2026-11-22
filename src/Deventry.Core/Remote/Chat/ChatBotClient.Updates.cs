@@ -467,6 +467,9 @@ public abstract partial class ChatBotClient
                         cancellationToken: cancellationToken).ConfigureAwait(false);
                 }
                 break;
+            case CancelWhenDoneButton:
+                await CancelWhenDoneAsync(tap, cancellationToken).ConfigureAwait(false);
+                break;
         }
     }
 

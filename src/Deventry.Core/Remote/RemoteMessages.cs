@@ -1,4 +1,5 @@
 using System.Globalization;
+using Deventry.Core.Power;
 
 namespace Deventry.Core.Remote;
 
@@ -130,6 +131,28 @@ public static class RemoteMessages
     public static string Closing(string machine) => $"Deventry on {machine} is closing. Its tabs are kept, and I'll answer again when it's back.";
 
     public static string Back(string machine) => $"Deventry on {machine} is back.";
+
+    // ---- When Claude is done (DESIGN.md §9, "When Claude is done") ------------------------------------------------------
+
+    /// <summary>"Claude is done, so DESK shuts down at 14:10."</summary>
+    public static string WhenDoneCounting(string machine, WhenDone action, DateTimeOffset at, TimeZoneInfo zone)
+    {
+        var time = TimeZoneInfo.ConvertTime(at, zone).ToString("t", CultureInfo.CurrentCulture);
+        return action == WhenDone.Sleep ? $"Claude is done, so {machine} goes to sleep at {time}." : $"Claude is done, so {machine} shuts down at {time}.";
+    }
+
+    /// <summary>The line the countdown's message ends with: "Cancelled from Discord at 14:09", "Shutting down now."</summary>
+    public static string WhenDoneEnded(WhenDone action, RemoteWhenDoneEnd how, string? client, DateTimeOffset at, TimeZoneInfo zone)
+    {
+        var time = TimeZoneInfo.ConvertTime(at, zone).ToString("t", CultureInfo.CurrentCulture);
+        return how switch
+        {
+            RemoteWhenDoneEnd.CancelledFromClient => $"Cancelled from {client ?? "a remote client"} at {time}",
+            RemoteWhenDoneEnd.CancelledAtDesk => $"Cancelled at the desk at {time}",
+            RemoteWhenDoneEnd.WorkStarted => action == WhenDone.Sleep ? "Not yet: Claude has work again, so it sleeps once that's done." : "Not yet: Claude has work again, so it shuts down once that's done.",
+            _ => action == WhenDone.Sleep ? "Going to sleep now." : "Shutting down now.",
+        };
+    }
 
     /// <summary>"Passed over 3 messages sent while Deventry was closed."</summary>
     public static string PassedOver(int count) => count == 1

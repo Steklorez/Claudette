@@ -23,7 +23,7 @@ Then choose when it applies:
 - **Only while Claude has work to finish** (the default once it's on). That means a tab is running a turn (not one waiting for you, since you may not be there to answer), Claude Code is keeping tasks or agents running in the background in any tab, or a task is waiting for a usage limit to reset so it can carry on by itself. A task that won't continue, because you chose **Don't continue** or the reset is more than a day away, doesn't count. When there's no work left, Deventry holds on for two more minutes, since the next turn often starts right after, and then lets the computer sleep as your OS settings say.
 - **Whenever Deventry is running**, from when it starts until it closes.
 
-Right-click the cup to choose between them, under **Keep awake** in its menu. Choosing turns the setting on too. The same menu's **Keep-awake settings…** opens Settings → General. The menu's first section is your [timed messages](timed-messages.md).
+Right-click the cup to choose between them, under **Keep awake** in its menu. Choosing turns the setting on too. The same menu's **Keep-awake settings…** opens Settings → General. The menu's first section is your [timed messages](timed-messages.md), and under **Keep awake** is [When Claude is done](#when-claude-is-done).
 
 ## The cup
 
@@ -32,6 +32,20 @@ The cup sits in the usage header, after the processes' total. It takes the accen
 While any [timed message](timed-messages.md) is on, the cup has a clock's two hands in its body. Sleep is held off from just before a timed message's time until its tab's turn has finished, whatever the setting says.
 
 Tabs connected to the [Claude app](the-claude-app.md) also keep the computer awake while Settings → General → **Also while tabs are connected to the Claude app** is on, and so does a bot of [Remote clients](remote-clients.md) while it's on, as long as **Also while a remote client is on** is. The cup steams for those too, and the tooltip names them.
+
+## When Claude is done
+
+{% include unreleased.html %}
+
+Leaving a long task to finish overnight? Right-click the cup and, under **When Claude is done**, choose **Shut down** or **Sleep**: once Claude has nothing left to do, Deventry shuts the computer down or puts it to sleep. Choosing one clears the other, and choosing it again turns it off.
+
+- **Done** means no tab is running a turn, keeping tasks running in the background, waiting for a usage limit to reset or waiting for you to answer a prompt; no [project tool](../project-tools/using-project-tools.md)'s job, such as a build, is running; and no [timed message](timed-messages.md) is due within the hour. A computer that's off can't be woken for one, so a shutdown waits for its turn first. A sleeping computer can, so **Sleep** waits only for one that's about to go, unless Deventry can't wake this computer.
+- **Until then**, a bar under the header says what it's waiting for, such as *Shuts down once Claude is done: waiting for 2 tabs working.*, with **Cancel**. The computer is kept awake meanwhile, whatever **Keep this computer awake** says, so it gets there. The cup's tooltip says so too.
+- **A minute's warning.** Once Claude is done, the bar counts down a minute, *Shutting down in 42 seconds.*, with **Shut down now** (or **Sleep now**) and **Cancel**, and a notification says so if Deventry isn't in front. Your [remote clients](remote-clients.md) are told too, with a sound if you're away, and their **Cancel** cancels it from your phone, whatever they're allowed to do. If Claude starts working again in that minute, the countdown stops, and starts again once it's done.
+- **Shut down** closes Deventry first, as its window's close button does, keeping your tabs for next time, then shuts the computer down. It isn't forced, so an app with unsaved work can still stop it. **Sleep** leaves Deventry as it is, there when the computer wakes.
+- **Once only.** It turns itself off once it has happened or you cancel it, and Deventry starts without it.
+
+On Windows, a computer with Modern Standby, which sleeps when its screen goes off, is put to sleep by turning its screen off. On macOS, the first time you choose **Shut down**, macOS asks whether Deventry may control System Events, which is how it shuts a Mac down; if you don't allow it, the bar says so, and you can allow it later in System Settings → Privacy & Security → Automation. On Linux, if shutting down or sleeping would ask for a password, which nobody may be there to type, the bar says so when you choose it.
 
 ## When it can't
 

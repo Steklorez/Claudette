@@ -97,6 +97,8 @@ public partial class App : Application
                 userPresence: UserPresences.CreateForCurrentOS(launcher, TimeProvider.System),
                 // A demo never wakes the computer: its timed messages are pictures (DESIGN.md §11, "Demo mode").
                 wakeTimer: Demo.DemoMode.FromEnvironment() is null ? WakeTimers.CreateForCurrentOS(launcher, TimeProvider.System) : null,
+                // Nor shuts it down or puts it to sleep (DESIGN.md §9, "When Claude is done").
+                computerPower: Demo.DemoMode.FromEnvironment() is null ? ComputerPowers.CreateForCurrentOS(launcher, TimeProvider.System) : null,
                 // The guide's pictures of the Tickets tab: the demo's GitHub issues, answered without the network (DESIGN.md §18, "Tickets").
                 httpHandler: Environment.GetEnvironmentVariable(Core.Demo.DemoTickets.Variable) is { Length: > 0 }
                     ? new Core.Demo.DemoTickets(TimeProvider.System) { InnerHandler = new System.Net.Http.SocketsHttpHandler { AutomaticDecompression = System.Net.DecompressionMethods.All } }
@@ -368,6 +370,9 @@ public partial class App : Application
         }
         _shuttingDown = true;
         window.IsEnabled = false;
+        // Closing to shut the computer down, Claude being done: it does once everything is written (DESIGN.md §9).
+        var shutDown = _services?.WhenDone is { ShutsDownOnClose: true } whenDone ? whenDone.Power : null;
+        var shutDownLog = _services?.Loggers.CreateLogger("WhenDone");
         // A card over the window says what closing is doing, once it takes a moment (DESIGN.md §13).
         var closing = _mainViewModel?.BeginClosing();
         try
@@ -406,8 +411,32 @@ public partial class App : Application
         }
         finally
         {
+            if (shutDown is not null && shutDownLog is not null)
+            {
+                await ShutDownAsync(shutDown, shutDownLog);
+            }
             _shutdownComplete = true;
             window.Close();
+        }
+    }
+
+    /// <summary>
+    /// Shuts the computer down, Deventry having closed its tabs and written what it keeps. It isn't forced, so an app with
+    /// unsaved work can still hold it up; one that fails leaves Deventry closed, as it was asked to be, and says why in the
+    /// log, which still writes once the services are gone.
+    /// </summary>
+    private static async Task ShutDownAsync(Core.Power.IComputerPower power, ILogger log)
+    {
+        try
+        {
+            if (await power.RunAsync(Core.Power.WhenDone.ShutDown) is { } why)
+            {
+                log.LogWarning("Couldn't shut the computer down: {Why}", why);
+            }
+        }
+        catch (Exception ex)
+        {
+            log.LogWarning(ex, "Couldn't shut the computer down.");
         }
     }
 }

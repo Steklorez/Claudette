@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json.Nodes;
+using Deventry.Core.Power;
 using Deventry.Core.Remote;
 using Deventry.Core.Remote.Chat;
 using Deventry.Core.Remote.Telegram;
@@ -803,6 +804,59 @@ public sealed class TelegramClientTests : IAsyncLifetime
         var back = await NextSentAsync(2);
         Assert.Equal("Deventry on DESK is back.", Text(back));
         Assert.True((bool)back["disable_notification"]!);
+    }
+
+    [Fact]
+    public async Task The_minute_before_shutting_down_comes_even_while_quiet_and_Cancel_cancels_it()
+    {
+        _desk.QuietUntil = Now + TimeSpan.FromHours(1);
+        await StartAsync();
+
+        _desk.Raise(new RemoteWhenDoneCounting(WhenDone.ShutDown, Now + TimeSpan.FromMinutes(1)) { Notice = RemoteNotice.Sound });
+
+        var sent = await NextSentAsync(1);
+        Assert.Equal("Claude is done, so DESK shuts down at 14:01.", Text(sent));
+        Assert.Null(sent["disable_notification"]);
+        _telegram.Tap(Me, FakeTelegram.Data(sent, "Cancel"), FakeTelegram.IdOf(sent));
+        await Waiting.UntilAsync(() => _desk.CallsCopy().Contains("cancel when done (Telegram)"), "the cancel");
+
+        _desk.Raise(new RemoteWhenDoneEnded(WhenDone.ShutDown, RemoteWhenDoneEnd.CancelledFromClient, "Telegram", Now));
+
+        await Waiting.UntilAsync(() => _telegram.Of("editMessageText").Count == 1, "the edit");
+        var edit = _telegram.Of("editMessageText").Single();
+        Assert.Equal("Claude is done, so DESK shuts down at 14:01.\n\n<i>Cancelled from Telegram at 14:00</i>", (string)edit["text"]!);
+        Assert.Null(edit["reply_markup"]);
+    }
+
+    [Fact]
+    public async Task Sleep_is_said_silently_at_the_desk_and_its_message_says_when_Claude_has_work_again()
+    {
+        await StartAsync();
+
+        _desk.Raise(new RemoteWhenDoneCounting(WhenDone.Sleep, Now + TimeSpan.FromMinutes(1)) { Notice = RemoteNotice.Silent });
+
+        var sent = await NextSentAsync(1);
+        Assert.Equal("Claude is done, so DESK goes to sleep at 14:01.", Text(sent));
+        Assert.True((bool)sent["disable_notification"]!);
+
+        _desk.Raise(new RemoteWhenDoneEnded(WhenDone.Sleep, RemoteWhenDoneEnd.WorkStarted, null, Now));
+
+        await Waiting.UntilAsync(() => _telegram.Of("editMessageText").Count == 1, "the edit");
+        Assert.EndsWith("<i>Not yet: Claude has work again, so it sleeps once that's done.</i>", (string)_telegram.Of("editMessageText")[0]["text"]!);
+    }
+
+    [Fact]
+    public async Task A_Cancel_the_desk_refuses_loses_its_button_and_says_why()
+    {
+        await StartAsync();
+        _desk.Raise(new RemoteWhenDoneCounting(WhenDone.ShutDown, Now + TimeSpan.FromMinutes(1)) { Notice = RemoteNotice.Sound });
+        var sent = await NextSentAsync(1);
+        _desk.Result = RemoteResult.No("It's no longer counting down.");
+
+        _telegram.Tap(Me, FakeTelegram.Data(sent, "Cancel"), FakeTelegram.IdOf(sent));
+
+        await Waiting.UntilAsync(() => _telegram.Of("editMessageReplyMarkup").Count == 1, "the button to go");
+        Assert.Contains(_telegram.Of("answerCallbackQuery"), a => (string?)a["text"] == "It's no longer counting down.");
     }
 
     // ---- Commands ---------------------------------------------------------------------------------------------------

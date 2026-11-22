@@ -776,7 +776,7 @@ internal sealed class TabTestHarness : IAsyncDisposable
         Services = new AppServices(AppPaths.Under(_root), launcher is FakeP4 ? launcher : new NoRealP4Launcher(launcher ?? new ProcessLauncher(outputDrainTime: Waiting.Timeout)), Time, Platform, dispatcher ?? new InlineDispatcher(), processTrees: Trees, notifier: Notifier,
             appInstaller: appInstaller, httpHandler: http ?? new OfflineHandler(), appVersion: appVersion ?? TestVersion, loginShell: loginShell,
             projectToolPaths: otherPrograms, sleepBlocker: SleepBlocker, loginItems: LoginItems, systemMotion: SystemMotion,
-            trash: Trash, userPresence: Presence, wakeTimer: WakeTimer, demo: demo, loggerFactory: new TestOutputLoggers());
+            trash: Trash, userPresence: Presence, wakeTimer: WakeTimer, computerPower: ComputerPower, demo: demo, loggerFactory: new TestOutputLoggers());
         Services.Notifications.UseBadge(Notifier);
         // The machine running the tests doesn't decide whether the Claude app is available (its ANTHROPIC_BASE_URL, say).
         Services.RemoteControl.EnvironmentVariable = _ => null;
@@ -839,6 +839,9 @@ internal sealed class TabTestHarness : IAsyncDisposable
 
     /// <summary>Stands in for waking the computer for a timed message (DESIGN.md §18, "Timed messages").</summary>
     public FakeWakeTimer WakeTimer { get; } = new();
+
+    /// <summary>Stands in for shutting the computer down or putting it to sleep once Claude is done (DESIGN.md §9).</summary>
+    public FakeComputerPower ComputerPower { get; } = new();
 
     /// <summary>Stands in for the OS's reduce-motion setting (DESIGN.md §3, "Accessibility").</summary>
     public FakeSystemMotion SystemMotion { get; } = new();

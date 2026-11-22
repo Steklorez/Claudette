@@ -272,13 +272,14 @@ public class MainWindowTests
         var menu = Assert.IsType<ContextMenu>(cup.ContextMenu);
         menu.Open(cup);
         UiText.Settle(window);
-        // In sections: the timed messages (DESIGN.md §18), none yet, then keeping awake.
-        Assert.Equal(["Timed messages", "Keep awake"], menu.Items.OfType<MenuItem>().Where(i => i.Classes.Contains("menusection")).Select(i => i.Header as string));
+        // In sections: the timed messages (DESIGN.md §18), none yet, then keeping awake, then what happens when Claude is done.
+        Assert.Equal(["Timed messages", "Keep awake", "When Claude is done"], menu.Items.OfType<MenuItem>().Where(i => i.Classes.Contains("menusection")).Select(i => i.Header as string));
         var items = menu.Items.OfType<MenuItem>().Where(i => !i.Classes.Contains("menusection")).ToArray();
-        Assert.Equal(["Add a timed message…", "Only while Claude has work to finish", "Whenever Deventry is running", "Keep-awake settings…", "Timed messages settings…"],
+        Assert.Equal(["Add a timed message…", "Only while Claude has work to finish", "Whenever Deventry is running", "Shut down", "Sleep", "Keep-awake settings…", "Timed messages settings…"],
             items.Select(i => i.Header as string));
-        Assert.Equal([false, false, true, false, false], items.Select(i => i.IsChecked));
-        Assert.Equal("General#keepAwake", items[3].CommandParameter);
+        Assert.Equal([false, false, true, false, false, false, false], items.Select(i => i.IsChecked));
+        Assert.All(items[3..5], i => Assert.Equal(MenuItemToggleType.CheckBox, i.ToggleType));
+        Assert.Equal("General#keepAwake", items[5].CommandParameter);
         ClickMenuItem(window, items[1]);
         menu.Close();
 
@@ -290,6 +291,51 @@ public class MainWindowTests
         Click(window, cup);
         Assert.False(h.Services.Settings.General.KeepAwake);
         Assert.False(cup.IsChecked);
+    }
+
+    [AvaloniaFact]
+    public async Task When_Claude_is_done_its_bar_says_what_it_waits_for_then_counts_down_with_Cancel()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var tab = await h.OpenTabAsync();
+        tab.ComposerText = "go";
+        await tab.SendCommand.ExecuteAsync(null);
+        await TabTestHarness.Eventually(() => tab.Status == TabStatus.Working, "the turn");
+        var main = new MainWindowViewModel(h.Services);
+        main.UseShell(h.Shell);
+        var window = new MainWindow { DataContext = main, Width = 1200, Height = 800 };
+        window.Show();
+        UiText.Settle(window);
+        var bar = window.GetVisualDescendants().OfType<Border>().Single(b => b.Name == "WhenDoneBanner");
+        Assert.False(bar.IsEffectivelyVisible);
+
+        await h.Services.WhenDone.ToggleShutDownCommand.ExecuteAsync(null);
+        UiText.Settle(window);
+
+        // Waiting, quietly.
+        Assert.True(bar.IsEffectivelyVisible);
+        Assert.Contains("info", bar.Classes);
+        Assert.Equal("Shuts down once Claude is done: waiting for 1 tab working.", Text(bar));
+        Assert.Equal(["Cancel"], VisibleButtons(bar));
+
+        h.Transport.EmitTurn();
+        await UiText.SettleUntilAsync(window, () => h.Services.WhenDone.IsCountingDown, "the countdown");
+
+        // Counting down, as a caution, with the way to go now.
+        Assert.DoesNotContain("info", bar.Classes);
+        Assert.Equal("Shutting down in 60 seconds. Claude is done.", Text(bar));
+        Assert.Equal(["Shut down now", "Cancel"], VisibleButtons(bar));
+
+        var cancel = bar.GetVisualDescendants().OfType<Button>().Single(b => b is { IsEffectivelyVisible: true, Content: "Cancel" });
+        cancel.Command!.Execute(null);
+        UiText.Settle(window);
+        Assert.False(bar.IsEffectivelyVisible);
+
+        static IEnumerable<string?> VisibleButtons(Border bar) =>
+            bar.GetVisualDescendants().OfType<Button>().Where(b => b.IsEffectivelyVisible).Select(b => b.Content as string);
+
+        static string Text(Border bar) =>
+            string.Concat(bar.GetVisualDescendants().OfType<TextBlock>().First().Inlines!.OfType<Avalonia.Controls.Documents.Run>().Select(r => r.Text));
     }
 
     [AvaloniaFact]

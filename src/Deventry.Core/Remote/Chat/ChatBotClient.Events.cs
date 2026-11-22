@@ -96,6 +96,12 @@ public abstract partial class ChatBotClient
                 await BroadcastAsync(Format.Escape(RemoteMessages.Closing(Desk.MachineName)), silent: closing.Notice != RemoteNotice.Sound,
                     cancellationToken: cancellationToken).ConfigureAwait(false);
                 break;
+            case RemoteWhenDoneCounting counting:
+                await OnWhenDoneCountingAsync(counting, cancellationToken).ConfigureAwait(false);
+                break;
+            case RemoteWhenDoneEnded ended:
+                await OnWhenDoneEndedAsync(ended, cancellationToken).ConfigureAwait(false);
+                break;
         }
     }
 

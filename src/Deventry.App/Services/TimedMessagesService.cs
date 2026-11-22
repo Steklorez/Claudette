@@ -50,6 +50,7 @@ public sealed partial class TimedMessagesService : ObservableObject, IDisposable
     private DateTimeOffset? _wake;
     private bool _wakeSet;
     private bool _dueSoon;
+    private DateTimeOffset? _nextAt;
     private int _working;
     private bool _disposed;
 
@@ -313,7 +314,9 @@ public sealed partial class TimedMessagesService : ObservableObject, IDisposable
             _ = Wake.WakeAtAsync(wake);
         }
         _dueSoon = plan.IsDueSoon(now);
+        _nextAt = plan.Next?.At;
         _services.KeepAwake.SetTimedMessages(_dueSoon, _working);
+        _services.WhenDone.SetTimedMessages(_nextAt, _dueSoon, _working);
     }
 
     /// <summary>
@@ -348,6 +351,7 @@ public sealed partial class TimedMessagesService : ObservableObject, IDisposable
         }
         _working = working;
         _services.KeepAwake.SetTimedMessages(_dueSoon, working);
+        _services.WhenDone.SetTimedMessages(_nextAt, _dueSoon, working);
 
         void Done(string id)
         {

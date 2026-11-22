@@ -100,4 +100,10 @@ public interface IRemoteDesk
 
     /// <summary>Opens a tab in <paramref name="folder"/>, as the folder picker does; its id is the result's.</summary>
     Task<RemoteResult> OpenTabAsync(string folder, string client, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Cancels shutting the computer down or putting it to sleep once Claude is done (DESIGN.md §9, "When Claude is
+    /// done"). At every level of <see cref="Access"/>: it only keeps the computer on.
+    /// </summary>
+    Task<RemoteResult> CancelWhenDoneAsync(string client, CancellationToken cancellationToken = default);
 }

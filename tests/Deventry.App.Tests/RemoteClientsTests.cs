@@ -3,6 +3,7 @@ using Deventry.App.Conversation;
 using Deventry.App.Services;
 using Deventry.App.Tests.Support;
 using Deventry.App.ViewModels;
+using Deventry.Core.Power;
 using Deventry.Core.Remote;
 using Deventry.Core.Settings;
 
@@ -549,6 +550,38 @@ public class RemoteClientsTests
         Assert.Single(remote.Client.Of<RemoteDeskClosing>());
         Assert.True(remote.Client.Stopped);
         Assert.True(remote.H.Services.State.RemoteClients.SaidClosing);
+    }
+
+    [Fact]
+    public async Task The_minute_before_shutting_down_reaches_the_client_whose_Cancel_turns_it_off()
+    {
+        await using var remote = await StartAsync();
+        var whenDone = remote.H.Services.WhenDone;
+
+        remote.H.OnUiThread(() => whenDone.ToggleShutDownCommand.Execute(null));
+
+        var counting = Assert.Single(remote.Client.Of<RemoteWhenDoneCounting>());
+        Assert.Equal(WhenDone.ShutDown, counting.Action);
+        Assert.Equal(remote.H.Time.GetUtcNow() + WhenDoneService.Countdown, counting.At);
+        // Away, as the harness's Deventry isn't in front: with a sound.
+        Assert.Equal(RemoteNotice.Sound, counting.Notice);
+
+        Assert.Equal(RemoteResult.Ok, await remote.Desk.CancelWhenDoneAsync("Telegram", Ct));
+
+        Assert.Equal(WhenDone.Nothing, whenDone.Choice);
+        var ended = Assert.Single(remote.Client.Of<RemoteWhenDoneEnded>());
+        Assert.Equal((RemoteWhenDoneEnd.CancelledFromClient, "Telegram"), (ended.How, ended.Client));
+        Assert.False((await remote.Desk.CancelWhenDoneAsync("Telegram", Ct)).Done);
+    }
+
+    [Fact]
+    public async Task Cancel_from_a_client_is_taken_even_when_remote_clients_can_only_watch()
+    {
+        await using var remote = await StartAsync(s => s.RemoteClients.Access = RemoteAccessLevel.Watch);
+        remote.H.OnUiThread(() => remote.H.Services.WhenDone.ToggleSleepCommand.Execute(null));
+
+        Assert.True((await remote.Desk.CancelWhenDoneAsync("Telegram", Ct)).Done);
+        Assert.Equal(RemoteWhenDoneEnd.CancelledFromClient, Assert.Single(remote.Client.Of<RemoteWhenDoneEnded>()).How);
     }
 
     [Fact]

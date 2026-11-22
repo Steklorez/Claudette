@@ -15,6 +15,7 @@ using Deventry.Core.Files;
 using Deventry.Core.Git;
 using Deventry.Core.Installation;
 using Deventry.Core.LoginItems;
+using Deventry.Core.Power;
 using Deventry.Core.Processes;
 using Deventry.Core.ProjectFiles;
 using Deventry.Core.ProjectTools;
@@ -99,6 +100,10 @@ public sealed class AppServices : IAsyncDisposable
     /// <param name="wakeTimer">
     /// Wakes the computer for the next timed message (DESIGN.md §18, "Timed messages"). Null can't: tests.
     /// </param>
+    /// <param name="computerPower">
+    /// Shuts the computer down or puts it to sleep once Claude is done (DESIGN.md §9, "When Claude is done"). Null can't:
+    /// tests, and a demo.
+    /// </param>
     /// <param name="demo">This Deventry is a demo (DESIGN.md §11, "Demo mode"); null for any other.</param>
     public AppServices(
         AppPaths paths,
@@ -123,6 +128,7 @@ public sealed class AppServices : IAsyncDisposable
         ITrash? trash = null,
         IUserPresence? userPresence = null,
         IWakeTimer? wakeTimer = null,
+        IComputerPower? computerPower = null,
         DemoMode? demo = null)
     {
         Demo = demo;
@@ -163,6 +169,8 @@ public sealed class AppServices : IAsyncDisposable
         ClaudeEnvironmentFor = async (overrides, cancellationToken) =>
             ClaudeEnvironment.From(await UserEnvironment.GetAsync(cancellationToken).ConfigureAwait(false), overrides);
         KeepAwake = new KeepAwakeService(this, sleepBlocker ?? new NoSleepBlocker());
+        // Before the timed messages, which tell it their next time as they start.
+        WhenDone = new WhenDoneService(this, computerPower ?? new NoComputerPower());
         RemoteControl = new RemoteControlService(this);
         var otherPrograms = projectToolPaths ?? ProjectToolPaths.ForCurrentUser();
         Locator = new ClaudeLocator(launcher, timeProvider, UserEnvironment, ClaudeVariables, new ClaudeDesktop(otherPrograms, ToolOSExtensions.Current));
@@ -397,6 +405,9 @@ public sealed class AppServices : IAsyncDisposable
     /// this computer awake</b>, which the header's cup turns on and off, and tabs connected to the Claude app.
     /// </summary>
     public KeepAwakeService KeepAwake { get; }
+
+    /// <summary>Shutting down or sleeping once Claude is done: the header cup's menu (DESIGN.md §9, "When Claude is done").</summary>
+    public WhenDoneService WhenDone { get; }
 
     /// <summary>The timed messages, sent at their times while Deventry runs (DESIGN.md §18, "Timed messages").</summary>
     public TimedMessagesService TimedMessages { get; }
@@ -939,6 +950,7 @@ public sealed class AppServices : IAsyncDisposable
         Notifications.Dispose();
         RemoteControl.Dispose();
         TimedMessages.Dispose();
+        WhenDone.Dispose();
         KeepAwake.Dispose();
         ServiceStatus.Dispose();
         LiveSessions.Dispose();

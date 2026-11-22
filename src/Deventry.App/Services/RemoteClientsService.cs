@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using Deventry.App.ViewModels;
 using Deventry.Core.Credentials;
+using Deventry.Core.Power;
 using Deventry.Core.Remote;
 using Deventry.Core.Remote.Discord;
 using Deventry.Core.Remote.Telegram;
@@ -587,6 +588,27 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// The computer shuts down or sleeps at <paramref name="at"/>, Claude being done (DESIGN.md §9, "When Claude is done"):
+    /// always said, as closing is, silently at the desk, so it can be cancelled from the phone.
+    /// </summary>
+    internal void OnWhenDoneCounting(WhenDone action, DateTimeOffset at)
+    {
+        if (IsActive)
+        {
+            Raise(new RemoteWhenDoneCounting(action, at) { Notice = _away ? RemoteNotice.Sound : RemoteNotice.Silent });
+        }
+    }
+
+    /// <summary>The countdown ended: its messages say how.</summary>
+    internal void OnWhenDoneEnded(WhenDone action, RemoteWhenDoneEnd how, string? client)
+    {
+        if (IsActive)
+        {
+            Raise(new RemoteWhenDoneEnded(action, how, client, _services.Time.GetUtcNow()));
+        }
+    }
+
     // ---- The desk ---------------------------------------------------------------------------------------------------
 
     public string MachineName => _services.Library.MachineName;
@@ -696,6 +718,10 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
             return opened is null ? RemoteResult.No("That folder isn't there any more.") : new RemoteResult(true, null, opened.Id);
         }, cancellationToken).ConfigureAwait(false);
     }
+
+    /// <summary>At every level: cancelling only keeps the computer on.</summary>
+    public Task<RemoteResult> CancelWhenDoneAsync(string client, CancellationToken cancellationToken = default) =>
+        OnUiAsync(() => _services.WhenDone.CancelFromClient(client), cancellationToken);
 
     /// <summary>The tab with <paramref name="tabId"/>, unless it's closed or kept from remote clients.</summary>
     private TabViewModel? Find(string tabId) => _shell?.AllTabs.FirstOrDefault(t => t.Id == tabId && !t.KeepsFromRemoteClients);

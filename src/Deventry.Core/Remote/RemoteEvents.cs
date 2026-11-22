@@ -1,3 +1,5 @@
+using Deventry.Core.Power;
+
 namespace Deventry.Core.Remote;
 
 /// <summary>
@@ -86,3 +88,26 @@ public sealed record RemoteProjectAction(string? TabId, string Title, string Bod
 
 /// <summary>Deventry is closing: its tabs are kept, and it answers again when it's back.</summary>
 public sealed record RemoteDeskClosing : RemoteEvent;
+
+/// <summary>
+/// Claude is done, and the computer shuts down or goes to sleep at <paramref name="At"/> unless the user cancels it,
+/// at the desk or with a client's <b>Cancel</b> (DESIGN.md §9, "When Claude is done"). Always sent: silently at the desk.
+/// </summary>
+public sealed record RemoteWhenDoneCounting(WhenDone Action, DateTimeOffset At) : RemoteEvent;
+
+/// <summary>How the minute before shutting down or sleeping ended.</summary>
+public enum RemoteWhenDoneEnd
+{
+    CancelledAtDesk,
+    CancelledFromClient,
+
+    /// <summary>Claude has work again: it waits for that to finish, and counts down again then.</summary>
+    WorkStarted,
+
+    /// <summary>It's shutting down or going to sleep now.</summary>
+    Now,
+}
+
+/// <summary>The minute before shutting down or sleeping ended.</summary>
+/// <param name="Client">The client it was cancelled from, by name ("Discord"), when one was.</param>
+public sealed record RemoteWhenDoneEnded(WhenDone Action, RemoteWhenDoneEnd How, string? Client, DateTimeOffset At) : RemoteEvent;

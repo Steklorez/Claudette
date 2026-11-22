@@ -187,10 +187,13 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     /// </summary>
     internal void OnTabWorkChanged()
     {
-        _services.KeepAwake.SetWork(new ClaudeWork(
+        var work = new ClaudeWork(
             AllTabs.Count(t => t.Status == TabStatus.Working),
             AllTabs.Sum(t => t.RunningTaskCount),
-            AllTabs.Count(t => t.IsWaitingForLimitReset && t.WillContinueAfterLimit)));
+            AllTabs.Count(t => t.IsWaitingForLimitReset && t.WillContinueAfterLimit));
+        _services.KeepAwake.SetWork(work);
+        // And what holds off shutting down or sleeping once Claude is done (DESIGN.md §9, "When Claude is done").
+        _services.WhenDone.SetWork(new WorkLeft(work, AllTabs.Count(t => t.NeedsInput), AllTabs.Count(t => t.ProjectTools.Runs.IsJobRunning)));
         // A timed message's tab holds sleep off through its first turn (DESIGN.md §18, "Timed messages").
         _services.TimedMessages.OnTabWork(AllTabs);
     }

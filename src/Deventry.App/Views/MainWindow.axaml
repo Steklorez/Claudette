@@ -392,6 +392,12 @@
                               Command="{Binding KeepAwake.ChooseCommand}" CommandParameter="{x:Static settings:KeepAwakeWhen.ClaudeHasWork}" />
                     <MenuItem Header="Whenever Deventry is running" ToggleType="Radio" IsChecked="{Binding KeepAwake.WhileDeventryRuns, Mode=OneWay}"
                               Command="{Binding KeepAwake.ChooseCommand}" CommandParameter="{x:Static settings:KeepAwakeWhen.DeventryRuns}" />
+                    <!-- Once only, after a minute's countdown (DESIGN.md §9, "When Claude is done"); one clears the other -->
+                    <MenuItem Classes="menusection" Header="When Claude is done" IsEnabled="False" />
+                    <MenuItem Header="Shut down" ToggleType="CheckBox" IsChecked="{Binding WhenDone.ShutsDown, Mode=OneWay}"
+                              Command="{Binding WhenDone.ToggleShutDownCommand}" />
+                    <MenuItem Header="Sleep" ToggleType="CheckBox" IsChecked="{Binding WhenDone.Sleeps, Mode=OneWay}"
+                              Command="{Binding WhenDone.ToggleSleepCommand}" />
                     <Separator />
                     <!-- Settings → General, at keeping the computer awake (DESIGN.md §14) -->
                     <MenuItem Header="Keep-awake settings…" Command="{Binding Shell.OpenSettingCommand, FallbackValue={x:Null}}" CommandParameter="General#keepAwake" />
@@ -641,6 +647,7 @@
         <StackPanel Name="Banners" DockPanel.Dock="Top" Margin="0,0,0,6">
           <StackPanel.IsVisible>
             <MultiBinding Converter="{x:Static BoolConverters.Or}">
+              <Binding Path="WhenDone.ShowsBanner" />
               <Binding Path="Usage.IsUsingCredits" FallbackValue="False" />
               <Binding Path="ShowsDemoBanner" />
               <Binding Path="ServiceStatus.ShowBanner" />
@@ -660,6 +667,23 @@
                       VerticalAlignment="Center" ToolTip.Tip="Your plan's usage on claude.ai, in your browser: where usage credits are turned off or capped" />
               <Button Grid.Column="2" Classes="flat" Content="Dismiss" Command="{Binding Usage.DismissCreditsNoticeCommand, FallbackValue={x:Null}}"
                       VerticalAlignment="Center" ToolTip.Tip="Hide this until usage credits start paying again" />
+            </Grid>
+          </Border>
+
+          <!-- When Claude is done (DESIGN.md §9): what it waits for, then the minute before shutting down or sleeping, with
+               Cancel; or why it can't -->
+          <Border Name="WhenDoneBanner" Classes="statusbanner" Classes.info="{Binding WhenDone.IsWaiting}" IsVisible="{Binding WhenDone.ShowsBanner}">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="4">
+              <TextBlock TextWrapping="Wrap" VerticalAlignment="Center">
+                <Run FontWeight="SemiBold" Text="{Binding WhenDone.BannerTitle}" />
+                <Run Text="{Binding WhenDone.BannerText}" />
+              </TextBlock>
+              <Button Grid.Column="1" Classes="accent" Content="{Binding WhenDone.NowLabel}" Command="{Binding WhenDone.GoNowCommand}"
+                      IsVisible="{Binding WhenDone.IsCountingDown}" VerticalAlignment="Center" />
+              <Button Grid.Column="2" Classes="flat" Content="Cancel" Command="{Binding WhenDone.CancelCommand}" IsVisible="{Binding WhenDone.CanCancel}"
+                      VerticalAlignment="Center" />
+              <Button Grid.Column="2" Classes="flat" Content="Dismiss" Command="{Binding WhenDone.DismissProblemCommand}" IsVisible="{Binding WhenDone.ShowsProblem}"
+                      VerticalAlignment="Center" />
             </Grid>
           </Border>
 
