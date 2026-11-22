@@ -334,6 +334,53 @@ public class RemoteClientsTests
     }
 
     [Fact]
+    public async Task Quiet_ending_tells_the_prompts_still_waiting_again()
+    {
+        await using var remote = await StartAsync();
+        remote.H.OnUiThread(() => remote.Service.SetQuiet(remote.H.Time.GetUtcNow() + TimeSpan.FromHours(1)));
+        var waiting = await PromptAsync(remote);
+
+        remote.H.Time.Advance(TimeSpan.FromHours(1));
+
+        await TabTestHarness.Eventually(() => remote.Client.Of<RemotePromptWaiting>().Count == 2, "the prompt told again");
+        var again = remote.Client.Of<RemotePromptWaiting>()[^1];
+        Assert.True(again.Again);
+        Assert.Equal(RemoteNotice.Sound, again.Notice);
+        Assert.Equal(waiting.Prompt.Id, again.Prompt.Id);
+    }
+
+    [Fact]
+    public async Task Quiet_turned_off_tells_the_prompts_still_waiting_again_once()
+    {
+        await using var remote = await StartAsync();
+        remote.H.OnUiThread(() => remote.Service.SetQuiet(remote.H.Time.GetUtcNow() + TimeSpan.FromHours(1)));
+        await PromptAsync(remote);
+
+        remote.H.OnUiThread(() => remote.Service.SetQuiet(null));
+        Assert.True(remote.Client.Of<RemotePromptWaiting>()[^1].Again);
+        // Off already, and the hour's end passing, tell nothing more.
+        remote.H.OnUiThread(() => remote.Service.SetQuiet(null));
+        remote.H.Time.Advance(TimeSpan.FromHours(1));
+
+        Assert.Equal(2, remote.Client.Of<RemotePromptWaiting>().Count);
+    }
+
+    [Fact]
+    public async Task Quiet_made_longer_tells_nothing_at_its_first_end()
+    {
+        await using var remote = await StartAsync();
+        remote.H.OnUiThread(() => remote.Service.SetQuiet(remote.H.Time.GetUtcNow() + TimeSpan.FromMinutes(30)));
+        await PromptAsync(remote);
+
+        remote.H.OnUiThread(() => remote.Service.SetQuiet(remote.H.Time.GetUtcNow() + TimeSpan.FromHours(1)));
+        remote.H.Time.Advance(TimeSpan.FromMinutes(30));
+        Assert.Single(remote.Client.Of<RemotePromptWaiting>());
+
+        remote.H.Time.Advance(TimeSpan.FromMinutes(30));
+        await TabTestHarness.Eventually(() => remote.Client.Of<RemotePromptWaiting>().Count == 2, "the prompt told again at the new end");
+    }
+
+    [Fact]
     public async Task Always_sends_silently_at_the_desk()
     {
         await using var remote = await StartAsync(s => s.RemoteClients.When = RemoteSendWhen.Always);

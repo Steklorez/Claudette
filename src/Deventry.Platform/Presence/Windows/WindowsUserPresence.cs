@@ -20,7 +20,6 @@ internal sealed unsafe partial class WindowsUserPresence : IUserPresence
     private const uint ScreenSaverRunning = 0x0072;
     private const int CurrentSession = -1;
     private const int SessionInfoEx = 25;
-    private const int SessionStateLocked = 0;
 
     private readonly Lock _lock = new();
     private nint _registration;
@@ -122,8 +121,7 @@ internal sealed unsafe partial class WindowsUserPresence : IUserPresence
         }
         try
         {
-            // WTSINFOEXW: its level, then WTSINFOEX_LEVEL1_W's session id, state and flags.
-            return bytes >= 16 && *(int*)buffer == 1 && *(int*)(buffer + 12) == SessionStateLocked;
+            return WtsSessionInfo.IsLocked(new ReadOnlySpan<byte>((void*)buffer, checked((int)bytes)));
         }
         finally
         {

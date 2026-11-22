@@ -151,6 +151,9 @@ public static class RemoteMessages
     /// <summary>What a prompt its agent withdrew says, as its card does.</summary>
     public const string WithdrawnOutcome = "No longer needed";
 
+    /// <summary>The line an earlier message of a prompt gets, losing its buttons, once it's asked again under a tab's status.</summary>
+    public const string AskedAgain = "Asked again below.";
+
     /// <summary>What a card answered from a client says under its outcome: "Answered from Telegram".</summary>
     public static string AnsweredFrom(string client) => $"Answered from {client}";
 

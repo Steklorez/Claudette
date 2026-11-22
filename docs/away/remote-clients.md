@@ -105,6 +105,8 @@ Each message starts with the tab's name and its project.
 
 When a prompt is answered, anywhere, its message loses its buttons and says how: *Allowed from Telegram at 14:09*, *Answered at the desk at 14:31* or *No longer needed*. In Deventry, a card answered from your phone says where: *Answered from Telegram*, or *Answered from Discord*.
 
+A prompt comes under whatever says its tab needs you. Pick a tab from `/tabs`, or send a message to a tab that's waiting on a prompt, and the prompt comes again under the tab's card or status, with its buttons; its message further up loses them and says *Asked again below.* While you're following a tab's status, its prompts always come to that chat, without a sound if they wouldn't have come otherwise.
+
 Some cards can only be answered at the desk: an MCP server's form, whether to trust a folder, signing in and continuing under another account. Their messages say *Answer this at the desk.*
 
 Buttons belong to the Deventry that sent them. After Deventry restarts, an old button says so and loses its buttons; `/tabs` gives you new ones.
@@ -159,7 +161,7 @@ The bot's commands are in the **/** menu, in Telegram and in Discord. In Discord
 | `/to` | Picks the tab your plain messages go to. |
 | `/stop` | Stops Claude in a tab, asking which when several are working. |
 | `/usage` | Your plan's usage and when it resets, and your accounts' spend today. |
-| `/quiet` | No messages for an hour; `/quiet 30` for 30 minutes, `/quiet off` to end it. Answers to what you do from your phone still come, silently. It's the same as the header's **Quiet for an hour**. |
+| `/quiet` | No messages for an hour; `/quiet 30` for 30 minutes, `/quiet off` to end it. Answers to what you do from your phone still come, silently, and the prompts still waiting when it ends come then. It's the same as the header's **Quiet for an hour**. |
 | `/new` | Opens a tab in a favorite or recent folder, when **Open new tabs** is on. |
 | `/help` | What the bot can do. |
 | `/pair` | Pairs your Discord account, with the code Settings shows. In Telegram, it's `/start` and the code. |
@@ -173,11 +175,11 @@ By default, the bot sends messages **While I'm away**: when any of these is true
 - Its screen saver is on, or its display is asleep.
 - Nobody has used its keyboard or mouse for five minutes, or what **Count me away after** says.
 
-When you go away, the prompts already waiting are sent then, so walking off with one open still reaches your phone. Settings says what your computer can tell: some Linux desktops say only whether Deventry is in front.
+When you go away, the prompts already waiting are sent then, so walking off with one open still reaches your phone. So are those that came while messages were quiet, once they aren't. Settings says what your computer can tell: some Linux desktops say only whether Deventry is in front.
 
 Choose **Always** to have every message come, silently while you're at the desk, so the chat keeps a record and your phone buzzes only when you're away.
 
-A tab you sent a message to from your phone always answers, away or not.
+A tab you sent a message to from your phone always answers, away or not, and a tab whose status you're following sends you its prompts.
 
 ## The icon in the header
 

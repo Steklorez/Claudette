@@ -439,6 +439,124 @@ public sealed class TelegramClientTests : IAsyncLifetime
         Assert.Single(_telegram.Sent);
     }
 
+    private IReadOnlyList<System.Text.Json.Nodes.JsonObject> EditsOf(System.Text.Json.Nodes.JsonObject sent) =>
+        [.. _telegram.Of("editMessageText").Where(e => (long)e["message_id"]! == FakeTelegram.IdOf(sent))];
+
+    [Fact]
+    public async Task A_tab_picked_with_its_prompt_sent_before_asks_it_again_under_its_card()
+    {
+        var prompt = FakeRemoteDesk.Command();
+        _desk.Tabs[0] = _desk.Tabs[0] with { Status = RemoteTabStatus.NeedsInput, Prompt = prompt };
+        await StartAsync();
+        _desk.Raise(new RemotePromptWaiting(_desk.Tabs[0], prompt) { Notice = RemoteNotice.Sound });
+        var first = await NextSentAsync(1);
+
+        _telegram.Message(Me, "/tabs", Now);
+        var list = await NextSentAsync(2);
+        _telegram.Tap(Me, FakeTelegram.Data(list, "❗ Grappling hook"), FakeTelegram.IdOf(list));
+
+        Assert.Contains("Needs you", Text(await NextSentAsync(3)));
+        var again = await NextSentAsync(4);
+        Assert.Contains("<b>Allow this command?</b>", Text(again));
+        Assert.Equal(["Allow", "Deny", "Deny with a message…"], FakeTelegram.Buttons(again).Select(b => b.Text));
+        Assert.True((bool)again["disable_notification"]!);
+        // The first loses its buttons and says where it went.
+        await Waiting.UntilAsync(() => EditsOf(first).Count == 1, "the first message's edit");
+        Assert.EndsWith("<i>Asked again below.</i>", (string)EditsOf(first)[0]["text"]!);
+        Assert.Null(EditsOf(first)[0]["reply_markup"]);
+
+        // Once it closes, only the message asked last says how.
+        _desk.Tabs[0] = _desk.Tabs[0] with { Status = RemoteTabStatus.Working, Prompt = null };
+        _desk.Raise(new RemotePromptClosed("t1", "p1", RemotePromptEnd.AnsweredAtDesk, "Allowed", null, Now));
+        await Waiting.UntilAsync(() => EditsOf(again).Count == 1, "the closing edit");
+        await SettleAsync();
+        Assert.EndsWith("<i>Allowed. Answered at the desk at 14:00</i>", (string)EditsOf(again)[0]["text"]!);
+        Assert.Single(EditsOf(first));
+    }
+
+    [Fact]
+    public async Task A_message_to_a_tab_waiting_on_a_prompt_asks_it_under_the_live_status()
+    {
+        var prompt = FakeRemoteDesk.Command();
+        _desk.Tabs[0] = _desk.Tabs[0] with { Status = RemoteTabStatus.NeedsInput, Prompt = prompt };
+        await StartAsync();
+        _telegram.Message(Me, "/to grappling", Now);
+        await NextSentAsync(1);
+
+        _telegram.Message(Me, "Use the staging database", Now);
+
+        Assert.Equal("Sent to <b>Grappling hook</b>.\nNeeds you", Text(await NextSentAsync(2)));
+        var asked = await NextSentAsync(3);
+        Assert.Contains("<b>Allow this command?</b>", Text(asked));
+        Assert.True((bool)asked["disable_notification"]!);
+    }
+
+    [Fact]
+    public async Task A_tab_followed_live_gets_its_prompt_even_when_the_desk_sends_none()
+    {
+        _desk.Tabs[0] = _desk.Tabs[0] with { Status = RemoteTabStatus.Working };
+        await StartAsync();
+        _telegram.Message(Me, "/tabs", Now);
+        var list = await NextSentAsync(1);
+        _telegram.Tap(Me, FakeTelegram.Data(list, "● Grappling hook"), FakeTelegram.IdOf(list));
+        await NextSentAsync(2);
+
+        // At the desk, with messages only while away: its status there says it needs you, so the prompt comes, silently.
+        var prompt = FakeRemoteDesk.Command();
+        _desk.Raise(new RemotePromptWaiting(_desk.Tabs[0] with { Status = RemoteTabStatus.NeedsInput, Prompt = prompt }, prompt) { Notice = RemoteNotice.None });
+
+        var sent = await NextSentAsync(3);
+        Assert.Contains("<b>Allow this command?</b>", Text(sent));
+        Assert.True((bool)sent["disable_notification"]!);
+    }
+
+    [Fact]
+    public async Task A_prompt_asked_before_the_live_status_is_asked_again_once_the_one_before_it_closes()
+    {
+        var first = FakeRemoteDesk.Command("p1", "npm test");
+        var second = FakeRemoteDesk.Command("p2", "npm run lint");
+        _desk.Tabs[0] = _desk.Tabs[0] with { Status = RemoteTabStatus.NeedsInput, Prompt = first };
+        await StartAsync();
+        _desk.Raise(new RemotePromptWaiting(_desk.Tabs[0], first) { Notice = RemoteNotice.Sound });
+        _desk.Raise(new RemotePromptWaiting(_desk.Tabs[0], second) { Notice = RemoteNotice.Sound });
+        var secondSent = await NextSentAsync(2);
+        _telegram.Message(Me, "/to grappling", Now);
+        await NextSentAsync(3);
+        _telegram.Message(Me, "Go on", Now);
+        // The live status, then the first prompt under it.
+        Assert.Contains("npm test", Text(await NextSentAsync(5)));
+
+        _desk.Tabs[0] = _desk.Tabs[0] with { Prompt = second };
+        _desk.Raise(new RemotePromptClosed("t1", "p1", RemotePromptEnd.AnsweredAtDesk, "Allowed", null, Now));
+
+        Assert.Contains("npm run lint", Text(await NextSentAsync(6)));
+        await Waiting.UntilAsync(() => EditsOf(secondSent).Count == 1, "the second's first message to lose its buttons");
+        Assert.EndsWith("<i>Asked again below.</i>", (string)EditsOf(secondSent)[0]["text"]!);
+    }
+
+    [Fact]
+    public async Task A_prompt_under_the_live_status_already_is_not_asked_again_when_another_closes()
+    {
+        _desk.Tabs[0] = _desk.Tabs[0] with { Status = RemoteTabStatus.Working };
+        await StartAsync();
+        _telegram.Message(Me, "/to grappling", Now);
+        await NextSentAsync(1);
+        _telegram.Message(Me, "Go on", Now);
+        await NextSentAsync(2);
+        var first = FakeRemoteDesk.Command("p1", "npm test");
+        var second = FakeRemoteDesk.Command("p2", "npm run lint");
+        _desk.Raise(new RemotePromptWaiting(_desk.Tabs[0] with { Status = RemoteTabStatus.NeedsInput, Prompt = first }, first) { Notice = RemoteNotice.Sound });
+        _desk.Raise(new RemotePromptWaiting(_desk.Tabs[0] with { Status = RemoteTabStatus.NeedsInput, Prompt = first }, second) { Notice = RemoteNotice.Sound });
+        await NextSentAsync(4);
+
+        _desk.Tabs[0] = _desk.Tabs[0] with { Status = RemoteTabStatus.NeedsInput, Prompt = second };
+        _desk.Raise(new RemotePromptClosed("t1", "p1", RemotePromptEnd.AnsweredAtDesk, "Allowed", null, Now));
+        await Waiting.UntilAsync(() => _telegram.Of("editMessageText").Count == 1, "the first's closing edit");
+        await SettleAsync();
+
+        Assert.Equal(4, _telegram.Sent.Count);
+    }
+
     [Fact]
     public async Task Just_what_happened_names_the_tab_and_Show_sends_the_prompt_when_asked()
     {

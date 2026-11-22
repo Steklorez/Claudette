@@ -34,11 +34,11 @@ public sealed record RemoteTabClosed(string TabId, string Name) : RemoteEvent
 
 /// <summary>
 /// A prompt is waiting. Raised again for the prompts already waiting when the user goes away, so walking off with one
-/// open still reaches the phone (<see cref="Again"/>).
+/// open still reaches the phone, and when quiet ends, so one it held back still does (<see cref="Again"/>).
 /// </summary>
 public sealed record RemotePromptWaiting(RemoteTab Tab, RemotePrompt Prompt) : RemoteEvent
 {
-    /// <summary>It was waiting before: the user just went away. A client that already sent it doesn't again.</summary>
+    /// <summary>It was waiting before: the user just went away, or quiet ended. A client that already sent it doesn't again.</summary>
     public bool Again { get; init; }
 }
 

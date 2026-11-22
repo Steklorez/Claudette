@@ -38,6 +38,9 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
     /// <summary>When the quiet ends, as UTC ticks; 0 for none. Clients read it on their own threads.</summary>
     private long _quietUntilTicks;
 
+    /// <summary>Quiet held messages when it was last looked at, on the UI thread: its end is told once.</summary>
+    private bool _quiet;
+
     private ShellViewModel? _shell;
     private ITimer? _presenceTimer;
     private PresenceReading _reading;
@@ -148,14 +151,35 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
             // The header says when it ends, and once it has.
             if (QuietUntil is { } end)
             {
-                _quietEnds.Restart(end - _services.Time.GetUtcNow(), () => Changed?.Invoke());
+                _quiet = true;
+                _quietEnds.Restart(end - _services.Time.GetUtcNow(), () =>
+                {
+                    OnQuietEnded();
+                    Changed?.Invoke();
+                });
             }
             else
             {
                 _quietEnds.Cancel();
+                OnQuietEnded();
             }
             Changed?.Invoke();
         });
+    }
+
+    /// <summary>
+    /// Quiet ended, on its own or turned off: what it held back isn't sent later, but the prompts still waiting are, as
+    /// when the user goes away (DESIGN.md §18, "Remote clients", "Commands"). One a client sent already isn't again.
+    /// </summary>
+    private void OnQuietEnded()
+    {
+        // Made longer since: its new end is on its way.
+        if (!_quiet || QuietUntil is not null)
+        {
+            return;
+        }
+        _quiet = false;
+        RaiseWaitingPrompts();
     }
 
     /// <summary>What this desktop can tell about the user being away, for Settings.</summary>
@@ -443,7 +467,16 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
         }
         _away = away;
         Changed?.Invoke();
-        if (!away || !IsActive || _shell is null)
+        if (away)
+        {
+            RaiseWaitingPrompts();
+        }
+    }
+
+    /// <summary>The prompts waiting in every tab, told again: each client sends those it hasn't, as the notice says.</summary>
+    private void RaiseWaitingPrompts()
+    {
+        if (!IsActive || _shell is null)
         {
             return;
         }
