@@ -59,8 +59,11 @@ public sealed partial class TabViewModel
     /// <summary>The next message would read the conversation from the cache, which a switch to another model loses.</summary>
     private bool IsPromptCacheWarm => PromptCacheLifetime is { } lifetime && PromptCacheClock.Countdown(lifetime.Lifetime) is { IsExpired: false };
 
-    /// <summary>How long the cache lasts for the tab's next request, and why; null when Claude Code doesn't cache its prompts.</summary>
-    internal PromptCacheTtl? PromptCacheLifetime =>
+    /// <summary>
+    /// How long the cache lasts for the tab's next request, and why; null when Claude Code doesn't cache its prompts, or the
+    /// tab's model runs on a local server, which keeps its prompt as long as it likes (DESIGN.md §18).
+    /// </summary>
+    internal PromptCacheTtl? PromptCacheLifetime => IsOnLocalModel ? null :
         PromptCache.Resolve(_promptCacheConfig, _modelId, PromptCacheClock.ReportedLifetime, PromptCacheBilling);
 
     private ClaudeBilling PromptCacheBilling => Account?.IsCloudProvider == true

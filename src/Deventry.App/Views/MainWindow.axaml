@@ -246,24 +246,24 @@
                        IsVisible="{Binding ShowsHeaderTitle}" />
 
             <!-- The selected tab runs under an API key or a cloud provider: its estimated spend in place of the plan's meters (DESIGN.md §4,
-                 "Accounts"). Click for the Usage panel. -->
+                 "Accounts"). Under Ollama or llama.cpp, its model and where it runs, and no spend (DESIGN.md §18). Click for the Usage panel. -->
             <Button x:Name="AccountSpend" Grid.Column="1" Classes="header" HorizontalAlignment="Left" IsVisible="{Binding ShowsSpend}" Command="{Binding Usage.OpenPanelCommand, FallbackValue={x:Null}}"
-                    ToolTip.Tip="{Binding Spend.Tooltip, FallbackValue={x:Null}}" AutomationProperties.Name="Estimated API spend">
+                    ToolTip.Tip="{Binding Spend.Tooltip, FallbackValue={x:Null}}" AutomationProperties.Name="{Binding Spend.AccessibleName, FallbackValue='Estimated API spend'}">
               <StackPanel Orientation="Horizontal" Spacing="14">
                 <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                   <Ellipse Width="8" Height="8" Fill="{Binding Spend.Tag.Brush, FallbackValue={x:Null}}" VerticalAlignment="Center" />
                   <TextBlock Text="{Binding Spend.Account.Name, FallbackValue=''}" FontWeight="SemiBold" VerticalAlignment="Center" />
                   <TextBlock Classes="muted small" Text="{Binding Spend.KindText, FallbackValue=''}" VerticalAlignment="Center" />
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" IsVisible="{Binding Spend.HasSpend, FallbackValue=False}">
                   <TextBlock Classes="muted small" Text="Today" VerticalAlignment="Center" />
                   <TextBlock Text="{Binding Spend.TodayText, FallbackValue=''}" FontWeight="SemiBold" VerticalAlignment="Center" />
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" IsVisible="{Binding Spend.HasSpend, FallbackValue=False}">
                   <TextBlock Classes="muted small" Text="This week" VerticalAlignment="Center" />
                   <TextBlock Text="{Binding Spend.WeekText, FallbackValue=''}" VerticalAlignment="Center" />
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" IsVisible="{Binding Spend.HasSpend, FallbackValue=False}">
                   <TextBlock Classes="muted small" Text="This month" VerticalAlignment="Center" />
                   <TextBlock Text="{Binding Spend.MonthText, FallbackValue=''}" VerticalAlignment="Center" />
                 </StackPanel>

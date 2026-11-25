@@ -40,7 +40,7 @@ public sealed partial class TabViewModel
     /// provider can't.
     /// </summary>
     internal string? AccountRemoteControlReason => Account is { } account
-        ? $"{account.Name} uses {(account.Provider is { } provider ? provider.Name : "an API key")}, and the Claude app needs a claude.ai sign-in"
+        ? $"{account.Name} uses {(account.Provider?.Name ?? account.Server?.Name ?? "an API key")}, and the Claude app needs a claude.ai sign-in"
         : null;
 
     /// <summary>
