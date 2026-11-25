@@ -147,14 +147,18 @@ public class SubagentTests
         h.Transport.Emit(Wire.Result("a1", "All done."));
         h.Transport.Emit(Wire.Result("a2", "Async agent launched successfully.", toolUseResult: new JsonObject { ["status"] = "async_launched", ["agentId"] = "task-b" }));
         h.Transport.Emit(Wire.TurnResult());
-        await TabTestHarness.Eventually(() => tab.Agents.Find("a1")?.IsDone == true && tab.Status == TabStatus.Idle, "the end of the turn");
+        // Settled: the tab says Idle from the session's own state, which can be ahead of the events it has applied, so
+        // Idle alone can come before the turn's end and the Idle after it, which change the rows the next steps read.
+        await TabTestHarness.Eventually(() => tab.Agents.Find("a1")?.IsDone == true && tab.Status == TabStatus.Idle && tab.IsSettled, "the end of the turn");
         var done = tab.SubagentRows[0];
         var background = tab.SubagentRows[1];
         Assert.False(done.Node.IsEarlier);
         Assert.True(done.CanDismiss);
         Assert.False(tab.HasEarlierSubagents);
 
-        await SendAsync(tab, "Now the next step");
+        // As a click does: on the UI, with the session's own events, rather than beside them.
+        tab.ComposerText = "Now the next step";
+        await InlineDispatcher.RunAsync(() => tab.SendCommand.ExecuteAsync(null));
 
         // Finished and before the latest message: earlier. Still running in the background: still part of the work.
         Assert.True(done.Node.IsEarlier);
@@ -164,16 +168,16 @@ public class SubagentTests
         Assert.True(background.CanDismissEarlier);
         Assert.False(background.CanDismiss);
 
-        background.DismissEarlierCommand.Execute(null);
+        InlineDispatcher.Run(() => background.DismissEarlierCommand.Execute(null));
 
-        Assert.Equal([background], tab.SubagentRows);
+        Assert.Equal([background], InlineDispatcher.Read(() => tab.SubagentRows.ToArray()));
         // Dismissing a running one does nothing; once it's finished it goes.
-        background.DismissCommand.Execute(null);
-        Assert.Single(tab.SubagentRows);
+        InlineDispatcher.Run(() => background.DismissCommand.Execute(null));
+        Assert.Single(InlineDispatcher.Read(() => tab.SubagentRows.ToArray()));
         h.Transport.Emit(Wire.Notification("task-b", "a2", "completed", "Waited."));
         await TabTestHarness.Eventually(() => background.CanDismiss, "the background subagent to finish");
-        background.DismissCommand.Execute(null);
-        Assert.Empty(tab.SubagentRows);
+        InlineDispatcher.Run(() => background.DismissCommand.Execute(null));
+        Assert.Empty(InlineDispatcher.Read(() => tab.SubagentRows.ToArray()));
         // Still on the Agents page and in the conversation.
         Assert.Equal(2, tab.Agents.Subagents.Count);
         Assert.Equal(2, tab.Items.OfType<SubagentItem>().Count());
