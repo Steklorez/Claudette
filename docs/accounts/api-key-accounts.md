@@ -9,7 +9,7 @@ summary: "An API-key account lets a tab run Claude Code on an API key instead of
 
 An API-key account lets a tab run Claude Code on an API key instead of your Claude sign-in. It suits a work key beside a personal plan. For Amazon Bedrock, Google Cloud or Microsoft Foundry, see [Cloud provider accounts](cloud-provider-accounts.md).
 
-{% include shot.html name="guide/accounts/settings-accounts" alt="Settings → Claude Code, at its Accounts: Default, signed in, with Sign out…; an API-key account named Studio and an Amazon Bedrock account named Render farm, each with its name, tag color, what it is and its spend warnings; then New folders use, and the switch for warning before a session continues under another account. The sidebar has Tabs, Usage and Advanced under Deventry, and All agents, Claude Code and Codex under Agents" %}
+{% include shot.html name="guide/accounts/settings-accounts" alt="Settings → Claude Code, at its Accounts: Default, signed in, with Sign out…; an API-key account named Studio and an Amazon Bedrock account named Render farm, each with its name, tag color, what it is and its spend warnings, and an Ollama account named Workstation, without spend warnings; then New folders use, and the switch for warning before a session continues under another account. The sidebar has Tabs, Usage and Advanced under Deventry, and All agents, Claude Code and Codex under Agents" %}
 
 ## Adding an account
 

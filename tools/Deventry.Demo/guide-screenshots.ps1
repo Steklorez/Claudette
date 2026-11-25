@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Takes the user guide's screenshots (Windows): the demo from deventry-demo in the Standard style, dark and light, each
 picture cropped to the part of Deventry the page describes.
@@ -182,7 +182,7 @@ if (Test-Wanted 'getting-started/sign-in') {
 # As the demo is.
 if (Test-Wanted 'getting-started/new-tab', 'tabs/sidebar', 'tabs/info-card', 'tabs/command-palette', 'conversation/tool-calls',
     'conversation/scratch-pad', 'conversation/media', 'conversation/media-cleared', 'composer/composer', 'changes/changed-files', 'project-tools/project-page', 'tabs/tool-windows', 'usage/usage-window', 'usage/token-breakdown',
-    'usage/tokens-window', 'settings/settings-window', 'settings/appearance', 'settings/search', 'settings/project-tools', 'settings/about', 'accounts/settings-accounts', 'away/remote-clients', 'away/remote-clients-discord',
+    'usage/tokens-window', 'settings/settings-window', 'settings/appearance', 'settings/search', 'settings/project-tools', 'settings/about', 'accounts/settings-accounts', 'accounts/ollama-account', 'away/remote-clients', 'away/remote-clients-discord',
     'tabs/tab-settings', 'project-files/files-tab', 'project-files/markdown-preview') {
     Use-Deventry @{} {
         Show-Tabs
@@ -371,6 +371,27 @@ if (Test-Wanted 'getting-started/new-tab', 'tabs/sidebar', 'tabs/info-card', 'ta
             $default = Find-ByText $settings "Sign out$([char] 0x2026)"
             $gap = 100 * [WindowShot]::Scale($settings)
             for ($step = 0; $step -lt 100 -and $default.Current.BoundingRectangle.Top - $scroller.Current.BoundingRectangle.Top -gt $gap; $step++) {
+                Send-ElementCommand 'scroll' $scroller @{ lines = 1 } | Out-Null
+            }
+            Wait-Settled $settings
+            Save-Window $settings $path
+            Close-Other $settings
+        }
+
+        # The demo's Ollama account, Workstation, its Change settings… open in place (DESIGN.md §18, "Ollama and llama.cpp
+        # accounts"): its line, what an Ollama account is, the address, the model and the window. Render farm's comes first.
+        Shot 'accounts/ollama-account' {
+            param($path)
+            $settings = Open-Settings
+            Select-ListItem $settings 'Claude Code'
+            Wait-Settled $settings
+            Invoke-Element (Find-ByText $settings "Change settings$([char] 0x2026)#2") 'Workstation''s Change settings'
+            Wait-Until { Find-ByText $settings 'Check the window' -Optional } 'Workstation''s settings' 20
+            # Its line at the top: what it is, beside its name, which its box holds.
+            $scroller = Find-ById $settings 'PageScroller'
+            $line = Find-ByPrefix $settings "Ollama $([char] 0x00B7) "
+            $gap = 60 * [WindowShot]::Scale($settings)
+            for ($step = 0; $step -lt 200 -and $line.Current.BoundingRectangle.Top - $scroller.Current.BoundingRectangle.Top -gt $gap; $step++) {
                 Send-ElementCommand 'scroll' $scroller @{ lines = 1 } | Out-Null
             }
             Wait-Settled $settings
