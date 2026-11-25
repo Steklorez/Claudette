@@ -3,7 +3,10 @@ using Deventry.Core.Installation;
 
 namespace Deventry.Core.Tests;
 
-/// <summary>Keeps compat/surface.yaml, and compat/codex-surface.yaml for Codex, honest (DESIGN.md §16, §18).</summary>
+/// <summary>
+/// Keeps compat/surface.yaml, compat/codex-surface.yaml for Codex and compat/local-servers-surface.yaml for Ollama and
+/// llama.cpp honest (DESIGN.md §16, §18).
+/// </summary>
 public partial class CompatibilitySurfaceTests
 {
     private static readonly string RepoRoot = FindRepoRoot();
@@ -21,6 +24,7 @@ public partial class CompatibilitySurfaceTests
     [Theory]
     [InlineData("surface.yaml")]
     [InlineData("codex-surface.yaml")]
+    [InlineData("local-servers-surface.yaml")]
     public void Every_used_in_file_exists(string file)
     {
         var missing = UsedInPattern().Matches(Read(file))
@@ -36,6 +40,7 @@ public partial class CompatibilitySurfaceTests
     [Theory]
     [InlineData("surface.yaml")]
     [InlineData("codex-surface.yaml")]
+    [InlineData("local-servers-surface.yaml")]
     public void Undocumented_entries_have_a_fallback(string file)
     {
         var entries = Read(file).Split("\n  - id:").Skip(1);
@@ -51,6 +56,7 @@ public partial class CompatibilitySurfaceTests
     [Theory]
     [InlineData("surface.yaml")]
     [InlineData("codex-surface.yaml")]
+    [InlineData("local-servers-surface.yaml")]
     public void Every_test_named_exists(string file)
     {
         // "test: A, B (a note)" names test classes; "none yet …" names none.
