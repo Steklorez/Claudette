@@ -196,6 +196,7 @@ public sealed class AppServices : IAsyncDisposable
         Tips = new ShortcutTips(Settings);
         Perforce = new PerforceService(this, credentials ?? new UnavailableCredentialStore());
         Accounts = new AccountsService(this, credentials ?? new UnavailableCredentialStore());
+        LocalServers = new LocalServersService(this);
         RemoteClients = new RemoteClientsService(this, credentials ?? new UnavailableCredentialStore(), userPresence ?? new NoUserPresence());
         Tickets = new TicketsService(this, credentials ?? new UnavailableCredentialStore());
         TimedMessages = new TimedMessagesService(this, wakeTimer ?? new NoWakeTimer());
@@ -378,6 +379,9 @@ public sealed class AppServices : IAsyncDisposable
 
     /// <summary>The accounts tabs run under besides the Default one, and their API keys (DESIGN.md §4, "Accounts").</summary>
     public AccountsService Accounts { get; }
+
+    /// <summary>The servers Ollama and llama.cpp accounts' models run on, and the ones Deventry started (DESIGN.md §18).</summary>
+    public LocalServersService LocalServers { get; }
 
     /// <summary>Project tools: detecting a tab's project and running its actions (DESIGN.md §18).</summary>
     public ProjectToolsService ProjectTools { get; }
@@ -955,6 +959,8 @@ public sealed class AppServices : IAsyncDisposable
         ServiceStatus.Dispose();
         LiveSessions.Dispose();
         EditorLogs.Dispose();
+        // The servers Deventry started for Ollama and llama.cpp accounts: nothing else was using them.
+        await LocalServers.DisposeAsync();
         if (ClaudeUpdates is not null)
         {
             await ClaudeUpdates.DisposeAsync();

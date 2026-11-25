@@ -201,23 +201,24 @@
                     </ComboBox>
                     <TextBlock Grid.Column="3" Classes="muted small" Text="{Binding KindText}" VerticalAlignment="Center" />
                   </Grid>
-                  <c:SettingRow Title="Warn when today's estimated spend passes ($)" Padding="8,4">
+                  <c:SettingRow Title="Warn when today's estimated spend passes ($)" Padding="8,4" IsVisible="{Binding HasSpend}">
                     <NumericUpDown Minimum="0" Increment="5" FormatString="0.##" Value="{Binding DailySpendAlert}" Width="140"
                                    AutomationProperties.Name="Daily spend warning in dollars" />
                   </c:SettingRow>
-                  <c:SettingRow Title="Warn when this month's estimated spend passes ($)" Padding="8,4">
+                  <c:SettingRow Title="Warn when this month's estimated spend passes ($)" Padding="8,4" IsVisible="{Binding HasSpend}">
                     <NumericUpDown Minimum="0" Increment="10" FormatString="0.##" Value="{Binding MonthlySpendAlert}" Width="140"
                                    AutomationProperties.Name="Monthly spend warning in dollars" />
                   </c:SettingRow>
                   <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding !IsChangingKey}">
-                    <Button Content="Change settings…" Command="{Binding EditDetailsCommand}" IsVisible="{Binding IsCloud}" IsEnabled="{Binding !IsEditingDetails}" />
+                    <Button Content="Change settings…" Command="{Binding EditDetailsCommand}" IsVisible="{Binding HasDetails}" IsEnabled="{Binding !IsEditingDetails}" />
                     <Button Content="Change key…" Command="{Binding ChangeKeyCommand}" IsVisible="{Binding HasKey}" />
                     <Button Content="Remove…" Command="{Binding Removal.AskCommand}" IsEnabled="{Binding CanRemove}"
                             ToolTip.Tip="{Binding RemoveTip}" ToolTip.ShowOnDisabled="True" />
                   </StackPanel>
-                  <!-- A cloud account's settings, changed in place -->
+                  <!-- A cloud account's settings, or an Ollama or llama.cpp account's, changed in place -->
                   <StackPanel Spacing="8" IsVisible="{Binding IsEditingDetails}">
-                    <ContentControl Content="{Binding Details}" />
+                    <ContentControl Content="{Binding Details}" IsVisible="{Binding Details, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                    <ContentControl Content="{Binding LocalDetails}" IsVisible="{Binding LocalDetails, Converter={x:Static ObjectConverters.IsNotNull}}" />
                     <StackPanel Orientation="Horizontal" Spacing="8">
                       <Button Classes="accent" Content="Save changes" Command="{Binding SaveDetailsCommand}" />
                       <Button Content="Cancel" Command="{Binding CancelDetailsCommand}" />
@@ -272,7 +273,8 @@
             </c:SettingRow>
             <TextBlock Classes="small muted" TextWrapping="Wrap" Text="{Binding ApiKeyNote}" Margin="8,0" />
           </StackPanel>
-          <ContentControl Content="{Binding NewCloud}" IsVisible="{Binding !IsNewApiKey}" />
+          <ContentControl Content="{Binding NewCloud}" IsVisible="{Binding NewCloud, Converter={x:Static ObjectConverters.IsNotNull}}" />
+          <ContentControl Content="{Binding NewLocal}" IsVisible="{Binding NewLocal, Converter={x:Static ObjectConverters.IsNotNull}}" />
           <Button Classes="accent" Content="Add account" Command="{Binding AddCommand}" IsEnabled="{Binding CanAdd}" HorizontalAlignment="Left" />
           <TextBlock Classes="small" TextWrapping="Wrap" Text="{Binding AddStatus}" IsVisible="{Binding AddStatus, Converter={x:Static ObjectConverters.IsNotNull}}" />
         </StackPanel>

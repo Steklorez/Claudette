@@ -1,0 +1,115 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:settings="using:Deventry.App.ViewModels.Settings"
+             xmlns:c="using:Deventry.App.Controls"
+             x:Class="Deventry.App.Views.Settings.LocalAccountFormView"
+             x:DataType="settings:LocalAccountForm">
+  <!-- An Ollama or llama.cpp account's settings (DESIGN.md §18, "Ollama and llama.cpp accounts"): adding one, or changing one's.
+       Settings → Agents → Claude Code → Accounts shows it, and so does the sign-in screen. -->
+  <StackPanel Spacing="8">
+    <!-- What its tabs will be, before anything is filled in -->
+    <Border Classes="settingsnote">
+      <StackPanel Spacing="6">
+        <TextBlock Classes="small" TextWrapping="Wrap" Text="{Binding Explanation}" />
+        <TextBlock Classes="small muted" TextWrapping="Wrap" Text="{Binding HowItWorks}" />
+        <StackPanel Orientation="Horizontal" Spacing="12">
+          <Button Classes="settingslink" Content="{Binding ProjectText}" Command="{Binding OpenProjectCommand}" ToolTip.Tip="{Binding Kind.ProjectUrl}" />
+          <Button Classes="settingslink" Content="{Binding DocsText}" Command="{Binding OpenDocsCommand}" ToolTip.Tip="{Binding Kind.DocsUrl}" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- The server -->
+    <c:SettingRow Title="Address" Padding="8,4">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+        <TextBox Text="{Binding Address}" PlaceholderText="{Binding AddressPlaceholder}" AutomationProperties.Name="Server's address" />
+        <Button Grid.Column="1" Content="Check" Command="{Binding CheckCommand}" IsEnabled="{Binding !IsChecking}" />
+      </Grid>
+    </c:SettingRow>
+    <TextBlock Classes="small" TextWrapping="Wrap" Margin="8,0" Text="{Binding CheckText}"
+               Classes.warning="{Binding CheckFailed}" IsVisible="{Binding CheckText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+
+    <!-- The model, from what Check found, or typed -->
+    <c:SettingRow Title="Model" Padding="8,4">
+      <StackPanel Spacing="6">
+        <ComboBox ItemsSource="{Binding ModelChoices}" SelectedItem="{Binding SelectedModel}" HorizontalAlignment="Stretch"
+                  PlaceholderText="Check the server for its models" AutomationProperties.Name="The server's models">
+          <ComboBox.ItemTemplate>
+            <DataTemplate DataType="settings:LocalModelChoice">
+              <StackPanel Spacing="1">
+                <TextBlock Text="{Binding Name}" />
+                <TextBlock Classes="small muted" Text="{Binding Detail}" TextWrapping="Wrap" />
+              </StackPanel>
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <TextBox Text="{Binding Model}" PlaceholderText="the model's name, such as qwen3:8b" AutomationProperties.Name="Model's name" />
+      </StackPanel>
+    </c:SettingRow>
+    <TextBlock Classes="small warning" TextWrapping="Wrap" Margin="8,0" Text="{Binding ModelNote}"
+               IsVisible="{Binding ModelNote, Converter={x:Static ObjectConverters.IsNotNull}}" />
+    <c:SettingRow Title="Model for background work (optional)" Padding="8,4">
+      <TextBox Text="{Binding BackgroundModel}" PlaceholderText="the same model" AutomationProperties.Name="Model for background work" />
+    </c:SettingRow>
+
+    <!-- The window, and what it means for Claude Code -->
+    <c:SettingRow Title="Window (tokens)" Padding="8,4">
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <NumericUpDown Minimum="0" Maximum="2000000" Increment="4096" FormatString="N0" Value="{Binding WindowValue}" Width="160"
+                       AutomationProperties.Name="Window in tokens" />
+        <Button Content="Check the window" Command="{Binding CheckWindowCommand}" IsEnabled="{Binding !IsChecking}" />
+      </StackPanel>
+    </c:SettingRow>
+    <TextBlock Classes="small" TextWrapping="Wrap" Margin="8,0" Text="{Binding WindowNote}" Classes.warning="{Binding WindowIsSmall}" />
+    <StackPanel Spacing="8" Margin="8,0" IsVisible="{Binding CanMakeCopy}">
+      <Button Content="{Binding CopyText}" Command="{Binding MakeCopy.AskCommand}" IsVisible="{Binding !MakeCopy.IsOpen}" HorizontalAlignment="Left" />
+      <StackPanel Spacing="8" IsVisible="{Binding MakeCopy.IsOpen}">
+        <TextBlock Classes="small" TextWrapping="Wrap" Text="{Binding CopyQuestion}" />
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Button Classes="accent" Content="Make the copy" Command="{Binding MakeCopy.ConfirmCommand}" />
+          <Button Content="Cancel" Command="{Binding MakeCopy.CancelCommand}" />
+        </StackPanel>
+      </StackPanel>
+    </StackPanel>
+    <c:SettingRow Title="Longest reply (tokens)" Padding="8,4">
+      <NumericUpDown Minimum="1024" Maximum="32000" Increment="1024" FormatString="N0" Value="{Binding LongestReplyValue}" Width="160"
+                     AutomationProperties.Name="Longest reply in tokens" />
+    </c:SettingRow>
+
+    <!-- The key, for llama-server's or ollama.com's -->
+    <CheckBox IsChecked="{Binding TakesKey}" Margin="8,0" AutomationProperties.Name="{Binding TakesKeyText}">
+      <TextBlock TextWrapping="Wrap" Text="{Binding TakesKeyText}" />
+    </CheckBox>
+    <StackPanel Spacing="6" IsVisible="{Binding TakesKey}">
+      <c:SettingRow Title="API key" Padding="8,4">
+        <TextBox Text="{Binding ApiKey}" PasswordChar="•" PlaceholderText="{Binding KeyPlaceholder}" AutomationProperties.Name="Server's API key" />
+      </c:SettingRow>
+      <TextBlock Classes="small muted" TextWrapping="Wrap" Margin="8,0" Text="{Binding KeyNote}" />
+    </StackPanel>
+
+    <!-- Starting the server when it isn't running -->
+    <CheckBox IsChecked="{Binding StartServer}" IsEnabled="{Binding CanStartServer}" Margin="8,0" AutomationProperties.Name="{Binding StartText}">
+      <TextBlock TextWrapping="Wrap" Text="{Binding StartText}" />
+    </CheckBox>
+    <TextBlock Classes="small muted" TextWrapping="Wrap" Margin="8,0" Text="{Binding StartNote}" />
+    <StackPanel Spacing="8" IsVisible="{Binding StartServer}">
+      <c:SettingRow Title="{Binding ServerPathTitle}" Padding="8,4" IsEnabled="{Binding CanStartServer}">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+          <TextBox Text="{Binding ServerPath}" PlaceholderText="{Binding ServerPathPlaceholder}" AutomationProperties.Name="{Binding ServerPathTitle}" />
+          <Button Grid.Column="1" Content="Browse…" Command="{Binding BrowseServerCommand}" />
+        </Grid>
+      </c:SettingRow>
+      <c:SettingRow Title="Model to load" Padding="8,4" IsVisible="{Binding IsLlamaCpp}" IsEnabled="{Binding CanStartServer}">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+          <TextBox Text="{Binding ServerModel}" PlaceholderText="a .gguf file, or user/repo:quant on Hugging Face" AutomationProperties.Name="Model llama-server loads" />
+          <Button Grid.Column="1" Content="Browse…" Command="{Binding BrowseServerModelCommand}" />
+        </Grid>
+      </c:SettingRow>
+    </StackPanel>
+
+    <!-- Claude Code itself -->
+    <CheckBox IsChecked="{Binding KeepOffline}" Margin="8,0" Content="Keep Claude Code off the internet" />
+    <TextBlock Classes="small muted" TextWrapping="Wrap" Margin="8,0"
+               Text="No telemetry, error reports, update checks or feature flags from Claude Code, and no check with Anthropic before WebFetch reads a page. Claude Code's features that wait on its feature flags stay off too." />
+  </StackPanel>
+</UserControl>

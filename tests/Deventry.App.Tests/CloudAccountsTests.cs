@@ -163,7 +163,7 @@ public class CloudAccountsTests
         await using var h = new TabTestHarness();
         var keys = UseKeys(h);
         using var page = new ClaudeCodePage(new SettingsContext(h.Services), null, null);
-        Assert.Equal(["Anthropic API key", "Amazon Bedrock", "Claude Platform on AWS", "Google Cloud's Agent Platform", "Claude Models on Google Cloud", "Microsoft Foundry"],
+        Assert.Equal(["Anthropic API key", "Amazon Bedrock", "Claude Platform on AWS", "Google Cloud's Agent Platform", "Claude Models on Google Cloud", "Microsoft Foundry", "Ollama", "llama.cpp"],
             page.KindChoices.Select(c => c.Label));
 
         page.NewName = "Studio";
