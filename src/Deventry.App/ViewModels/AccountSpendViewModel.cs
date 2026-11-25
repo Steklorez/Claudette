@@ -48,17 +48,33 @@ public sealed partial class AccountSpendViewModel : ViewModelBase, IDisposable
         _ticker.Dispose();
     }
 
-    /// <summary>The selected tab's API-key or cloud provider account; null while it runs under Default, and the plan meters show.</summary>
+    /// <summary>
+    /// The selected tab's API-key, cloud provider, Ollama or llama.cpp account; null while it runs under Default, and the
+    /// plan meters show.
+    /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsShown), nameof(Tag), nameof(KindText))]
+    [NotifyPropertyChangedFor(nameof(IsShown), nameof(Tag), nameof(KindText), nameof(HasSpend), nameof(AccessibleName))]
     public partial ClaudeAccount? Account { get; private set; }
 
     public bool IsShown => Account is not null;
 
+    /// <summary>The account spends: an Ollama or llama.cpp account's model runs on the user's own server, for nothing (DESIGN.md §18).</summary>
+    public bool HasSpend => Account is { IsLocal: false };
+
     public AccountTag? Tag => AccountTag.For(Account, showDefault: false);
 
-    /// <summary>What the account is, beside its name: "API key, estimated", "Amazon Bedrock, estimated".</summary>
-    public string KindText => Account is null ? "" : $"{Account.KindName}, estimated";
+    /// <summary>
+    /// What the account is, beside its name: "API key, estimated", "Amazon Bedrock, estimated", or for one whose model runs
+    /// on the user's own server, the model and where: "Ollama · qwen3:8b · on this computer".
+    /// </summary>
+    public string KindText => Account switch
+    {
+        null => "",
+        { Server: { } server, Local: { } local } => $"{server.Name} · {local.Model} · {LocalServers.Where(local.Address)}",
+        _ => $"{Account.KindName}, estimated",
+    };
+
+    public string AccessibleName => HasSpend ? "Estimated API spend" : "The model's server";
 
     [ObservableProperty]
     public partial string TodayText { get; private set; } = "";
@@ -70,8 +86,9 @@ public sealed partial class AccountSpendViewModel : ViewModelBase, IDisposable
     public partial string MonthText { get; private set; } = "";
 
     /// <summary>Whose tabs the spend is from: other machines' too, while they share their usage (DESIGN.md §6, "Sharing across machines").</summary>
-    public string Tooltip =>
-        (_services.Settings.Usage.ShareThroughLibrary
+    public string Tooltip => Account is { Server: { } server, Local: { } local }
+        ? $"Claude Code runs on {local.Model}, which {server.ServerName} serves {LocalServers.Where(local.Address)}: nothing is spent. Click for usage details."
+        : (_services.Settings.Usage.ShareThroughLibrary
             ? $"Estimated spend on this {SpendSubject} from this machine's tabs, and other machines' tabs that sync to the session library under an account of the same name"
             : $"Estimated spend on this {SpendSubject} from this machine's tabs")
         + ", with the turns running counted as they go: Claude Code's own estimates at list price, not your bill. Click for usage details.";
@@ -83,8 +100,8 @@ public sealed partial class AccountSpendViewModel : ViewModelBase, IDisposable
     {
         Account = account;
         OnPropertyChanged(nameof(Tooltip));
-        _ticker.Run(account is not null);
-        if (account is null)
+        _ticker.Run(account is { IsLocal: false });
+        if (account is null or { IsLocal: true })
         {
             TodayText = WeekText = MonthText = "";
             return;
@@ -130,7 +147,7 @@ public sealed partial class AccountSpendViewModel : ViewModelBase, IDisposable
     /// <summary>Reads the spend off the UI thread.</summary>
     internal async Task RefreshAsync()
     {
-        if (Account is not { } account)
+        if (Account is not { IsLocal: false } account)
         {
             return;
         }

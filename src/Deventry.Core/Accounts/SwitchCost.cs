@@ -39,4 +39,25 @@ public static class SwitchCost
             _ => $"{read}, billed to its API key.",
         };
     }
+
+    /// <summary>
+    /// A conversation of <paramref name="tokens"/> fits an Ollama or llama.cpp account's model: under where Claude Code
+    /// would compact it, which on a small window it couldn't, since the compaction reads the whole conversation too
+    /// (DESIGN.md §18, "Moving a tab, and passing work off"). One whose size isn't known is taken to fit.
+    /// </summary>
+    public static bool Fits(LocalServerSettings local, long tokens) =>
+        tokens <= 0 || local.Window <= 0 || tokens < LocalServers.CompactionPoint(local.Window, local.LongestReply);
+
+    /// <summary>What moving a conversation to an Ollama or llama.cpp account means: the model reads it, for nothing.</summary>
+    public static string DescribeLocal(LocalServerKind server, LocalServerSettings local, long tokens) =>
+        (tokens > 0
+            ? $"{local.Model} reads the conversation's {tokens.ToString("N0", CultureInfo.CurrentCulture)} tokens again on {server.ServerName}, {LocalServers.Where(local.Address)}"
+            : $"{local.Model} reads the conversation again on {server.ServerName}, {LocalServers.Where(local.Address)}")
+        + ": it's free, and takes a moment. Its window is "
+        + (local.Window > 0 ? $"{local.Window.ToString("N0", CultureInfo.CurrentCulture)} tokens." : "what the server gives it.");
+
+    /// <summary>Why a conversation can't move to an Ollama or llama.cpp account as it is, and what it can do instead.</summary>
+    public static string DoesntFit(string accountName, LocalServerSettings local, long tokens) =>
+        $"The conversation's {tokens.ToString("N0", CultureInfo.CurrentCulture)} tokens don't fit {local.Model}'s {local.Window.ToString("N0", CultureInfo.CurrentCulture)}-token window, so it can't move to {accountName} as it is. " +
+        $"Start a new chat under {accountName} instead, with a digest of this one in the composer for you to trim and send; this conversation stays in History.";
 }

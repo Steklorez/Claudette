@@ -1,0 +1,56 @@
+﻿"Accounts"
+"This computer"
+[button] Reset to defaults
+"Tabs run under Default, your own sign-in, unless their folder group's Account menu, or the tab's own, picks another."
+"Default"
+"Signed in as me@example.com"
+[field] "Home"
+[choice] "Blue"
+"Ollama · qwen3:8b"
+[button] Change settings…
+[button] Remove…
+"New folders use"
+"Which account a folder opened for the first time runs under."
+[choice] "Default"
+"Warn before continuing a session under another account"
+"Ask first when a session started under one account is about to carry on under another.  "
+[toggle on] Warn before continuing a session under another account
+"Add an account"
+"Keys are kept in Test Keychain, never in Deventry's files, and never synced. A cloud provider's account can sign in without one, through its own tools."
+"Name"
+[field] "for example: Work"
+"Kind"
+[choice] "Ollama"
+"Claude Code runs as it always does, but its model runs in Ollama on this computer, or at the address below. Your prompts and files go to that server for the model's answers, and nowhere else. Claude Code itself still talks to Anthropic for its updates and telemetry unless you keep it off the internet below. Anthropic doesn't support Claude Code on models other than Claude: how well it works depends on the model you choose, and what goes wrong is the model's or the server's to fix, not Claude Code's."
+"Ollama runs a model at the window its own setting gives it (the app's slider, or OLLAMA_CONTEXT_LENGTH), which a request can't change: 4,096 tokens on a GPU under 24 GB unless changed. A server Deventry starts runs at the window below."
+[button] ollama.com
+[button] Claude Code on Ollama
+"Address"
+[field] "http://localhost:11434"
+[button] Check
+"Ollama runs qwen3:8b at 4,096 tokens."
+"Model"
+[choice] "qwen3:8b"
+[field] "qwen3:8b"
+"Model for background work (optional)"
+[field] "the same model"
+"Window (tokens)"
+[button] (icon)
+[button] (icon)
+[field] "40,960"
+[button] Check the window
+"Ollama runs qwen3:8b with a 4,096-token window here, not 40,960. Ollama would cut the start off each request without saying so, and Claude would forget what it was doing. Make a copy of the model with the window below, change Ollama's own setting, or let Deventry start Ollama, which runs it at the window below."
+[button] Make a copy with a 40,960-token window…
+"Longest reply (tokens)"
+[button] (icon)
+[button] (icon)
+[field] "8,192"
+[ ] It takes an API key (for Ollama's cloud at https://ollama.com)
+[x] Start Ollama when it isn't running
+"Deventry runs "ollama serve" on the address's port, with the window below as the default for the models it loads, and stops it when Deventry closes. An Ollama that's already running, such as Ollama's app, is used as it is."
+"Path to ollama"
+[field] "Not found: install Ollama, or choose ollama"
+[button] Browse…
+[ ] Keep Claude Code off the internet
+"No telemetry, error reports, update checks or feature flags from Claude Code, and no check with Anthropic before WebFetch reads a page. Claude Code's features that wait on its feature flags stay off too."
+[button] Add account

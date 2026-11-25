@@ -19,6 +19,12 @@ public sealed partial class SignInViewModel : ViewModelBase
 
     /// <summary>Codex, offered beside Claude Code on the launch screen (DESIGN.md §18, "Installing and signing in"); null in the banner's dialog.</summary>
     public CodexSetupViewModel? Codex { get; init; }
+
+    /// <summary>
+    /// An Ollama or llama.cpp account in place of a sign-in, on the launch screen (DESIGN.md §18, "Without a Claude
+    /// account"); null in the banner's dialog.
+    /// </summary>
+    public LocalAccountOfferViewModel? LocalAccount { get; init; }
     private const string FinishInBrowserText = "Finish signing in in your browser.";
 
     private readonly AppServices _services;

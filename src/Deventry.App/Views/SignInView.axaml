@@ -59,6 +59,30 @@
         <TextBlock Classes="muted small" TextWrapping="Wrap" IsVisible="{Binding IsUsingCommand}"
                    Text="Signing in with claude auth login. It opens your browser itself." />
       </StackPanel>
+      <!-- An Ollama or llama.cpp account in place of a sign-in (DESIGN.md §18, "Without a Claude account") -->
+      <StackPanel Spacing="8" IsVisible="{Binding LocalAccount, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <Button Content="{x:Static vm:LocalAccountOfferViewModel.OfferText}" Command="{Binding LocalAccount.OpenCommand, FallbackValue={x:Null}}"
+                IsVisible="{Binding !LocalAccount.IsOpen, FallbackValue=False}" />
+        <StackPanel Spacing="8" IsVisible="{Binding LocalAccount.IsOpen, FallbackValue=False}" MaxWidth="640">
+          <TextBlock Classes="small muted" TextWrapping="Wrap" Text="{Binding LocalAccount.Note, FallbackValue=''}" />
+          <WrapPanel ItemSpacing="8" LineSpacing="8">
+            <ComboBox ItemsSource="{Binding LocalAccount.Kinds, FallbackValue={x:Null}}" SelectedItem="{Binding LocalAccount.Kind, FallbackValue={x:Null}}" MinWidth="160"
+                      AutomationProperties.Name="Server" />
+            <TextBox Text="{Binding LocalAccount.Name, FallbackValue=''}" PlaceholderText="Account name (optional)" MinWidth="200"
+                     AutomationProperties.Name="Account name" />
+          </WrapPanel>
+          <ScrollViewer MaxHeight="420">
+            <ContentControl Content="{Binding LocalAccount.Form, FallbackValue={x:Null}}" />
+          </ScrollViewer>
+          <TextBlock Classes="small error" TextWrapping="Wrap" Text="{Binding LocalAccount.Status, FallbackValue=''}"
+                     IsVisible="{Binding LocalAccount.Status, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}" />
+          <WrapPanel ItemSpacing="8" LineSpacing="8">
+            <Button Classes="accent" Content="Add it and open Deventry" Command="{Binding LocalAccount.AddCommand, FallbackValue={x:Null}}"
+                    IsEnabled="{Binding !LocalAccount.IsAdding, FallbackValue=False}" />
+            <Button Content="Cancel" Command="{Binding LocalAccount.CloseCommand, FallbackValue={x:Null}}" />
+          </WrapPanel>
+        </StackPanel>
+      </StackPanel>
       <views:CodexOfferView DataContext="{Binding Codex}" IsVisible="{Binding $self.DataContext, Converter={x:Static ObjectConverters.IsNotNull}}" />
     </StackPanel>
   </Border>

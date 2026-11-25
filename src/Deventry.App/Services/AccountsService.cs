@@ -44,6 +44,12 @@ public sealed class AccountsService(AppServices services, ICredentialStore crede
 
     public bool HasAccounts => All.Count > 0;
 
+    /// <summary>
+    /// There's an Ollama or llama.cpp account, whose tabs need no sign-in, so Deventry opens without Claude Code's
+    /// (DESIGN.md §18, "Without a Claude account").
+    /// </summary>
+    public bool HasLocalAccounts => All.Any(a => a.IsLocal);
+
     /// <summary>The account with <paramref name="id"/>; null for Default, or for one that's gone.</summary>
     public ClaudeAccount? Find(string? id) => AccountState.Find(services.State, id);
 
@@ -130,6 +136,98 @@ public sealed class AccountsService(AppServices services, ICredentialStore crede
         }
         Add(account);
         return account;
+    }
+
+    /// <summary>
+    /// Adds an Ollama or llama.cpp account (DESIGN.md §18, "Ollama and llama.cpp accounts"). Its key, if its server takes
+    /// one, goes to the credential store first, so an account is only added once its key is saved.
+    /// </summary>
+    /// <exception cref="CredentialStoreException">The key couldn't be saved.</exception>
+    /// <exception cref="ArgumentException">What the account says isn't right (<see cref="LocalServers.Problem"/>), or it has no key it says it has.</exception>
+    public async Task<ClaudeAccount> AddLocalAccountAsync(string name, LocalServerKind server, LocalServerSettings local, string? key)
+    {
+        var settings = Normalized(server, local);
+        if (settings.HasKey && key?.Trim() is not { Length: > 0 })
+        {
+            throw new ArgumentException("Paste the server's API key, or untick that it takes one.", nameof(key));
+        }
+        var account = new ClaudeAccount
+        {
+            Name = name.Trim(),
+            Kind = server.Kind,
+            Local = settings,
+            Color = TabGroupViewModel.ToHex(NextColor()),
+        };
+        if (settings.HasKey)
+        {
+            await Credentials.WriteAsync(AccountSecrets.CredentialKey(account.Id), AccountSecrets.CredentialLabel(account), key!.Trim()).ConfigureAwait(false);
+        }
+        Add(account);
+        return account;
+    }
+
+    /// <summary>
+    /// Saves what an Ollama or llama.cpp account says, which its tabs use when they start again: a new key replaces its
+    /// key, and one it no longer takes is removed from the credential store.
+    /// </summary>
+    /// <param name="key">A new key; null keeps the one it has.</param>
+    /// <exception cref="CredentialStoreException">The key couldn't be saved or removed.</exception>
+    /// <exception cref="ArgumentException">It isn't right, or it takes a key it hasn't been given.</exception>
+    public async Task SetLocalAsync(ClaudeAccount account, LocalServerSettings local, string? key)
+    {
+        if (account is not { Server: { } server, Local: { } before })
+        {
+            return;
+        }
+        var settings = Normalized(server, local);
+        var newKey = key?.Trim() is { Length: > 0 } trimmed ? trimmed : null;
+        if (settings.HasKey && newKey is null && !before.HasKey)
+        {
+            throw new ArgumentException("Paste the server's API key, or untick that it takes one.", nameof(key));
+        }
+        if (settings.HasKey && newKey is not null)
+        {
+            await Credentials.WriteAsync(AccountSecrets.CredentialKey(account.Id), AccountSecrets.CredentialLabel(account), newKey).ConfigureAwait(false);
+        }
+        else if (!settings.HasKey && before.HasKey)
+        {
+            await Credentials.DeleteAsync(AccountSecrets.CredentialKey(account.Id)).ConfigureAwait(false);
+        }
+        services.Dispatcher.Post(() =>
+        {
+            account.Local = settings;
+            services.SaveState();
+            Changed?.Invoke();
+        });
+    }
+
+    private static LocalServerSettings Normalized(LocalServerKind server, LocalServerSettings local)
+    {
+        if (LocalServers.Problem(server, local) is { } problem)
+        {
+            throw new ArgumentException(problem, nameof(local));
+        }
+        var settings = local.Copy();
+        settings.Address = LocalServers.NormalizeAddress(local.Address)!;
+        settings.Model = local.Model.Trim();
+        settings.BackgroundModel = local.BackgroundModel?.Trim() is { Length: > 0 } background && background != settings.Model ? background : null;
+        settings.ServerPath = local.ServerPath?.Trim() is { Length: > 0 } path ? path : null;
+        settings.ServerModel = local.ServerModel?.Trim() is { Length: > 0 } model ? model : null;
+        return settings;
+    }
+
+    /// <summary>An account's key from the credential store, for Deventry's own requests to its server.</summary>
+    /// <exception cref="Core.LocalModels.LocalServerException">It couldn't be read.</exception>
+    public async Task<string?> ReadKeyAsync(ClaudeAccount account)
+    {
+        try
+        {
+            return await Credentials.ReadAsync(AccountSecrets.CredentialKey(account.Id)).ConfigureAwait(false);
+        }
+        catch (CredentialStoreException ex)
+        {
+            throw new Core.LocalModels.LocalServerException($"Deventry couldn't read {account.Name}'s key from {Credentials.Name}: {ex.Message}", ex);
+        }
     }
 
     private void Add(ClaudeAccount account) => services.Dispatcher.Post(() =>
@@ -221,7 +319,10 @@ public sealed class AccountsService(AppServices services, ICredentialStore crede
         {
             return null;
         }
-        if (HelperExecutable is not { } executable || !ApiKeyHelper.IsSafePath(executable))
+        // Only an account whose key the helper gives needs Deventry's path in a command; an Ollama without a key doesn't.
+        var usesHelper = account.IsApiKey || account.Local is { HasKey: true };
+        var executable = HelperExecutable ?? "";
+        if (usesHelper && !ApiKeyHelper.IsSafePath(executable))
         {
             throw new InvalidOperationException($"Claude Code can't be given {account.Name}'s credentials: Deventry's own path ({HelperExecutable ?? "unknown"}) can't go in a command as it is.");
         }
@@ -328,7 +429,7 @@ public sealed class AccountsService(AppServices services, ICredentialStore crede
         _ = OnSpendRecordedAsync(accountId);
     }
 
-    /// <summary>What a spend warning says the spend is on: "Work's API key", "Studio's Amazon Bedrock account".</summary>
+    /// <summary>What a spend warning says the spend is on: "Work's API key", "Studio's Amazon Bedrock account". Local accounts have none.</summary>
     public static string SpendOn(ClaudeAccount account) =>
         account.Provider is { } provider ? $"{account.Name}'s {provider.Name} account" : $"{account.Name}'s API key";
 }

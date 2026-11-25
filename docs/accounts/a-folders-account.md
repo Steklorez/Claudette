@@ -1,7 +1,7 @@
 ---
 title: A folder's account
 parent: Accounts
-nav_order: 4
+nav_order: 5
 summary: "Each folder group in the sidebar has an account that its new tabs run under."
 ---
 

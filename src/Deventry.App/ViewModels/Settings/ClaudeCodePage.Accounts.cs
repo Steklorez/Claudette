@@ -18,22 +18,30 @@ public sealed partial class AccountEditor : ObservableObject
     private readonly AccountsService _accounts;
     private readonly Func<string, Task<string?>> _pickFile;
     private readonly Func<string, Task> _openUrl;
+    private readonly LocalServersService? _servers;
 
-    public AccountEditor(AccountsService accounts, ClaudeAccount account, Func<string, Task<string?>>? pickFile = null, Func<string, Task>? openUrl = null)
+    public AccountEditor(AccountsService accounts, ClaudeAccount account, Func<string, Task<string?>>? pickFile = null, Func<string, Task>? openUrl = null,
+        LocalServersService? servers = null)
     {
         _accounts = accounts;
         _pickFile = pickFile ?? (_ => Task.FromResult<string?>(null));
         _openUrl = openUrl ?? (_ => Task.CompletedTask);
+        _servers = servers;
         Account = account;
         Removal = new InlineConfirmation(RemoveAsync);
     }
 
     public ClaudeAccount Account { get; }
 
-    /// <summary>What it is, beside its name: "API key", "Amazon Bedrock · AWS profile or SSO".</summary>
+    /// <summary>What it is, beside its name: "API key", "Amazon Bedrock · AWS profile or SSO", "Ollama · qwen3:8b".</summary>
     public string KindText => Account is { Provider: { } provider, Cloud: { } cloud }
         ? $"{provider.Name} · {CloudSignIns.Label(cloud.SignIn, provider)}"
-        : Account.KindName;
+        : Account is { Server: { } server, Local: { } local }
+            ? $"{server.Name} · {local.Model}"
+            : Account.KindName;
+
+    /// <summary>It spends: an Ollama or llama.cpp account's model runs on the user's own server, which charges nothing.</summary>
+    public bool HasSpend => !Account.IsLocal;
 
     /// <summary>Renamed as the box loses focus; an empty name keeps the old one.</summary>
     public string Name
@@ -91,8 +99,11 @@ public sealed partial class AccountEditor : ObservableObject
 
     // ---- The key ------------------------------------------------------------------------------------------------------
 
-    /// <summary>It has a key to change: an API key, or a cloud account that signs in with one.</summary>
-    public bool HasKey => Account.HasSecret;
+    /// <summary>
+    /// It has a key to change on its own: an API key, or a cloud account that signs in with one. An Ollama or llama.cpp
+    /// account's key is in its settings.
+    /// </summary>
+    public bool HasKey => Account.HasSecret && !Account.IsLocal;
 
     /// <summary>Its key goes in the environment of its tabs' <c>claude</c>: changing it says so again.</summary>
     public bool ExposesKey => Account.Cloud is { } cloud && CloudSignIns.PutsKeyInEnvironment(cloud.SignIn);
@@ -157,12 +168,19 @@ public sealed partial class AccountEditor : ObservableObject
 
     public bool IsCloud => Account.IsCloudProvider;
 
+    /// <summary>Its settings can be changed: a cloud account's, or an Ollama or llama.cpp account's.</summary>
+    public bool HasDetails => Account.IsCloudProvider || Account.IsLocal;
+
     /// <summary>The settings being changed, while <see cref="IsEditingDetails"/>.</summary>
     [ObservableProperty]
     public partial CloudAccountForm? Details { get; private set; }
 
     [ObservableProperty]
     public partial bool IsEditingDetails { get; private set; }
+
+    /// <summary>An Ollama or llama.cpp account's settings being changed, while <see cref="IsEditingDetails"/>.</summary>
+    [ObservableProperty]
+    public partial LocalAccountForm? LocalDetails { get; private set; }
 
     [RelayCommand]
     private void EditDetails()
@@ -173,6 +191,12 @@ public sealed partial class AccountEditor : ObservableObject
             Details = new CloudAccountForm(provider, _accounts.Credentials.Name, _pickFile, _openUrl, cloud);
             IsEditingDetails = true;
         }
+        else if (Account is { Server: { } server, Local: { } local } && _servers is not null)
+        {
+            Status = null;
+            LocalDetails = new LocalAccountForm(server, _servers, _accounts.Credentials.Name, _pickFile, _openUrl, local, () => _accounts.ReadKeyAsync(Account));
+            IsEditingDetails = true;
+        }
     }
 
     [RelayCommand]
@@ -180,11 +204,18 @@ public sealed partial class AccountEditor : ObservableObject
     {
         IsEditingDetails = false;
         Details = null;
+        LocalDetails?.ClearSecrets();
+        LocalDetails = null;
     }
 
     [RelayCommand]
-    private void SaveDetails()
+    private async Task SaveDetailsAsync()
     {
+        if (LocalDetails is { } local)
+        {
+            await SaveLocalAsync(local);
+            return;
+        }
         if (Details is not { } form)
         {
             return;
@@ -199,6 +230,31 @@ public sealed partial class AccountEditor : ObservableObject
         IsEditingDetails = false;
         Details = null;
         OnPropertyChanged(nameof(KindText));
+    }
+
+    private async Task SaveLocalAsync(LocalAccountForm form)
+    {
+        if (form.Problem is { } problem)
+        {
+            Status = problem;
+            return;
+        }
+        try
+        {
+            await _accounts.SetLocalAsync(Account, form.ToSettings(), form.Secret);
+            Status = $"Saved. Tabs on {Account.Name} use the change when they start again.";
+            IsEditingDetails = false;
+            LocalDetails = null;
+            OnPropertyChanged(nameof(KindText));
+        }
+        catch (Exception ex) when (ex is CredentialStoreException or ArgumentException)
+        {
+            Status = ex.Message;
+        }
+        finally
+        {
+            form.ClearSecrets();
+        }
     }
 
     // ---- Removing it --------------------------------------------------------------------------------------------------
@@ -254,8 +310,11 @@ public sealed class OrganizationRuleRow(RemoteControlService service, Organizati
     public IRelayCommand RemoveCommand { get; } = new RelayCommand(() => service.RemoveRule(rule));
 }
 
-/// <summary>What Settings → Claude Code → Add an account can add: an Anthropic API key, or a cloud provider.</summary>
-public sealed record AccountKindChoice(string Label, CloudProvider? Provider)
+/// <summary>
+/// What Settings → Claude Code → Add an account can add: an Anthropic API key, a cloud provider, or an Ollama or
+/// llama.cpp server.
+/// </summary>
+public sealed record AccountKindChoice(string Label, CloudProvider? Provider, LocalServerKind? Server = null)
 {
     public override string ToString() => Label;
 }
@@ -313,7 +372,7 @@ public sealed partial class ClaudeCodePage
     public string ApiKeyNote =>
         $"Kept in {Accounts.Credentials.Name}. Claude Code asks Deventry for it when a tab starts, so it's never in a command line or the environment.";
 
-    private AccountEditor NewEditor(ClaudeAccount account) => new(Accounts, account, PickFileAsync, Services.Platform.OpenUrlAsync);
+    private AccountEditor NewEditor(ClaudeAccount account) => new(Accounts, account, PickFileAsync, Services.Platform.OpenUrlAsync, Services.LocalServers);
 
     private Task<string?> PickFileAsync(string title) => Services.Platform.PickFileAsync(title);
 
@@ -329,11 +388,20 @@ public sealed partial class ClaudeCodePage
     partial void OnNewKindChanged(AccountKindChoice value)
     {
         NewCloud = value.Provider is { } provider ? new CloudAccountForm(provider, Accounts.Credentials.Name, PickFileAsync, Services.Platform.OpenUrlAsync) : null;
+        NewLocal = value.Server is { } server ? NewLocalForm(server) : null;
         NewKey = "";
         AddStatus = null;
     }
 
-    public bool IsNewApiKey => NewKind.Provider is null;
+    public bool IsNewApiKey => NewKind is { Provider: null, Server: null };
+
+    /// <summary>The new Ollama or llama.cpp account's form; null while adding any other kind.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanAdd))]
+    public partial LocalAccountForm? NewLocal { get; private set; }
+
+    private LocalAccountForm NewLocalForm(LocalServerKind server) =>
+        new(server, Services.LocalServers, Accounts.Credentials.Name, PickFileAsync, Services.Platform.OpenUrlAsync);
 
     /// <summary>The new cloud account's form; null while adding an API key.</summary>
     [ObservableProperty]
@@ -364,7 +432,7 @@ public sealed partial class ClaudeCodePage
     /// The new account can be added here: one with a key needs the credential store, which a Linux without
     /// <c>secret-tool</c> doesn't have; a cloud account that signs in without one doesn't.
     /// </summary>
-    public bool CanAdd => Accounts.Credentials.IsAvailable || NewCloud is { KeepsSecret: false };
+    public bool CanAdd => Accounts.Credentials.IsAvailable || NewCloud is { KeepsSecret: false } || NewLocal is not null;
 
     [ObservableProperty]
     public partial string NewName { get; set; } = "";
@@ -382,6 +450,11 @@ public sealed partial class ClaudeCodePage
         if (NewCloud is { } cloud)
         {
             await AddCloudAsync(name, cloud);
+            return;
+        }
+        if (NewLocal is { } local)
+        {
+            await AddLocalAsync(name, local);
             return;
         }
         if (name.Length == 0 || NewKey.Trim().Length == 0)
@@ -434,6 +507,39 @@ public sealed partial class ClaudeCodePage
         finally
         {
             cloud.ClearSecrets();
+        }
+    }
+
+    private async Task AddLocalAsync(string name, LocalAccountForm local)
+    {
+        if (name.Length == 0)
+        {
+            AddStatus = "Give the account a name.";
+            return;
+        }
+        if (local.Problem is { } problem)
+        {
+            AddStatus = problem;
+            return;
+        }
+        if (local.TakesKey && !Accounts.Credentials.IsAvailable)
+        {
+            AddStatus = Accounts.Credentials.UnavailableReason;
+            return;
+        }
+        try
+        {
+            await Accounts.AddLocalAccountAsync(name, local.Kind, local.ToSettings(), local.Secret);
+            Added(name);
+            NewLocal = NewLocalForm(local.Kind);
+        }
+        catch (Exception ex) when (ex is CredentialStoreException or ArgumentException)
+        {
+            AddStatus = ex.Message;
+        }
+        finally
+        {
+            local.ClearSecrets();
         }
     }
 

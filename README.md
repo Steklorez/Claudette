@@ -36,7 +36,7 @@ Live meters for the session, the week and each model's limit, with a projection:
 
 ### Your plan for your projects, their API key for theirs
 
-Run a project's tabs on an API key kept in your OS's credential store, and see what it's spending today, this week and this month. [Accounts →](https://deventry.app/accounts/)
+Run a project's tabs on an API key kept in your OS's credential store, and see what it's spending today, this week and this month. Or run them on a model your own computer serves, through Ollama or llama.cpp, for nothing and without a Claude account. [Accounts →](https://deventry.app/accounts/)
 
 ### Review every change Claude makes
 

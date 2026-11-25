@@ -782,6 +782,8 @@ internal sealed class TabTestHarness : IAsyncDisposable
         Services.RemoteControl.EnvironmentVariable = _ => null;
         // Nor whether it has Codex (DESIGN.md §18, "Codex, a second agent"): not found, unless a test says it is.
         Services.FindCodex = _ => Task.FromResult(new Core.Installation.CodexLocateResult(null, Core.Installation.CodexInstallProblem.NotFound, "Codex wasn't found."));
+        // Ollama's and llama-server's programs aren't found, whatever this machine has, unless a test says where they are.
+        Services.LocalServers.FileExists = _ => false;
         // Nor do its organization's managed Claude Code settings (DESIGN.md §7, "Starting mode").
         Services.ClaudeManagedSettingsDirectory = null;
         // Nor its environment, for what Claude Code's configuration says (its DISABLE_PROMPT_CACHING, say).

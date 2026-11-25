@@ -2,8 +2,9 @@ namespace Deventry.Core.Accounts;
 
 /// <summary>
 /// An account a tab can run Claude Code under besides the Default one, Claude Code's own sign-in (DESIGN.md §4,
-/// "Accounts"): an Anthropic API key, or a cloud provider. Kept per machine in the app state; its key, if it has one, is
-/// only in the OS credential store.
+/// "Accounts"): an Anthropic API key, a cloud provider, or a model on the user's own Ollama or <c>llama-server</c>
+/// (DESIGN.md §18, "Ollama and llama.cpp accounts"). Kept per machine in the app state; its key, if it has one, is only in
+/// the OS credential store.
 /// </summary>
 public sealed class ClaudeAccount
 {
@@ -20,6 +21,9 @@ public sealed class ClaudeAccount
 
     /// <summary>A cloud provider account's details; null for an API key.</summary>
     public CloudAccountSettings? Cloud { get; set; }
+
+    /// <summary>An Ollama or llama.cpp account's server and model; null for any other kind.</summary>
+    public LocalServerSettings? Local { get; set; }
 
     /// <summary>Its tag's color, as <c>#RRGGBB</c>.</summary>
     public string Color { get; set; } = "";
@@ -43,14 +47,23 @@ public sealed class ClaudeAccount
 
     public bool IsCloudProvider => Provider is not null;
 
+    /// <summary>The server its model runs on, for an Ollama or llama.cpp account; null for any other kind.</summary>
+    public LocalServerKind? Server => Local is null ? null : LocalServers.Find(Kind);
+
+    /// <summary>Its model runs on the user's own Ollama or <c>llama-server</c>, which charges nothing.</summary>
+    public bool IsLocal => Server is not null;
+
     /// <summary>A kind this Deventry knows, with what it needs: tabs can run under it.</summary>
-    public bool IsUsable => IsApiKey || IsCloudProvider;
+    public bool IsUsable => IsApiKey || IsCloudProvider || IsLocal;
 
-    /// <summary>It has a secret in the credential store: an API key's key, or a cloud provider's (<see cref="AccountSecrets"/>).</summary>
-    public bool HasSecret => IsApiKey || Cloud is { } cloud && CloudSignIns.KeepsSecret(cloud.SignIn);
+    /// <summary>
+    /// It has a secret in the credential store: an API key's key, a cloud provider's, or an Ollama or llama.cpp server's
+    /// (<see cref="AccountSecrets"/>).
+    /// </summary>
+    public bool HasSecret => IsApiKey || Cloud is { } cloud && CloudSignIns.KeepsSecret(cloud.SignIn) || Local is { HasKey: true };
 
-    /// <summary>What it is, as the info card and Settings say it: "API key", "Amazon Bedrock".</summary>
-    public string KindName => Provider?.Name ?? "API key";
+    /// <summary>What it is, as the info card and Settings say it: "API key", "Amazon Bedrock", "Ollama".</summary>
+    public string KindName => Provider?.Name ?? Server?.Name ?? "API key";
 }
 
 /// <summary>
@@ -76,6 +89,12 @@ public static class AccountKinds
 
     /// <summary>Microsoft Foundry (<c>CLAUDE_CODE_USE_FOUNDRY</c>).</summary>
     public const string Foundry = "foundry";
+
+    /// <summary>A model on the user's own Ollama (DESIGN.md §18, "Ollama and llama.cpp accounts").</summary>
+    public const string Ollama = "ollama";
+
+    /// <summary>A model on the user's own <c>llama-server</c>, llama.cpp's.</summary>
+    public const string LlamaCpp = "llamaCpp";
 }
 
 /// <summary>

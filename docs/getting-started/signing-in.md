@@ -47,6 +47,10 @@ If you signed in from a terminal, choose **I've already signed in**. Deventry as
 
 **Try the demo** opens Deventry on made-up projects, with a stand-in for Claude, in a window of its own: see [Trying the demo](trying-the-demo.md).
 
+{% include unreleased.html %}
+
+**Use Ollama or llama.cpp instead** runs Claude Code on a model your own computer serves, with no Claude account: fill in its form and click **Add it and open Deventry**. While you have such an account, Deventry opens without asking you to sign in. See [Ollama and llama.cpp accounts](../accounts/ollama-and-llama-cpp-accounts.md).
+
 ## In the middle of a session
 
 If Claude Code loses its sign-in while Deventry is running, a banner runs across the top of every tab: *Claude Code needs you to sign in.* The tabs stay open. **Sign in** on the banner opens the same screen as a window over the main one, which you can close. **Dismiss** hides the banner until Claude Code needs a sign-in again; the header's account menu still has **Sign in**, and messages you send still wait for it. If Deventry isn't in front, you also get one notification, whatever the number of tabs.

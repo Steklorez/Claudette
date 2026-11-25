@@ -153,7 +153,8 @@ public sealed partial class TabTokensViewModel : ObservableObject
     /// </summary>
     private void ReportRunning()
     {
-        if (IsRunning && _services.Usage is { } usage && _tab.Account is { } account)
+        // An Ollama or llama.cpp account spends nothing (DESIGN.md §18).
+        if (IsRunning && _services.Usage is { } usage && _tab.Account is { IsLocal: false } account)
         {
             usage.SetRunningSpend(_tab.Id, account.Id, _live.SoFar().Calls.Sum(c => Cost(c) ?? 0));
         }

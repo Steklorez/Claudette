@@ -594,7 +594,10 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     // ---- Model, effort and mode (DESIGN.md §5, "Model & effort") ------------------------------------------
 
     /// <summary>Before the tab starts, the models its agent last offered on this machine.</summary>
-    public IReadOnlyList<ModelInfo> Models => _session?.Initialization?.Models.Where(m => m.Value != "default").ToArray()
+    public IReadOnlyList<ModelInfo> Models => Account is { Local: { } local } && _session?.Initialization?.Models is { } offered
+        // Every alias leads to the account's model on a local server: it's offered once (DESIGN.md §18).
+        ? [.. offered.Where(m => m.Value == local.Model).DefaultIfEmpty(offered.FirstOrDefault(m => m.ResolvedModel == local.Model && m.Value != "default")).OfType<ModelInfo>().Take(1)]
+        : _session?.Initialization?.Models.Where(m => m.Value != "default").ToArray()
         ?? _services.KnownModels(Agent);
 
     [ObservableProperty]
@@ -611,7 +614,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
 
     public string EffortName => (Effort is null ? "Default effort" : Formats.Capitalize(Effort)) + (IsUltracode ? " · Ultracode" : "");
 
-    public string ModelBadge => $"{ShortModel(ModelName)} · {(Effort is null ? "Default" : Formats.Capitalize(Effort))}";
+    public string ModelBadge => IsOnLocalModel ? ShortModel(ModelName) : $"{ShortModel(ModelName)} · {(Effort is null ? "Default" : Formats.Capitalize(Effort))}";
 
     /// <summary>
     /// Until its agent starts, the row and the info card show the model and effort it will start with, named from what
@@ -673,7 +676,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         return lastLine ?? $"Claude Code stopped unexpectedly (exit code {exit.ExitCode?.ToString(CultureInfo.InvariantCulture) ?? "unknown"})";
     }
 
-    public IReadOnlyList<EffortChoice> EffortLevels => [.. (CurrentModelInfo?.SupportedEffortLevels ?? []).Select(level => new EffortChoice(level))];
+    public IReadOnlyList<EffortChoice> EffortLevels => IsOnLocalModel ? [] : [.. (CurrentModelInfo?.SupportedEffortLevels ?? []).Select(level => new EffortChoice(level))];
 
     private ModelInfo? CurrentModelInfo => FindModel(_modelId) ?? _session?.Initialization?.Models.FirstOrDefault(m => m.Value == "default");
 
@@ -1318,6 +1321,16 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         {
             return;
         }
+        // A local account's model that can't see, or its server stopped answering (DESIGN.md §18): the message stays in the composer.
+        if (ImagesRefusal(Attachments.Count) is { } refusal)
+        {
+            _conversation.AddNote(refusal, NoteKind.Warning);
+            return;
+        }
+        if (await CheckLocalServerBeforeSendingAsync())
+        {
+            return;
+        }
         var typed = ComposerText.Trim();
         var suffixes = Chips.Select(c => c.Suffix.Text).ToArray();
         var suffixText = suffixes.Length > 0 ? string.Join("\n", suffixes) : null;
@@ -1881,6 +1894,9 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             // An account's settings choose its provider, or none, over Claude Code's own settings and the environment, and
             // its key comes from Deventry's key helper, or for some providers' keys in the environment (DESIGN.md §4,
             // "Accounts").
+            // An Ollama or llama.cpp account's server answers, started if the account says to, with its model loaded
+            // (DESIGN.md §18, "Ollama and llama.cpp accounts").
+            await PrepareLocalServerAsync(_closing.Token);
             var accountLaunch = await _services.Accounts.LaunchForAsync(Account);
             foreach (var (name, value) in accountLaunch?.Environment ?? new Dictionary<string, string?>())
             {
@@ -1914,15 +1930,17 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 // Chosen when asked about the folder's own configuration (DESIGN.md §7, "Folder trust").
                 SettingSources = State.WithoutProjectSettings ? "user" : null,
                 Settings = accountLaunch?.Settings,
-                FallbackModel = settings.ClaudeCode.FallbackModel,
+                // Claude's models mean nothing to a local server: no fallback to one.
+                FallbackModel = IsOnLocalModel ? null : settings.ClaudeCode.FallbackModel,
                 AgentProgressSummaries = settings.ClaudeCode.SubagentProgressSummaries,
                 // The next prompt Claude Code predicts, which the empty composer shows (DESIGN.md §5, "Prompt suggestions").
                 PromptSuggestions = settings.ClaudeCode.PromptSuggestions,
                 // A worktree tab's first start makes its worktree, or opens it again (DESIGN.md §4, "Worktree tabs").
                 Worktree = State.NewWorktree,
                 AddDirectories = [.. State.ExtraFolders.Where(Directory.Exists)],
-                Model = State.Overrides.Model ?? settings.NewTabs.DefaultModel,
-                Effort = State.Overrides.Effort ?? settings.NewTabs.DefaultEffort,
+                Model = accountLaunch?.Model is { } localModel ? LocalModelToStart(localModel) : State.Overrides.Model ?? settings.NewTabs.DefaultModel,
+                Effort = IsOnLocalModel ? null : State.Overrides.Effort ?? settings.NewTabs.DefaultEffort,
+                DisallowedTools = accountLaunch?.DisallowedTools ?? [],
                 PermissionMode = chosenMode ?? (resume is null ? starting.LaunchMode : null),
                 AdditionalArguments = settings.Advanced.ExtraArguments.Split(' ', StringSplitOptions.RemoveEmptyEntries),
                 ProtocolLogPath = _services.ProtocolLogPath(FolderName),
@@ -1959,7 +1977,11 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             _ = LoadSpinnerVerbsAsync();
             _ = LoadPromptCacheConfigAsync();
             _ = LoadTaskListAsync();
-            _services.RememberModels(Agent, session.Initialization?.Models);
+            // A local account's list is its server's model under Claude's aliases, not Claude's models.
+            if (!IsOnLocalModel)
+            {
+                _services.RememberModels(Agent, session.Initialization?.Models);
+            }
             CheckAccountProvider(session.Initialization?.Account.ApiProvider);
             if (Account is null && session.Initialization?.Account is { } signedIn)
             {
@@ -1977,7 +1999,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 _forkNote = null;
             }
             ProcessMonitor.AttachTree(session);
-            Effort = State.Overrides.Effort ?? settings.NewTabs.DefaultEffort;
+            Effort = IsOnLocalModel ? null : State.Overrides.Effort ?? settings.NewTabs.DefaultEffort;
             PermissionMode = session.PermissionMode;
             _modelId = session.Model ?? State.Overrides.Model;
             ModelName = ModelDisplayName(_modelId ?? settings.NewTabs.DefaultModel) ?? CurrentModelInfo?.DisplayName;
@@ -2580,6 +2602,8 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 }
                 // Where the task list stands, with Continue while tasks are left (DESIGN.md §5, "Tasks").
                 OnTurnEndedForTasks();
+                // A local account's server that stopped answering (DESIGN.md §18).
+                OnTurnEndedForLocalServer(completed.Result);
                 if (!completed.Result.IsError)
                 {
                     NotifyTurnFinished(completed.Result);

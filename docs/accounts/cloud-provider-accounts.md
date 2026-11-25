@@ -9,7 +9,7 @@ summary: "A cloud provider account lets a tab run Claude Code through Amazon Bed
 
 A cloud provider account lets a tab run Claude Code through Amazon Bedrock, Google Cloud or Microsoft Foundry instead of your Claude sign-in. It suits a studio whose Claude comes through its cloud, beside a personal plan. You choose where it's used as you would for an API key: [a folder's account](a-folders-account.md), or [moving a tab](moving-a-tab-to-another-account.md).
 
-{% include shot.html name="guide/accounts/settings-accounts" alt="Settings → Claude Code, at its Accounts: Default, signed in, with Sign out…; an API-key account named Studio and an Amazon Bedrock account named Render farm, each with its name, tag color, what it is and its spend warnings; then New folders use, and the switch for warning before a session continues under another account. The sidebar has Tabs, Usage and Advanced under Deventry, and All agents, Claude Code and Codex under Agents" %}
+{% include shot.html name="guide/accounts/settings-accounts" alt="Settings → Claude Code, at its Accounts: Default, signed in, with Sign out…; an API-key account named Studio and an Amazon Bedrock account named Render farm, each with its name, tag color, what it is and its spend warnings, and an Ollama account named Workstation, without spend warnings; then New folders use, and the switch for warning before a session continues under another account. The sidebar has Tabs, Usage and Advanced under Deventry, and All agents, Claude Code and Codex under Agents" %}
 
 ## The providers
 
