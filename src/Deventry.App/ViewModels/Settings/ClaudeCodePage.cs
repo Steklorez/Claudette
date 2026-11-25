@@ -25,7 +25,8 @@ public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
                 "Empty finds Claude Code by itself. A change takes effect the next time Deventry starts.", keywords: ["executable", "binary", "location"]),
         ]);
         Editors = [.. Accounts.All.Select(NewEditor)];
-        KindChoices = [new AccountKindChoice("Anthropic API key", null), .. CloudProviders.All.Select(p => new AccountKindChoice(p.Name, p))];
+        KindChoices = [new AccountKindChoice("Anthropic API key", null), .. CloudProviders.All.Select(p => new AccountKindChoice(p.Name, p)),
+            .. LocalServers.All.Select(k => new AccountKindChoice(k.Name, null, k))];
         NewKind = KindChoices[0];
         NewFolderChoices = AccountChoice.All(Accounts, Accounts.NewFolderAccount);
         Section("accounts", "Accounts",

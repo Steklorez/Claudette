@@ -334,6 +334,11 @@ public abstract partial class ChatBotClient
             : $"Sent to {Format.Bold(tab.Name)}, with {Format.Escape(RemoteMessages.Things(images, files.Count - images))}.";
         var id = await SendAsync(chat, LiveText(heading, tab), LiveButtons(tab), replyTo, silent: true, tabId: tab.Id, cancellationToken: cancellationToken).ConfigureAwait(false);
         StartLive(chat, id, heading, tab);
+        // A tab waiting on a prompt goes no further until it's answered: it's asked under the status that says so.
+        if (tab.Prompt is { } prompt)
+        {
+            await AskBelowAsync(chat, tab, prompt, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     private async Task AskWhichTabAsync(long chat, string text, IReadOnlyList<RemoteAttachment> files, long? replyTo, CancellationToken cancellationToken)
@@ -461,6 +466,9 @@ public abstract partial class ChatBotClient
                     await SendAsync(chat, $"Opened {Format.Bold(openedTab.Name)}. Your messages go to it now.", silent: true, tabId: openedTab.Id,
                         cancellationToken: cancellationToken).ConfigureAwait(false);
                 }
+                break;
+            case CancelWhenDoneButton:
+                await CancelWhenDoneAsync(tap, cancellationToken).ConfigureAwait(false);
                 break;
         }
     }

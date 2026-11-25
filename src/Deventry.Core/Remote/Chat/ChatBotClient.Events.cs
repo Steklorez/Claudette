@@ -14,11 +14,17 @@ public abstract partial class ChatBotClient
     /// <summary>The tabs the user sent a message to from here: their prompts and their turn's end always come.</summary>
     private readonly HashSet<string> _engaged = new(StringComparer.Ordinal);
 
-    /// <summary>The messages each waiting prompt was sent in, by tab and prompt, with their text, to edit once it closes.</summary>
-    private readonly Dictionary<string, List<(long Chat, long Message, string Text)>> _promptMessages = new(StringComparer.Ordinal);
+    /// <summary>The messages each waiting prompt was sent in, by tab and prompt, to edit once it closes.</summary>
+    private readonly Dictionary<string, List<PromptCopy>> _promptMessages = new(StringComparer.Ordinal);
 
     /// <summary>Each tab's live status message: the last one sent.</summary>
     private readonly Dictionary<string, Live> _live = new(StringComparer.Ordinal);
+
+    /// <summary>How many prompt and live status messages have gone, so which of two came later in a chat is known.</summary>
+    private long _order;
+
+    /// <summary>A message a prompt was sent in, with its text, and when it went among the prompts and live statuses.</summary>
+    private sealed record PromptCopy(long Chat, long Message, string Text, long Order);
 
     private sealed class Live(long chat, long message, string heading, RemoteTab tab)
     {
@@ -31,12 +37,18 @@ public abstract partial class ChatBotClient
 
         public RemoteTab Tab { get; set; } = tab;
 
+        public long Order { get; init; }
+
         public DateTimeOffset LastEdit { get; set; }
 
         public string LastText { get; set; } = "";
     }
 
     private static string PromptKey(string tabId, string promptId) => $"{tabId}\n{promptId}";
+
+    /// <summary>The messages the prompt was sent in to <paramref name="chat"/>, oldest first.</summary>
+    private IEnumerable<PromptCopy> CopiesIn(long chat, string tabId, string promptId) =>
+        _promptMessages.TryGetValue(PromptKey(tabId, promptId), out var copies) ? copies.Where(c => c.Chat == chat) : [];
 
     private void OnDeskEvent(RemoteEvent raised) => Post(token => HandleEventAsync(raised, token));
 
@@ -84,6 +96,12 @@ public abstract partial class ChatBotClient
                 await BroadcastAsync(Format.Escape(RemoteMessages.Closing(Desk.MachineName)), silent: closing.Notice != RemoteNotice.Sound,
                     cancellationToken: cancellationToken).ConfigureAwait(false);
                 break;
+            case RemoteWhenDoneCounting counting:
+                await OnWhenDoneCountingAsync(counting, cancellationToken).ConfigureAwait(false);
+                break;
+            case RemoteWhenDoneEnded ended:
+                await OnWhenDoneEndedAsync(ended, cancellationToken).ConfigureAwait(false);
+                break;
         }
     }
 
@@ -104,10 +122,10 @@ public abstract partial class ChatBotClient
         // Its prompts still waiting lose their buttons: they're answered at the desk now.
         foreach (var key in _promptMessages.Keys.Where(k => k.StartsWith(PromptKey(closed.TabId, ""), StringComparison.Ordinal)).ToArray())
         {
-            _promptMessages.Remove(key, out var messages);
-            foreach (var (chat, message, text) in messages ?? [])
+            _promptMessages.Remove(key, out var copies);
+            foreach (var copy in copies ?? [])
             {
-                await EditAsync(chat, message, $"{text}\n\n{line}", null, cancellationToken).ConfigureAwait(false);
+                await EditAsync(copy.Chat, copy.Message, $"{copy.Text}\n\n{line}", null, cancellationToken).ConfigureAwait(false);
             }
         }
     }
@@ -116,18 +134,26 @@ public abstract partial class ChatBotClient
 
     private async Task OnPromptWaitingAsync(RemotePromptWaiting waiting, CancellationToken cancellationToken)
     {
-        var key = PromptKey(waiting.Tab.Id, waiting.Prompt.Id);
-        // Sent before, it isn't again when the user goes away.
-        if (_promptMessages.ContainsKey(key) || Effective(waiting.Notice, waiting.Tab.Id) is not (var notice and not RemoteNotice.None))
+        var notice = Effective(waiting.Notice, waiting.Tab.Id);
+        List<long> chats = notice == RemoteNotice.None ? [] : [.. await PairedChatsAsync(cancellationToken).ConfigureAwait(false)];
+        // A chat following the tab's live status gets it whatever the desk says: the status there says it needs you.
+        if (_live.TryGetValue(waiting.Tab.Id, out var live) && !chats.Contains(live.Chat))
         {
-            return;
+            chats.Add(live.Chat);
         }
-        var chats = await PairedChatsAsync(cancellationToken).ConfigureAwait(false);
-        await SendPromptAsync(chats, waiting.Tab, waiting.Prompt, Desk.Detail, notice == RemoteNotice.Silent, cancellationToken).ConfigureAwait(false);
+        // Sent to a chat before, it isn't again: when the user goes away, or quiet ends.
+        chats.RemoveAll(chat => CopiesIn(chat, waiting.Tab.Id, waiting.Prompt.Id).Any());
+        if (chats.Count > 0)
+        {
+            await SendPromptAsync(chats, waiting.Tab, waiting.Prompt, Desk.Detail, notice != RemoteNotice.Sound, cancellationToken).ConfigureAwait(false);
+        }
     }
 
-    /// <summary>Sends a waiting prompt to <paramref name="chats"/>, with its buttons, and keeps its messages to edit once it closes.</summary>
-    private async Task SendPromptAsync(IReadOnlyList<long> chats, RemoteTab tab, RemotePrompt prompt, RemoteDetail detail, bool silent, CancellationToken cancellationToken)
+    /// <summary>
+    /// Sends a waiting prompt to <paramref name="chats"/>, with its buttons, and keeps its messages to edit once it closes.
+    /// Returns how many chats it reached.
+    /// </summary>
+    private async Task<int> SendPromptAsync(IReadOnlyList<long> chats, RemoteTab tab, RemotePrompt prompt, RemoteDetail detail, bool silent, CancellationToken cancellationToken)
     {
         var key = PromptKey(tab.Id, prompt.Id);
         var text = detail == RemoteDetail.JustWhatHappened ? Format.Escape(RemoteMessages.NeedsYou(tab.Name)) : PromptText(tab, prompt);
@@ -135,6 +161,7 @@ public abstract partial class ChatBotClient
             ? Rows([MakeButton("Show", new ShowButton(tab.Id, prompt.Id))], 1)
             : PromptButtons(tab, prompt);
         var sent = _promptMessages.TryGetValue(key, out var kept) ? kept : _promptMessages[key] = [];
+        var reached = 0;
         foreach (var chat in chats)
         {
             try
@@ -145,25 +172,53 @@ public abstract partial class ChatBotClient
                     await SendFileAsync(chat, $"{FileName(tab.Name)} plan.md", plan, $"{Format.Bold(tab.Name)}: the plan", tab.Id, cancellationToken).ConfigureAwait(false);
                 }
                 var id = await SendAsync(chat, text, buttons, null, silent, tab.Id, cancellationToken).ConfigureAwait(false);
-                sent.Add((chat, id, text));
+                sent.Add(new PromptCopy(chat, id, text, ++_order));
+                reached++;
             }
             catch (ChatApiException ex)
             {
                 _logger.LogWarning("{Client}: couldn't send a prompt: {Error}", Name, ex.Message);
             }
         }
+        return reached;
+    }
+
+    /// <summary>
+    /// The prompt waiting in a tab, under what has just said in <paramref name="chat"/> that it needs you (its card, or
+    /// its live status): sent there again, silently, and its earlier messages there lose their buttons and say so
+    /// (DESIGN.md §18, "What the bot sends").
+    /// </summary>
+    private async Task AskBelowAsync(long chat, RemoteTab tab, RemotePrompt prompt, CancellationToken cancellationToken)
+    {
+        var earlier = CopiesIn(chat, tab.Id, prompt.Id).ToList();
+        if (await SendPromptAsync([chat], tab, prompt, Desk.Detail, silent: true, cancellationToken).ConfigureAwait(false) == 0)
+        {
+            // Not sent: the earlier ones keep their buttons.
+            return;
+        }
+        var line = Format.Italic(RemoteMessages.AskedAgain);
+        foreach (var copy in earlier)
+        {
+            _promptMessages[PromptKey(tab.Id, prompt.Id)].Remove(copy);
+            await EditAsync(copy.Chat, copy.Message, $"{copy.Text}\n\n{line}", null, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     private async Task OnPromptClosedAsync(RemotePromptClosed closed, CancellationToken cancellationToken)
     {
-        if (!_promptMessages.Remove(PromptKey(closed.TabId, closed.PromptId), out var messages))
+        if (_promptMessages.Remove(PromptKey(closed.TabId, closed.PromptId), out var copies))
         {
-            return;
+            var line = Format.Italic(RemoteMessages.Closed(closed.How, closed.Outcome, closed.Client, closed.At, _time.LocalTimeZone));
+            foreach (var copy in copies)
+            {
+                await EditAsync(copy.Chat, copy.Message, $"{copy.Text}\n\n{line}", null, cancellationToken).ConfigureAwait(false);
+            }
         }
-        var line = Format.Italic(RemoteMessages.Closed(closed.How, closed.Outcome, closed.Client, closed.At, _time.LocalTimeZone));
-        foreach (var (chat, message, text) in messages)
+        // The tab's live status may still say it needs you, for a prompt asked before that status: it's asked again under it.
+        if (_live.TryGetValue(closed.TabId, out var live) && await FindTabAsync(closed.TabId, cancellationToken).ConfigureAwait(false) is { Prompt: { } next } tab
+            && CopiesIn(live.Chat, tab.Id, next.Id).ToList() is { Count: > 0 } there && there.All(c => c.Order < live.Order))
         {
-            await EditAsync(chat, message, $"{text}\n\n{line}", null, cancellationToken).ConfigureAwait(false);
+            await AskBelowAsync(live.Chat, tab, next, cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -235,7 +290,7 @@ public abstract partial class ChatBotClient
     /// <summary>A tab's message that shows what it's doing, edited in place at most every 5 seconds, with <b>Stop</b>.</summary>
     private void StartLive(long chat, long message, string heading, RemoteTab tab)
     {
-        var live = new Live(chat, message, heading, tab) { LastEdit = _time.GetUtcNow(), LastText = LiveText(heading, tab) };
+        var live = new Live(chat, message, heading, tab) { Order = ++_order, LastEdit = _time.GetUtcNow(), LastText = LiveText(heading, tab) };
         // The tab's earlier one stays as it last read: the new one carries on.
         _live[tab.Id] = live;
         ScheduleLive(tab.Id, LiveRefreshInterval);
@@ -287,7 +342,10 @@ public abstract partial class ChatBotClient
         await EditAsync(live.Chat, live.Message, $"{live.Heading}\n{Format.Escape(status)}", null, cancellationToken).ConfigureAwait(false);
     }
 
-    /// <summary>A tab picked from <c>/tabs</c>: what it's doing, live, with its buttons; and its prompt, when one waits.</summary>
+    /// <summary>
+    /// A tab picked from <c>/tabs</c>: what it's doing, live, with its buttons; and under it its prompt, when one waits,
+    /// asked again if it was sent before.
+    /// </summary>
     private async Task SendTabCardAsync(long chat, string tabId, CancellationToken cancellationToken)
     {
         if (await FindTabAsync(tabId, cancellationToken).ConfigureAwait(false) is not { } tab)
@@ -298,9 +356,9 @@ public abstract partial class ChatBotClient
         var heading = Header(tab);
         var id = await SendAsync(chat, LiveText(heading, tab), CardButtons(tab), null, silent: true, tab.Id, cancellationToken).ConfigureAwait(false);
         StartLive(chat, id, heading, tab);
-        if (tab.Prompt is { } prompt && !_promptMessages.ContainsKey(PromptKey(tab.Id, prompt.Id)))
+        if (tab.Prompt is { } prompt)
         {
-            await SendPromptAsync([chat], tab, prompt, Desk.Detail, silent: true, cancellationToken).ConfigureAwait(false);
+            await AskBelowAsync(chat, tab, prompt, cancellationToken).ConfigureAwait(false);
         }
     }
 

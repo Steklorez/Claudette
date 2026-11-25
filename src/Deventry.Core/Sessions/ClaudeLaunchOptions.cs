@@ -120,6 +120,12 @@ public sealed record ClaudeLaunchOptions
 
     /// <summary><c>--add-dir</c>, once for each: folders Claude may also read and edit (DESIGN.md §4, "Extra folders").</summary>
     public IReadOnlyList<string> AddDirectories { get; init; } = [];
+
+    /// <summary>
+    /// <c>--disallowedTools</c>: tools Claude Code starts without, such as WebSearch on an Ollama or llama.cpp account's
+    /// tab, whose server can't search (DESIGN.md §18, "Ollama and llama.cpp accounts").
+    /// </summary>
+    public IReadOnlyList<string> DisallowedTools { get; init; } = [];
 }
 
 public static class ClaudeArguments
@@ -155,6 +161,10 @@ public static class ClaudeArguments
         foreach (var directory in options.AddDirectories)
         {
             AddOption(args, "--add-dir", directory);
+        }
+        if (options.DisallowedTools.Count > 0)
+        {
+            AddOption(args, "--disallowedTools", string.Join(',', options.DisallowedTools));
         }
         AddOption(args, "--resume", options.Resume);
         AddOption(args, "--name", options.Name);

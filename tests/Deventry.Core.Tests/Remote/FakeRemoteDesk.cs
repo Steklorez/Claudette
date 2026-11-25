@@ -107,6 +107,8 @@ internal sealed class FakeRemoteDesk : IRemoteDesk
         return Result.Done ? Result with { TabId = Tabs.FirstOrDefault()?.Id } : Result;
     }
 
+    public Task<RemoteResult> CancelWhenDoneAsync(string client, CancellationToken cancellationToken = default) => Record($"cancel when done ({client})");
+
     public static RemoteTab Tab(string id, string name, RemoteTabStatus status = RemoteTabStatus.Idle, RemotePrompt? prompt = null) => new()
     {
         Id = id,

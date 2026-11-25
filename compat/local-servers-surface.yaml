@@ -1,0 +1,122 @@
+# What Deventry relies on from Ollama's and llama.cpp's own APIs, for Ollama and llama.cpp accounts (DESIGN.md §18,
+# "Ollama and llama.cpp accounts"). What Claude Code does on them is in surface.yaml.
+#
+# Neither server publishes a schema, and neither is on the daily compatibility check: these are checked by hand
+# against a new version, with the spike's commands (DESIGN.md §18, "The spike"). The fields are surface.yaml's, with
+# kind: endpoint | field | env | flag | behavior.
+
+versions:
+  ollama: 0.40.18         # checked 2026-11-25
+  llama-server: 1.0.0     # b12723, checked 2026-11-25
+
+items:
+  # --- Ollama -------------------------------------------------------------------------------------------
+  - id: "GET /api/version"
+    kind: endpoint
+    status: documented
+    usedIn: src/Deventry.Core/LocalModels/OllamaServer.cs
+    docs: https://docs.ollama.com/api
+    test: LocalModelServersTests
+    # {"version": "0.40.18"}: whether it answers, and its version for Settings' Check.
+  - id: "GET /api/tags"
+    kind: endpoint
+    status: documented
+    usedIn: src/Deventry.Core/LocalModels/OllamaServer.cs
+    docs: https://docs.ollama.com/api
+    test: LocalModelServersTests
+    # models[]: name, size, details.context_length (the trained window) and capabilities (tools, thinking, vision).
+  - id: "POST /api/show"
+    kind: endpoint
+    status: documented
+    usedIn: src/Deventry.Core/LocalModels/OllamaServer.cs
+    docs: https://docs.ollama.com/api
+    test: LocalModelServersTests
+    # capabilities, model_info["<arch>.context_length"], and parameters, where a model's own num_ctx is a line.
+  - id: "POST /api/generate with an empty prompt loads the model"
+    kind: behavior
+    status: documented
+    usedIn: src/Deventry.Core/LocalModels/OllamaServer.cs
+    docs: https://docs.ollama.com/api
+    test: LocalModelServersTests
+    # done_reason "load"; keep_alive "30m" keeps it loaded for the tab's first turns.
+  - id: "GET /api/ps"
+    kind: endpoint
+    status: documented
+    usedIn: src/Deventry.Core/LocalModels/OllamaServer.cs
+    docs: https://docs.ollama.com/api
+    test: LocalModelServersTests
+    # models[].context_length: the window a loaded model runs at, which a request can't change.
+  - id: "POST /api/create from a model with parameters.num_ctx"
+    kind: behavior
+    status: documented
+    usedIn: src/Deventry.Core/LocalModels/OllamaServer.cs
+    docs: https://docs.ollama.com/api
+    test: LocalModelServersTests
+    # A copy that shares the model's files and keeps its window whatever OLLAMA_CONTEXT_LENGTH is (the spike's qwen3-8b-32k).
+  - id: "OLLAMA_HOST"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/LocalModels/LocalServerLaunch.cs
+    docs: https://docs.ollama.com/faq
+    test: LocalServerLaunchTests
+    # 127.0.0.1:<port> for an ollama serve Deventry starts.
+  - id: "OLLAMA_CONTEXT_LENGTH"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/LocalModels/LocalServerLaunch.cs
+    docs: https://docs.ollama.com/context-length
+    test: LocalServerLaunchTests
+    # The account's window, for an ollama serve Deventry starts. Without it, Ollama picks by the GPU's memory: 4,096 under
+    # 24 GB, and cuts longer prompts without saying so.
+  - id: "Authorization: Bearer at ollama.com"
+    kind: behavior
+    status: documented
+    usedIn: src/Deventry.Core/LocalModels/LocalModelServer.cs
+    docs: https://docs.ollama.com/api/authentication
+    test: LocalModelServersTests
+    # An Ollama account's key, for its cloud reached directly; x-api-key alone isn't accepted there.
+
+  # --- llama-server -------------------------------------------------------------------------------------
+  - id: "GET /health"
+    kind: endpoint
+    status: documented
+    usedIn: src/Deventry.Core/LocalModels/LlamaCppServer.cs
+    docs: https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md
+    test: LocalModelServersTests
+    # 200 {"status":"ok"} once the model is loaded, 503 while it loads; answers without the key.
+  - id: "GET /props"
+    kind: endpoint
+    status: documented
+    usedIn: src/Deventry.Core/LocalModels/LlamaCppServer.cs
+    docs: https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md
+    test: LocalModelServersTests
+    # build_info, default_generation_settings.n_ctx (the window), modalities.vision and chat_template_caps.supports_tools.
+  - id: "GET /v1/models"
+    kind: endpoint
+    status: documented
+    usedIn: src/Deventry.Core/LocalModels/LlamaCppServer.cs
+    docs: https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md
+    test: LocalModelServersTests
+    # data[].id: --alias, or the model file's path without one. With one model, any name is accepted.
+  - id: "--port default 9931"
+    kind: behavior
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/LocalServers.cs
+    docs: https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md
+    test: LocalAccountsTests
+    # Since 1.0; January 2026's examples used 8080. Only an account's default address: it's the user's to change.
+  - id: "-m, -hf, --alias, -c, --host, --port"
+    kind: flag
+    status: documented
+    usedIn: src/Deventry.Core/LocalModels/LocalServerLaunch.cs
+    docs: https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md
+    test: LocalServerLaunchTests
+    # The command a llama-server Deventry starts runs: the account's model file or Hugging Face model, its name, window and port.
+  - id: "--api-key, as x-api-key or Authorization: Bearer"
+    kind: behavior
+    status: documented
+    usedIn: src/Deventry.Core/LocalModels/LocalModelServer.cs
+    docs: https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md
+    test: LocalModelServersTests
+    # Either header is taken (checked in the spike), so Claude Code's apiKeyHelper, which sends both, fits. LLAMA_API_KEY
+    # is removed from a server Deventry starts, which listens only on this computer.

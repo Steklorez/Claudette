@@ -21,6 +21,11 @@ public enum NotificationKind
     ProjectAction,
     /// <summary>A timed message was sent, or skipped (DESIGN.md §18, "Timed messages").</summary>
     TimedMessage,
+    /// <summary>
+    /// The computer shuts down or sleeps in a minute, Claude being done (DESIGN.md §9, "When Claude is done"): always
+    /// sent, as the user asked for it from the cup's menu.
+    /// </summary>
+    WhenDone,
 }
 
 /// <summary>Where clicking a notification goes: a tab, or an app-wide screen.</summary>
@@ -107,6 +112,7 @@ public sealed class NotificationService : IDisposable
             NotificationKind.CheckIn => (checkIns ?? _services.Settings.CheckIns).Notify,
             NotificationKind.ProjectAction => settings.ProjectActions,
             NotificationKind.TimedMessage => settings.TimedMessages,
+            NotificationKind.WhenDone => true,
             _ => false,
         };
     }

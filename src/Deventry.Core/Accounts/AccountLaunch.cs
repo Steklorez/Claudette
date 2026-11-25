@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json.Nodes;
 using Deventry.Core.Claude;
 
@@ -11,7 +12,7 @@ namespace Deventry.Core.Accounts;
 /// the environment, which the Default account's configuration may be in: an empty value turns a variable off. An API
 /// key reaches Claude Code through Deventry's key helper (<see cref="ApiKeyHelper"/>). A provider's own key can only
 /// reach Claude Code in its environment, so only that goes there, and never in the settings, which are on the command
-/// line.
+/// line. An Ollama or llama.cpp account's settings point Claude Code at its server instead (DESIGN.md §18).
 /// </para>
 /// </summary>
 /// <param name="Settings">The <c>--settings</c> value: no secrets.</param>
@@ -19,6 +20,25 @@ namespace Deventry.Core.Accounts;
 /// <param name="KeyVariable">The variable the account's key is in, in <paramref name="Environment"/>; null when it has none there.</param>
 public sealed record AccountLaunch(string Settings, IReadOnlyDictionary<string, string?> Environment, string? KeyVariable = null)
 {
+    /// <summary>
+    /// The model the tab starts on when it hasn't chosen one, for an account whose server has only its own models (an
+    /// Ollama or llama.cpp account's); null to start as any tab does.
+    /// </summary>
+    public string? Model { get; init; }
+
+    /// <summary>Tools the account's tabs start without (<c>--disallowedTools</c>): WebSearch, on a server that can't search.</summary>
+    public IReadOnlyList<string> DisallowedTools { get; init; } = [];
+
+    /// <summary>The variables an Ollama or llama.cpp account's tabs set, besides the model pins, in the order they're set.</summary>
+    public static readonly IReadOnlyList<string> LocalVariables =
+    [
+        "ANTHROPIC_BASE_URL", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_DEFAULT_MODEL", "CLAUDE_CODE_DISABLE_1M_CONTEXT",
+        "CLAUDE_CODE_MAX_CONTEXT_TOKENS", "CLAUDE_CODE_MAX_OUTPUT_TOKENS",
+    ];
+
+    /// <summary>Claude Code's variable for keeping it off the internet: no telemetry, error reports, updates or feature flags.</summary>
+    public const string NonessentialTrafficVariable = "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC";
+
     /// <summary>
     /// Anthropic credentials Claude Code takes over an <c>apiKeyHelper</c>, so one in the user's environment or settings
     /// would quietly bill another key: every account's tabs go without them.
@@ -82,6 +102,10 @@ public sealed record AccountLaunch(string Settings, IReadOnlyDictionary<string, 
             settings["env"] = env;
             return new AccountLaunch(settings.ToJsonString(), environment);
         }
+        if (account is { Server: { } server, Local: { } local })
+        {
+            return ForLocal(account, server, local, executable, settings, env, environment, OffAll, Set);
+        }
         if (account is not { Provider: { } provider, Cloud: { } cloud })
         {
             throw new InvalidOperationException($"{account.Name} is a kind of account this Deventry doesn't know.");
@@ -140,6 +164,62 @@ public sealed record AccountLaunch(string Settings, IReadOnlyDictionary<string, 
         }
         settings["env"] = env;
         return new AccountLaunch(settings.ToJsonString(), environment, keyVariable);
+    }
+
+    /// <summary>
+    /// An Ollama or llama.cpp account's tab (DESIGN.md §18, "Ollama and llama.cpp accounts"): Claude Code is pointed at the
+    /// server, with every alias leading to the account's model, told the model's window and the longest reply, and kept
+    /// from WebSearch, which a local server answers without searching.
+    /// </summary>
+    private static AccountLaunch ForLocal(ClaudeAccount account, LocalServerKind server, LocalServerSettings local, string executable,
+        JsonObject settings, JsonObject env, Dictionary<string, string?> environment, Action<IEnumerable<string>> offAll, Action<string, string?> set)
+    {
+        if (LocalServers.NormalizeAddress(local.Address) is not { } address)
+        {
+            throw new InvalidOperationException($"{account.Name} has no address for {server.ServerName}.");
+        }
+        if (local.Model.Trim() is not { Length: > 0 } model)
+        {
+            throw new InvalidOperationException($"{account.Name} has no model.");
+        }
+        offAll(CloudProviders.Switches.Append("ANTHROPIC_API_KEY"));
+        env["ANTHROPIC_BASE_URL"] = address;
+        if (local.HasKey)
+        {
+            // The key reaches Claude Code from Deventry's key helper, which Claude Code sends as both headers: llama-server
+            // takes either, and ollama.com needs the bearer one. A token in the environment would take over from it.
+            settings["apiKeyHelper"] = ApiKeyHelper.Command(executable, account.Id);
+            offAll(["ANTHROPIC_AUTH_TOKEN"]);
+        }
+        else
+        {
+            // The server ignores it, but without a credential Claude Code would ask for a sign-in.
+            env["ANTHROPIC_AUTH_TOKEN"] = server.Token;
+        }
+        // Every alias leads to the account's models: Claude's names mean nothing to the server.
+        env["ANTHROPIC_DEFAULT_MODEL"] = model;
+        set(ModelPins[0], model);
+        set(ModelPins[1], model);
+        set(ModelPins[2], model);
+        set(ModelPins[3], local.BackgroundModelOrMain());
+        // Otherwise Claude Code's Default is "<model>[1m]", with a window of a million.
+        env["CLAUDE_CODE_DISABLE_1M_CONTEXT"] = "1";
+        if (local.Window > 0)
+        {
+            env["CLAUDE_CODE_MAX_CONTEXT_TOKENS"] = local.Window.ToString(CultureInfo.InvariantCulture);
+        }
+        env["CLAUDE_CODE_MAX_OUTPUT_TOKENS"] = Math.Clamp(local.LongestReply, LocalServers.MinimumLongestReply, LocalServers.MaximumLongestReply).ToString(CultureInfo.InvariantCulture);
+        if (local.KeepOffline)
+        {
+            env[NonessentialTrafficVariable] = "1";
+            settings["skipWebFetchPreflight"] = true;
+        }
+        settings["env"] = env;
+        return new AccountLaunch(settings.ToJsonString(), environment)
+        {
+            Model = model,
+            DisallowedTools = ["WebSearch"],
+        };
     }
 
     /// <summary>

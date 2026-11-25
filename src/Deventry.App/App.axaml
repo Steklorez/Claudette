@@ -2,6 +2,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Deventry.App.ViewModels"
              xmlns:views="using:Deventry.App.Views"
+             xmlns:settingsvm="using:Deventry.App.ViewModels.Settings"
+             xmlns:settingsviews="using:Deventry.App.Views.Settings"
              xmlns:controls="using:Deventry.App.Controls"
              xmlns:md="clr-namespace:LiveMarkdown.Avalonia;assembly=LiveMarkdown.Avalonia"
              xmlns:tm="clr-namespace:TextMateSharp.Grammars;assembly=TextMateSharp.Grammars"
@@ -22,6 +24,10 @@
     </DataTemplate>
     <DataTemplate DataType="vm:ShellViewModel">
       <views:ShellView />
+    </DataTemplate>
+    <!-- An Ollama or llama.cpp account's form, in Settings and on the sign-in screen (DESIGN.md §18) -->
+    <DataTemplate DataType="settingsvm:LocalAccountForm">
+      <settingsviews:LocalAccountFormView />
     </DataTemplate>
   </Application.DataTemplates>
 

@@ -76,4 +76,9 @@ internal sealed class FolderProjectToolsHost(ShellViewModel shell, TabGroupViewM
     public void ProjectLaunched()
     {
     }
+
+    // It runs no jobs (CanRunJobs).
+    public void JobRunningChanged()
+    {
+    }
 }

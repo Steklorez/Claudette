@@ -40,7 +40,7 @@ public sealed partial class TabViewModel
     /// provider can't.
     /// </summary>
     internal string? AccountRemoteControlReason => Account is { } account
-        ? $"{account.Name} uses {(account.Provider is { } provider ? provider.Name : "an API key")}, and the Claude app needs a claude.ai sign-in"
+        ? $"{account.Name} uses {(account.Provider?.Name ?? account.Server?.Name ?? "an API key")}, and the Claude app needs a claude.ai sign-in"
         : null;
 
     /// <summary>
@@ -63,10 +63,41 @@ public sealed partial class TabViewModel
             return;
         }
         var name = target?.Name ?? AccountsService.DefaultName;
+        var tokens = Context.Tokens ?? 0;
+        if (target is { Server: { } server, Local: { } local })
+        {
+            // An Ollama or llama.cpp model reads it for nothing, if it fits its window (DESIGN.md §18).
+            if (!SwitchCost.Fits(local, tokens))
+            {
+                _shell.Confirm($"Move \"{DisplayName}\" to {name}?", SwitchCost.DoesntFit(name, local, tokens),
+                    "New chat with a digest", () => NewChatWithDigestUnderAsync(target));
+                return;
+            }
+            _shell.Confirm($"Move \"{DisplayName}\" to {name}?", SwitchCost.DescribeLocal(server, local, tokens), "Move", () => ApplyAccountAsync(target));
+            return;
+        }
         var billing = target is null ? ClaudeBilling.Subscription : target.IsCloudProvider ? ClaudeBilling.CloudProvider : ClaudeBilling.ApiKey;
         _shell.Confirm($"Move \"{DisplayName}\" to {name}?",
-            SwitchCost.Describe(name, Context.Tokens ?? 0, _modelId, billing, target?.Provider?.Name),
+            SwitchCost.Describe(name, tokens, _modelId, billing, target?.Provider?.Name),
             "Move", () => ApplyAccountAsync(target));
+    }
+
+    /// <summary>
+    /// A conversation too big for an Ollama or llama.cpp account's model: the tab starts a new chat under it, with a
+    /// digest of this one in the composer to trim and send, as continuing under another account offers (DESIGN.md §4).
+    /// </summary>
+    private async Task NewChatWithDigestUnderAsync(ClaudeAccount account)
+    {
+        var digest = ConversationDigest(Items);
+        State.AccountId = account.Id;
+        ConfirmCurrentAccount();
+        _services.SaveState();
+        AccountChanged();
+        await StartNewChatAsync(account.Name);
+        if (digest.Length > 0)
+        {
+            ComposerText = ComposerText.Trim() is { Length: > 0 } held ? $"{digest}\n\n{held}" : digest;
+        }
     }
 
     /// <summary>

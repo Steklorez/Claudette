@@ -449,8 +449,16 @@ public sealed class UsageTracker : IAsyncDisposable
         var records = TurnRecord.From(usage, sessionId, tabId, _services.Time.GetUtcNow(), project, account);
         // Its calls, tools' results and compactions, which point to it by its id (DESIGN.md §18, "What's recorded").
         turnId ??= Guid.NewGuid().ToString("N");
+        var callRecords = CallRecord.From(calls, turnId, tabId, sessionId);
+        // An Ollama or llama.cpp account's model runs on the user's own server, which charges nothing: Claude Code prices a
+        // model it doesn't know as if it were Opus, and a resumed session forgets that it guessed (DESIGN.md §18).
+        if (_services.Accounts.Find(account)?.IsLocal == true)
+        {
+            records = [.. records.Select(r => r with { CostUsd = 0 })];
+            callRecords = [.. callRecords.Select(c => c with { CostUsd = 0 })];
+        }
         var detail = new TurnDetail(
-            CallRecord.From(calls, turnId, tabId, sessionId),
+            callRecords,
             StepRecord.From(calls, turnId),
             UsageEvent.From(calls, turnId, tabId, sessionId));
         // Which plan the Default account's turn used, so only machines on the same one count it (DESIGN.md §6).

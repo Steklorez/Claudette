@@ -3,6 +3,7 @@ using Deventry.App.Conversation;
 using Deventry.App.Services;
 using Deventry.App.Tests.Support;
 using Deventry.App.ViewModels;
+using Deventry.Core.Power;
 using Deventry.Core.Remote;
 using Deventry.Core.Settings;
 
@@ -334,6 +335,53 @@ public class RemoteClientsTests
     }
 
     [Fact]
+    public async Task Quiet_ending_tells_the_prompts_still_waiting_again()
+    {
+        await using var remote = await StartAsync();
+        remote.H.OnUiThread(() => remote.Service.SetQuiet(remote.H.Time.GetUtcNow() + TimeSpan.FromHours(1)));
+        var waiting = await PromptAsync(remote);
+
+        remote.H.Time.Advance(TimeSpan.FromHours(1));
+
+        await TabTestHarness.Eventually(() => remote.Client.Of<RemotePromptWaiting>().Count == 2, "the prompt told again");
+        var again = remote.Client.Of<RemotePromptWaiting>()[^1];
+        Assert.True(again.Again);
+        Assert.Equal(RemoteNotice.Sound, again.Notice);
+        Assert.Equal(waiting.Prompt.Id, again.Prompt.Id);
+    }
+
+    [Fact]
+    public async Task Quiet_turned_off_tells_the_prompts_still_waiting_again_once()
+    {
+        await using var remote = await StartAsync();
+        remote.H.OnUiThread(() => remote.Service.SetQuiet(remote.H.Time.GetUtcNow() + TimeSpan.FromHours(1)));
+        await PromptAsync(remote);
+
+        remote.H.OnUiThread(() => remote.Service.SetQuiet(null));
+        Assert.True(remote.Client.Of<RemotePromptWaiting>()[^1].Again);
+        // Off already, and the hour's end passing, tell nothing more.
+        remote.H.OnUiThread(() => remote.Service.SetQuiet(null));
+        remote.H.Time.Advance(TimeSpan.FromHours(1));
+
+        Assert.Equal(2, remote.Client.Of<RemotePromptWaiting>().Count);
+    }
+
+    [Fact]
+    public async Task Quiet_made_longer_tells_nothing_at_its_first_end()
+    {
+        await using var remote = await StartAsync();
+        remote.H.OnUiThread(() => remote.Service.SetQuiet(remote.H.Time.GetUtcNow() + TimeSpan.FromMinutes(30)));
+        await PromptAsync(remote);
+
+        remote.H.OnUiThread(() => remote.Service.SetQuiet(remote.H.Time.GetUtcNow() + TimeSpan.FromHours(1)));
+        remote.H.Time.Advance(TimeSpan.FromMinutes(30));
+        Assert.Single(remote.Client.Of<RemotePromptWaiting>());
+
+        remote.H.Time.Advance(TimeSpan.FromMinutes(30));
+        await TabTestHarness.Eventually(() => remote.Client.Of<RemotePromptWaiting>().Count == 2, "the prompt told again at the new end");
+    }
+
+    [Fact]
     public async Task Always_sends_silently_at_the_desk()
     {
         await using var remote = await StartAsync(s => s.RemoteClients.When = RemoteSendWhen.Always);
@@ -502,6 +550,38 @@ public class RemoteClientsTests
         Assert.Single(remote.Client.Of<RemoteDeskClosing>());
         Assert.True(remote.Client.Stopped);
         Assert.True(remote.H.Services.State.RemoteClients.SaidClosing);
+    }
+
+    [Fact]
+    public async Task The_minute_before_shutting_down_reaches_the_client_whose_Cancel_turns_it_off()
+    {
+        await using var remote = await StartAsync();
+        var whenDone = remote.H.Services.WhenDone;
+
+        remote.H.OnUiThread(() => whenDone.ToggleShutDownCommand.Execute(null));
+
+        var counting = Assert.Single(remote.Client.Of<RemoteWhenDoneCounting>());
+        Assert.Equal(WhenDone.ShutDown, counting.Action);
+        Assert.Equal(remote.H.Time.GetUtcNow() + WhenDoneService.Countdown, counting.At);
+        // Away, as the harness's Deventry isn't in front: with a sound.
+        Assert.Equal(RemoteNotice.Sound, counting.Notice);
+
+        Assert.Equal(RemoteResult.Ok, await remote.Desk.CancelWhenDoneAsync("Telegram", Ct));
+
+        Assert.Equal(WhenDone.Nothing, whenDone.Choice);
+        var ended = Assert.Single(remote.Client.Of<RemoteWhenDoneEnded>());
+        Assert.Equal((RemoteWhenDoneEnd.CancelledFromClient, "Telegram"), (ended.How, ended.Client));
+        Assert.False((await remote.Desk.CancelWhenDoneAsync("Telegram", Ct)).Done);
+    }
+
+    [Fact]
+    public async Task Cancel_from_a_client_is_taken_even_when_remote_clients_can_only_watch()
+    {
+        await using var remote = await StartAsync(s => s.RemoteClients.Access = RemoteAccessLevel.Watch);
+        remote.H.OnUiThread(() => remote.H.Services.WhenDone.ToggleSleepCommand.Execute(null));
+
+        Assert.True((await remote.Desk.CancelWhenDoneAsync("Telegram", Ct)).Done);
+        Assert.Equal(RemoteWhenDoneEnd.CancelledFromClient, Assert.Single(remote.Client.Of<RemoteWhenDoneEnded>()).How);
     }
 
     [Fact]

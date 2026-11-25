@@ -50,6 +50,9 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
     /// <summary>The timed messages, for the cup's clock and menu (DESIGN.md §18, "Timed messages").</summary>
     public TimedMessagesService TimedMessages { get; } = services.TimedMessages;
 
+    /// <summary>The cup's <b>When Claude is done</b>, and its banner (DESIGN.md §9, "When Claude is done").</summary>
+    public WhenDoneService WhenDone { get; } = services.WhenDone;
+
     /// <summary>The signed-in email and plan, or null when signed out.</summary>
     public string? AccountText => Account.IsSignedIn ? Account.Summary : null;
 
@@ -177,6 +180,8 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
     public Task StartAsync()
     {
         services.Notifications.Activated += OnNotificationActivated;
+        // Claude is done and the minute is up: Deventry closes as from its window, then shuts the computer down.
+        services.WhenDone.CloseRequested += OnWhenDoneClose;
         // From launch, before Claude Code is found or signed in: an incident can be why those fail.
         services.ServiceStatus.Start();
         Account.CheckSignIn = CheckSignInAsync;
@@ -320,13 +325,16 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
             }
             else
             {
-                CurrentPage = new SignInViewModel(services, CheckSignInAsync) { Error = message, Codex = new CodexSetupViewModel(services) };
+                CurrentPage = new SignInViewModel(services, CheckSignInAsync) { Error = message, Codex = new CodexSetupViewModel(services), LocalAccount = new LocalAccountOfferViewModel(services, CheckSignInAsync) };
             }
             return;
         }
 
         Account.Status = status;
-        if (!status.LoggedIn)
+        // An Ollama or llama.cpp account's tabs need no sign-in, so Deventry opens with one (DESIGN.md §18, "Without a
+        // Claude account"): Default's tabs find Claude Code signed out as they would anyway.
+        var withoutSignIn = !status.LoggedIn && !midSession && services.Accounts.HasLocalAccounts;
+        if (!status.LoggedIn && !withoutSignIn)
         {
             if (midSession)
             {
@@ -338,12 +346,15 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
             }
             else
             {
-                CurrentPage = new SignInViewModel(services, CheckSignInAsync) { Codex = new CodexSetupViewModel(services) };
+                CurrentPage = new SignInViewModel(services, CheckSignInAsync) { Codex = new CodexSetupViewModel(services), LocalAccount = new LocalAccountOfferViewModel(services, CheckSignInAsync) };
             }
             return;
         }
 
-        Account.OnSignedIn(status);
+        if (status.LoggedIn)
+        {
+            Account.OnSignedIn(status);
+        }
         services.ProjectsDirectory = status.ProjectsDirectory
             ?? (status.ConfigDirectory is { } config ? Path.Combine(config, "projects") : null);
         services.ClaudeConfigDirectory = status.ConfigDirectory
@@ -383,7 +394,8 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
             {
                 _shell.Restore(initialFolder);
             }
-            StartUsage();
+            // Plan usage is asked for once Claude Code is signed in.
+            StartUsage(poll: status.LoggedIn);
             // The tabs are up: a remote client Settings turns on can reach them (DESIGN.md §18, "Remote clients").
             services.RemoteClients.Start(_shell);
             StartUpdateChecks(_shell);
@@ -393,18 +405,21 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
         else
         {
             CurrentPage = _shell;
-            // Like the tabs, the utility session (plan usage) starts again, with the new sign-in.
+            // Like the tabs, the utility session (plan usage) starts again, with the new sign-in, and plan usage is
+            // asked for if Deventry opened without one.
             await services.StopUtilitySessionAsync();
+            services.Usage?.Start();
             await _shell.OnSignedInAgainAsync();
         }
     }
 
     /// <summary>Starts plan usage tracking and the header. A failure here never stops the tabs from working.</summary>
-    private void StartUsage()
+    /// <param name="poll">Ask for the plan's usage: not before Claude Code is signed in.</param>
+    private void StartUsage(bool poll = true)
     {
         try
         {
-            var tracker = services.StartUsageTracking();
+            var tracker = services.StartUsageTracking(poll);
             var usage = new UsageViewModel(services, tracker)
             {
                 // The detailed header's busiest tabs, by name (DESIGN.md §6, "Detailed header").
@@ -657,7 +672,10 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
     public partial ClosingViewModel? Closing { get; private set; }
 
     /// <summary>Closing starts: the card that says what it's doing, or a restart's, already up.</summary>
-    public ClosingViewModel BeginClosing() => Closing ??= NewClosing("Closing Deventry…", wait: false);
+    public ClosingViewModel BeginClosing() =>
+        Closing ??= NewClosing(services.WhenDone.ShutsDownOnClose ? "Closing Deventry to shut down…" : "Closing Deventry…", wait: false);
+
+    private void OnWhenDoneClose() => ExitRequested?.Invoke();
 
     /// <summary>A card counting every step closing will take from here: the bots, each tab, a restart's wait, saving.</summary>
     private ClosingViewModel NewClosing(string title, bool wait)
@@ -685,6 +703,7 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
             closing?.Advance();
         }
         services.Notifications.Activated -= OnNotificationActivated;
+        services.WhenDone.CloseRequested -= OnWhenDoneClose;
         services.ClaudeEnvironmentTokenChanged -= Account.OnEnvironmentTokenChanged;
         ServiceStatus.Dispose();
         RemoteClients.Dispose();

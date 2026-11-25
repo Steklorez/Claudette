@@ -1,7 +1,7 @@
 ---
 title: Spend and its warnings
 parent: Accounts
-nav_order: 6
+nav_order: 7
 summary: "An API key or a cloud provider has no plan limits, so there's nothing for the usage meters to measure."
 ---
 

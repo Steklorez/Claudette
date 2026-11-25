@@ -1,6 +1,8 @@
+using System.Buffers.Binary;
 using Deventry.Core.Processes;
 using Deventry.Core.Remote;
 using Deventry.Platform.Presence;
+using Deventry.Platform.Presence.Windows;
 using Microsoft.Extensions.Time.Testing;
 
 namespace Deventry.Platform.Tests.Presence;
@@ -90,6 +92,32 @@ public class UserPresenceTests
 
         Assert.Equal(PresenceReading.Unknown, reading);
         Assert.Equal(PresenceSignals.None, presence.Signals);
+    }
+
+    [Theory]
+    [InlineData(1, false)]
+    [InlineData(0, true)]
+    [InlineData(-1, false)]
+    public void Windows_reads_the_lock_from_the_sessions_flags_not_its_state(int flags, bool locked)
+    {
+        // As a signed-in session answers: level 1, then from 8 bytes in its id, its connect state (WTSActive) and its flags.
+        var info = new byte[232];
+        BinaryPrimitives.WriteInt32LittleEndian(info, 1);
+        BinaryPrimitives.WriteInt32LittleEndian(info.AsSpan(8), 1);
+        BinaryPrimitives.WriteInt32LittleEndian(info.AsSpan(12), 0);
+        BinaryPrimitives.WriteInt32LittleEndian(info.AsSpan(16), flags);
+
+        Assert.Equal(locked, WtsSessionInfo.IsLocked(info));
+    }
+
+    [Fact]
+    public void Windows_reads_nothing_it_doesnt_know_as_locked()
+    {
+        var levelTwo = new byte[232];
+        BinaryPrimitives.WriteInt32LittleEndian(levelTwo, 2);
+
+        Assert.False(WtsSessionInfo.IsLocked(levelTwo));
+        Assert.False(WtsSessionInfo.IsLocked(new byte[16]));
     }
 
     [Fact]

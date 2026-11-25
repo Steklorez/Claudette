@@ -187,9 +187,11 @@ items:
   - id: "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC"
     kind: env
     status: documented
-    usedIn: tests/Deventry.IntegrationTests/RealCliTests.cs
+    usedIn: tests/Deventry.IntegrationTests/RealCliTests.cs, src/Deventry.Core/Accounts/AccountLaunch.cs
     docs: https://code.claude.com/docs/en/env-vars
-    test: RealCliTests
+    test: RealCliTests, LocalAccountsTests
+    # Also a local account's Keep Claude Code off the internet (DESIGN.md §18). Any value turns traffic off, "0" too, so
+    # an account without it leaves the user's own alone rather than writing one.
   - id: "Bash tool environment comes from Claude Code's own environment"
     kind: behavior
     status: documented
@@ -1726,9 +1728,9 @@ items:
     status: documented
     usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
     docs: https://code.claude.com/docs/en/env-vars
-    test: CloudAccountsTests
+    test: CloudAccountsTests, LocalAccountsTests
     # A cloud account's model pins, in its --settings env; emptied when it has none, so another provider's pins in
-    # the user's settings don't apply.
+    # the user's settings don't apply. A local account sets all four to its model, Haiku's to its background model.
   - id: "ANTHROPIC_DEFAULT_SONNET_MODEL"
     kind: env
     status: documented
@@ -1801,6 +1803,72 @@ items:
     fallback: "Where initialize's models offer a first-party family only as pinned ids (claude-fable-5-1[1m]), the picker adds the family's alias before them, sent with set_model or --model as any entry's value. If an alias stops resolving, set_model fails and the tab says so; the pinned entries are still offered. Only signed in with the token (tokenSource): nothing is added for any other sign-in, where a pinned model can be on purpose (a gateway, a modelPicker lineup, a cloud provider), or when the alias is listed."
     # Each documented alias runs its family's newest model. The model the tab then runs, from system/init, is named from
     # its id ("Fable 5.2" for claude-fable-5-2).
+
+  # --- Ollama and llama.cpp accounts (DESIGN.md §18) ----------------------------------------------------
+  # What their servers' own APIs give Deventry is in compat/local-servers-surface.yaml.
+  - id: "ANTHROPIC_BASE_URL on an account"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/llm-gateway
+    test: LocalAccountsTests, LocalAccountRealCliTests
+    # An Ollama or llama.cpp account's server, in its --settings env, with ANTHROPIC_AUTH_TOKEN set to a placeholder the
+    # server ignores (or emptied for a server with a key, which apiKeyHelper gives). Without a credential Claude Code would
+    # keep a saved claude.ai sign-in, and without either it asks for one.
+  - id: "ANTHROPIC_DEFAULT_MODEL"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/env-vars
+    test: LocalAccountsTests, LocalAccountRealCliTests
+    # A local account's model, so initialize's Default entry is it rather than "<model>[1m]" (2.1.332). Needs 2.1.236.
+  - id: "CLAUDE_CODE_DISABLE_1M_CONTEXT"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/model-config
+    test: LocalAccountsTests, LocalAccountRealCliTests
+    # "1" on a local account's tabs: an unknown model id with [1m] gets a window of a million, over CLAUDE_CODE_MAX_CONTEXT_TOKENS.
+  - id: "CLAUDE_CODE_MAX_CONTEXT_TOKENS"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/model-config
+    test: LocalAccountsTests, LocalAccountRealCliTests
+    # The window the local model runs at on its server. For a model id Claude Code doesn't know it applies on its own, and
+    # get_context_usage reports it as maxTokens; unknown ids are otherwise given a million (2.1.323).
+  - id: "CLAUDE_CODE_MAX_OUTPUT_TOKENS"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/env-vars
+    test: LocalAccountsTests
+    # A local account's longest reply, 8,192 unless changed: Claude Code keeps it free of the window (below).
+  - id: "auto-compact at the window less the longest reply and 13,000"
+    kind: behavior
+    status: undocumented
+    usedIn: src/Deventry.Core/Accounts/LocalServers.cs
+    test: LocalAccountsTests
+    fallback: "Settings' warnings about a local model's window use LocalServers.CompactionPoint. If Claude Code keeps more or less of the window free, the warnings come early or late by the difference; get_context_usage's autoCompactThreshold says the real point."
+    # Measured in the spike (2.1.332): autoCompactThreshold = window - min(CLAUDE_CODE_MAX_OUTPUT_TOKENS, 20000) - 13000,
+    # for 40,960 and 65,536 with the default output and 8,192. The env-vars page says only that the default window is the
+    # model's less 33K.
+  - id: "skipWebFetchPreflight"
+    kind: field
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/env-vars
+    test: LocalAccountsTests
+    # With a local account's Keep Claude Code off the internet, in its --settings, beside CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC:
+    # WebFetch's check of a domain otherwise calls api.anthropic.com.
+  - id: "--disallowedTools"
+    kind: flag
+    status: documented
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs, src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/cli-reference
+    test: LocalAccountsTests, LocalAccountRealCliTests
+    # WebSearch on a local account's tabs: Claude Code's search request goes to the server, which answers without searching,
+    # and the tool reports it unavailable after a wasted call. Only at start, so only for what an account starts without.
 
   # --- Plan usage (DESIGN.md §6) ------------------------------------------------------------------------
   - id: "rate_limits_available"

@@ -52,6 +52,9 @@ internal interface IProjectToolsHost : ITabAreaHost
 
     /// <summary>One of the project's launch actions started a program, such as the editor: its log goes under this tab.</summary>
     void ProjectLaunched();
+
+    /// <summary>A job started or stopped running: what's left before <b>When Claude is done</b> changes (DESIGN.md §9).</summary>
+    void JobRunningChanged();
 }
 
 /// <summary>
@@ -770,7 +773,11 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
 
     Task<OpenedPath> IProjectRunsHost.OpenPathAsync(string path, int? line, int? column) => _host.OpenPathAsync(path, line, column);
 
-    void IProjectRunsHost.RunningRunChanged() => OnPropertyChanged(nameof(ButtonTip));
+    void IProjectRunsHost.RunningRunChanged()
+    {
+        OnPropertyChanged(nameof(ButtonTip));
+        _host.JobRunningChanged();
+    }
 
     void IProjectRunsHost.JobBegan() => ToolsChanged();
 

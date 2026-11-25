@@ -89,6 +89,8 @@ public sealed partial class TabViewModel : IProcessMonitorHost, IChangedFilesHos
 
     void IProjectToolsHost.ProjectLaunched() => _shell.OnProjectLaunched(this);
 
+    void IProjectToolsHost.JobRunningChanged() => _shell.OnTabWorkChanged();
+
     /// <summary>
     /// Whether this tab started <paramref name="pid"/>, through its <c>claude</c> (Claude running a commandlet) or its
     /// project job, for which tab an editor's log goes under (DESIGN.md §18, "Editor logs"). Safe off the UI thread.

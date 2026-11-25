@@ -12,5 +12,7 @@ public static class AccountSecrets
     /// <summary>What the OS shows for it.</summary>
     public static string CredentialLabel(ClaudeAccount account) => account.Provider is { } provider
         ? $"Deventry: {provider.KeyName ?? "key"} for {provider.Name} ({account.Name})"
-        : ApiKeyHelper.CredentialLabel(account.Name);
+        : account.Server is { } server
+            ? $"Deventry: API key for {server.ServerName} ({account.Name})"
+            : ApiKeyHelper.CredentialLabel(account.Name);
 }

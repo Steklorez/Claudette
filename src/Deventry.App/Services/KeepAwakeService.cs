@@ -1,4 +1,5 @@
 using Deventry.App.ViewModels;
+using Deventry.Core.Power;
 using Deventry.Core.RemoteControl;
 using Deventry.Core.Settings;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -35,12 +36,15 @@ public sealed partial class KeepAwakeService : ObservableObject, IDisposable
     private readonly ISleepBlocker _sleep;
     private readonly UiTimeout _grace;
     private readonly UiTimeout _timedGrace;
+    private readonly UiTimeout _lettingSleep;
     private ClaudeWork _work;
     private bool _timedDue;
     private int _timedWorking;
     private string? _nextTimedMessage;
     private int _connectedTabs;
     private bool _remoteClientOn;
+    private WhenDone _whenDone;
+    private string? _whenDoneLine;
 
     public KeepAwakeService(AppServices services, ISleepBlocker sleep)
     {
@@ -48,6 +52,7 @@ public sealed partial class KeepAwakeService : ObservableObject, IDisposable
         _sleep = sleep;
         _grace = new UiTimeout(services.Time, services.Dispatcher);
         _timedGrace = new UiTimeout(services.Time, services.Dispatcher);
+        _lettingSleep = new UiTimeout(services.Time, services.Dispatcher);
         Update();
     }
 
@@ -168,10 +173,14 @@ public sealed partial class KeepAwakeService : ObservableObject, IDisposable
         {
             yield return _timedWorking > 1 ? $"{_timedWorking} timed messages' tabs are working." : "A timed message's tab is working.";
         }
+        if (_whenDoneLine is { } whenDone)
+        {
+            yield return whenDone;
+        }
     }
 
     /// <summary>"2 tabs working, 1 waiting for a usage limit to reset".</summary>
-    private static string DescribeWork(ClaudeWork work)
+    internal static string DescribeWork(ClaudeWork work)
     {
         var parts = new List<string>(3);
         if (work.Working > 0)
@@ -263,14 +272,41 @@ public sealed partial class KeepAwakeService : ObservableObject, IDisposable
 
     private bool ForTimedMessages => _timedDue || _timedWorking > 0 || _timedGrace.IsPending;
 
+    /// <summary>
+    /// <b>When Claude is done</b> is on, or off (DESIGN.md §9, "When Claude is done"): until it happens, sleep is held off,
+    /// so the computer gets there, whatever <b>Keep this computer awake</b> says; <paramref name="line"/> is the tip's line
+    /// for it, what it waits for.
+    /// </summary>
+    public void SetWhenDone(WhenDone choice, string? line)
+    {
+        if (choice != _whenDone || line != _whenDoneLine)
+        {
+            _whenDone = choice;
+            _whenDoneLine = choice == WhenDone.Nothing ? null : line;
+            Update();
+        }
+    }
+
     /// <summary>Settings → General, or Settings → Claude Code's <b>Keep this computer awake while tabs are connected</b>, may have changed.</summary>
     public void OnSettingsChanged() => Update();
 
-    private bool Wanted =>
+    /// <summary>
+    /// <b>Sleep</b> when Claude is done is putting the computer to sleep (DESIGN.md §9, "When Claude is done"): for
+    /// <paramref name="span"/>, nothing of Deventry's holds sleep off, whatever else would (a remote client on, say), so a
+    /// computer that sleeps once its display is off does. Then, on waking or when it didn't sleep, they hold it again.
+    /// </summary>
+    public void LetSleep(TimeSpan span)
+    {
+        _lettingSleep.Restart(span, Update);
+        Update();
+    }
+
+    private bool Wanted => !_lettingSleep.IsPending && (
         (IsOn && (WhileDeventryRuns || _work.Any || _grace.IsPending))
         || (_connectedTabs > 0 && _services.Settings.ClaudeCode.KeepAwakeWhileConnected)
         || WhileRemoteClient
-        || ForTimedMessages;
+        || ForTimedMessages
+        || _whenDone != WhenDone.Nothing);
 
     private void Update()
     {
@@ -298,7 +334,8 @@ public sealed partial class KeepAwakeService : ObservableObject, IDisposable
             ? " A remote client is on."
             : " A remote client is on; keeping the computer awake for it is turned off in Settings → General.";
         var timed = !ForTimedMessages ? "" : _timedDue ? " A timed message is due." : " A timed message's tab is working.";
-        return $"{setting} {tabs}{connected}{remote}{timed} {_sleep.Describe()}";
+        var whenDone = _whenDoneLine is { } line ? $" {line}" : "";
+        return $"{setting} {tabs}{connected}{remote}{timed}{whenDone} {_sleep.Describe()}";
     }
 
     /// <summary>At exit: the computer can sleep again.</summary>
@@ -306,6 +343,7 @@ public sealed partial class KeepAwakeService : ObservableObject, IDisposable
     {
         _grace.Dispose();
         _timedGrace.Dispose();
+        _lettingSleep.Dispose();
         _sleep.SetBlocking(false);
         _sleep.Dispose();
     }

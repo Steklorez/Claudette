@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using Deventry.App.ViewModels;
 using Deventry.Core.Credentials;
+using Deventry.Core.Power;
 using Deventry.Core.Remote;
 using Deventry.Core.Remote.Discord;
 using Deventry.Core.Remote.Telegram;
@@ -37,6 +38,9 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
 
     /// <summary>When the quiet ends, as UTC ticks; 0 for none. Clients read it on their own threads.</summary>
     private long _quietUntilTicks;
+
+    /// <summary>Quiet held messages when it was last looked at, on the UI thread: its end is told once.</summary>
+    private bool _quiet;
 
     private ShellViewModel? _shell;
     private ITimer? _presenceTimer;
@@ -148,14 +152,35 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
             // The header says when it ends, and once it has.
             if (QuietUntil is { } end)
             {
-                _quietEnds.Restart(end - _services.Time.GetUtcNow(), () => Changed?.Invoke());
+                _quiet = true;
+                _quietEnds.Restart(end - _services.Time.GetUtcNow(), () =>
+                {
+                    OnQuietEnded();
+                    Changed?.Invoke();
+                });
             }
             else
             {
                 _quietEnds.Cancel();
+                OnQuietEnded();
             }
             Changed?.Invoke();
         });
+    }
+
+    /// <summary>
+    /// Quiet ended, on its own or turned off: what it held back isn't sent later, but the prompts still waiting are, as
+    /// when the user goes away (DESIGN.md §18, "Remote clients", "Commands"). One a client sent already isn't again.
+    /// </summary>
+    private void OnQuietEnded()
+    {
+        // Made longer since: its new end is on its way.
+        if (!_quiet || QuietUntil is not null)
+        {
+            return;
+        }
+        _quiet = false;
+        RaiseWaitingPrompts();
     }
 
     /// <summary>What this desktop can tell about the user being away, for Settings.</summary>
@@ -443,7 +468,16 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
         }
         _away = away;
         Changed?.Invoke();
-        if (!away || !IsActive || _shell is null)
+        if (away)
+        {
+            RaiseWaitingPrompts();
+        }
+    }
+
+    /// <summary>The prompts waiting in every tab, told again: each client sends those it hasn't, as the notice says.</summary>
+    private void RaiseWaitingPrompts()
+    {
+        if (!IsActive || _shell is null)
         {
             return;
         }
@@ -551,6 +585,27 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
         else if (kind == NotificationKind.ProjectAction && (tabId is null || Find(tabId) is not null))
         {
             Raise(new RemoteProjectAction(tabId, title, body) { Notice = NoticeFor(Settings.ProjectActions) });
+        }
+    }
+
+    /// <summary>
+    /// The computer shuts down or sleeps at <paramref name="at"/>, Claude being done (DESIGN.md §9, "When Claude is done"):
+    /// always said, as closing is, silently at the desk, so it can be cancelled from the phone.
+    /// </summary>
+    internal void OnWhenDoneCounting(WhenDone action, DateTimeOffset at)
+    {
+        if (IsActive)
+        {
+            Raise(new RemoteWhenDoneCounting(action, at) { Notice = _away ? RemoteNotice.Sound : RemoteNotice.Silent });
+        }
+    }
+
+    /// <summary>The countdown ended: its messages say how.</summary>
+    internal void OnWhenDoneEnded(WhenDone action, RemoteWhenDoneEnd how, string? client)
+    {
+        if (IsActive)
+        {
+            Raise(new RemoteWhenDoneEnded(action, how, client, _services.Time.GetUtcNow()));
         }
     }
 
@@ -663,6 +718,10 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
             return opened is null ? RemoteResult.No("That folder isn't there any more.") : new RemoteResult(true, null, opened.Id);
         }, cancellationToken).ConfigureAwait(false);
     }
+
+    /// <summary>At every level: cancelling only keeps the computer on.</summary>
+    public Task<RemoteResult> CancelWhenDoneAsync(string client, CancellationToken cancellationToken = default) =>
+        OnUiAsync(() => _services.WhenDone.CancelFromClient(client), cancellationToken);
 
     /// <summary>The tab with <paramref name="tabId"/>, unless it's closed or kept from remote clients.</summary>
     private TabViewModel? Find(string tabId) => _shell?.AllTabs.FirstOrDefault(t => t.Id == tabId && !t.KeepsFromRemoteClients);

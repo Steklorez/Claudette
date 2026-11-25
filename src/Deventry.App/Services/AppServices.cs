@@ -15,6 +15,7 @@ using Deventry.Core.Files;
 using Deventry.Core.Git;
 using Deventry.Core.Installation;
 using Deventry.Core.LoginItems;
+using Deventry.Core.Power;
 using Deventry.Core.Processes;
 using Deventry.Core.ProjectFiles;
 using Deventry.Core.ProjectTools;
@@ -99,6 +100,10 @@ public sealed class AppServices : IAsyncDisposable
     /// <param name="wakeTimer">
     /// Wakes the computer for the next timed message (DESIGN.md §18, "Timed messages"). Null can't: tests.
     /// </param>
+    /// <param name="computerPower">
+    /// Shuts the computer down or puts it to sleep once Claude is done (DESIGN.md §9, "When Claude is done"). Null can't:
+    /// tests, and a demo.
+    /// </param>
     /// <param name="demo">This Deventry is a demo (DESIGN.md §11, "Demo mode"); null for any other.</param>
     public AppServices(
         AppPaths paths,
@@ -123,6 +128,7 @@ public sealed class AppServices : IAsyncDisposable
         ITrash? trash = null,
         IUserPresence? userPresence = null,
         IWakeTimer? wakeTimer = null,
+        IComputerPower? computerPower = null,
         DemoMode? demo = null)
     {
         Demo = demo;
@@ -163,6 +169,8 @@ public sealed class AppServices : IAsyncDisposable
         ClaudeEnvironmentFor = async (overrides, cancellationToken) =>
             ClaudeEnvironment.From(await UserEnvironment.GetAsync(cancellationToken).ConfigureAwait(false), overrides);
         KeepAwake = new KeepAwakeService(this, sleepBlocker ?? new NoSleepBlocker());
+        // Before the timed messages, which tell it their next time as they start.
+        WhenDone = new WhenDoneService(this, computerPower ?? new NoComputerPower());
         RemoteControl = new RemoteControlService(this);
         var otherPrograms = projectToolPaths ?? ProjectToolPaths.ForCurrentUser();
         Locator = new ClaudeLocator(launcher, timeProvider, UserEnvironment, ClaudeVariables, new ClaudeDesktop(otherPrograms, ToolOSExtensions.Current));
@@ -188,6 +196,7 @@ public sealed class AppServices : IAsyncDisposable
         Tips = new ShortcutTips(Settings);
         Perforce = new PerforceService(this, credentials ?? new UnavailableCredentialStore());
         Accounts = new AccountsService(this, credentials ?? new UnavailableCredentialStore());
+        LocalServers = new LocalServersService(this);
         RemoteClients = new RemoteClientsService(this, credentials ?? new UnavailableCredentialStore(), userPresence ?? new NoUserPresence());
         Tickets = new TicketsService(this, credentials ?? new UnavailableCredentialStore());
         TimedMessages = new TimedMessagesService(this, wakeTimer ?? new NoWakeTimer());
@@ -371,6 +380,9 @@ public sealed class AppServices : IAsyncDisposable
     /// <summary>The accounts tabs run under besides the Default one, and their API keys (DESIGN.md §4, "Accounts").</summary>
     public AccountsService Accounts { get; }
 
+    /// <summary>The servers Ollama and llama.cpp accounts' models run on, and the ones Deventry started (DESIGN.md §18).</summary>
+    public LocalServersService LocalServers { get; }
+
     /// <summary>Project tools: detecting a tab's project and running its actions (DESIGN.md §18).</summary>
     public ProjectToolsService ProjectTools { get; }
 
@@ -397,6 +409,9 @@ public sealed class AppServices : IAsyncDisposable
     /// this computer awake</b>, which the header's cup turns on and off, and tabs connected to the Claude app.
     /// </summary>
     public KeepAwakeService KeepAwake { get; }
+
+    /// <summary>Shutting down or sleeping once Claude is done: the header cup's menu (DESIGN.md §9, "When Claude is done").</summary>
+    public WhenDoneService WhenDone { get; }
 
     /// <summary>The timed messages, sent at their times while Deventry runs (DESIGN.md §18, "Timed messages").</summary>
     public TimedMessagesService TimedMessages { get; }
@@ -753,13 +768,17 @@ public sealed class AppServices : IAsyncDisposable
     public UsageTracker? Usage { get; private set; }
 
     /// <summary>Opens the usage history and starts polling plan usage. Called once, after sign-in.</summary>
-    public UsageTracker StartUsageTracking()
+    /// <param name="poll">Ask for the plan's usage now; without, <see cref="UsageTracker.Start"/> does, once Claude Code is signed in.</param>
+    public UsageTracker StartUsageTracking(bool poll = true)
     {
         if (Usage is null)
         {
             UsageHistory = new UsageStore(Paths.UsageDatabase, Time);
             Usage = new UsageTracker(this, UsageHistory);
-            Usage.Start();
+            if (poll)
+            {
+                Usage.Start();
+            }
         }
         return Usage;
     }
@@ -939,10 +958,13 @@ public sealed class AppServices : IAsyncDisposable
         Notifications.Dispose();
         RemoteControl.Dispose();
         TimedMessages.Dispose();
+        WhenDone.Dispose();
         KeepAwake.Dispose();
         ServiceStatus.Dispose();
         LiveSessions.Dispose();
         EditorLogs.Dispose();
+        // The servers Deventry started for Ollama and llama.cpp accounts: nothing else was using them.
+        await LocalServers.DisposeAsync();
         if (ClaudeUpdates is not null)
         {
             await ClaudeUpdates.DisposeAsync();

@@ -24,6 +24,9 @@ public static class DemoContent
     /// </summary>
     public const string StudioAccount = "studio";
 
+    /// <summary>The demo's Ollama account, which no tab uses: Settings shows it (DESIGN.md §18, "Ollama and llama.cpp accounts").</summary>
+    public const string LocalAccount = "demo-workstation";
+
     /// <summary>When the conversations' last turn ends, after <see cref="Day"/>: 9:13:52 on their usual morning.</summary>
     private static readonly TimeSpan LastTurnEnds = new(9, 14, 0);
 

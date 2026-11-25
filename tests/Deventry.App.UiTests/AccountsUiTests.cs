@@ -72,6 +72,29 @@ public class AccountsUiTests
         await Verify(DescribeAccounts(window, h));
     }
 
+    [AvaloniaFact]
+    public async Task Adding_an_Ollama_account_says_what_it_is_lists_the_models_and_warns_of_a_small_window()
+    {
+        // An Ollama that runs its models at 4,096 tokens, as on a 16 GB GPU (DESIGN.md §18, "Ollama and llama.cpp accounts").
+        using var ollama = FakeLocalServers.Ollama();
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher(), http: ollama);
+        h.Services.Accounts.Credentials = new FakeCredentialStore();
+        await h.Services.Accounts.AddLocalAccountAsync("Home", Core.Accounts.LocalServers.Ollama,
+            new Core.Accounts.LocalServerSettings { Address = FakeLocalServers.OllamaAddress, Model = "qwen3:8b", Window = 65_536 }, null);
+        using var settings = new SettingsViewModel(h.Services, "me@example.com") { SelectedCategory = SettingsCategory.ClaudeCode };
+        var accounts = (ViewModels.Settings.ClaudeCodePage)settings.CurrentPage!;
+        accounts.NewKind = accounts.KindChoices.Single(c => c.Server == Core.Accounts.LocalServers.Ollama);
+        var form = accounts.NewLocal!;
+        await form.CheckCommand.ExecuteAsync(null);
+        form.SelectedModel = form.ModelChoices[0];
+        await form.CheckWindowCommand.ExecuteAsync(null);
+        var window = new SettingsWindow { DataContext = settings, Width = 900, Height = 700 };
+        window.Show();
+        UiText.Settle(window);
+
+        await Verify(DescribeAccounts(window, h));
+    }
+
     /// <summary>
     /// The Claude Code page's Accounts and Add an account, without the rest of the page, whose Starting a session has a
     /// setting only macOS and Linux show.

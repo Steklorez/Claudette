@@ -98,6 +98,9 @@ internal static class GdbusReply
     public static double? Number(string? output) =>
         double.TryParse(First(output), NumberStyles.Float, CultureInfo.InvariantCulture, out var number) && number >= 0 ? number : null;
 
+    /// <summary>The reply's first value as a string, without its quotes: logind's <c>('yes',)</c> is <c>yes</c>.</summary>
+    public static string? Text(string? output) => First(output)?.Trim('\'', '"');
+
     /// <summary>The first value, without the tuple's brackets, a variant's angle brackets or a type's name.</summary>
     private static string? First(string? output)
     {

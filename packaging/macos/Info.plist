@@ -41,6 +41,12 @@
   <string>Claude Code, running in Deventry, reads and edits the projects you open.</string>
   <key>NSNetworkVolumesUsageDescription</key>
   <string>Claude Code, running in Deventry, reads and edits the projects you open.</string>
+  <!--
+    Shut down when Claude is done (DESIGN.md §9) tells System Events to shut down, which macOS asks about once. AppleScript
+    that Claude Code runs, as Deventry's child, is asked about as Deventry's too.
+  -->
+  <key>NSAppleEventsUsageDescription</key>
+  <string>Deventry shuts this Mac down when Claude is done, when you ask it to from the cup in its header.</string>
   <key>ITSAppUsesNonExemptEncryption</key>
   <false/>
 </dict>

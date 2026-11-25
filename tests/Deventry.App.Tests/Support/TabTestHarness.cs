@@ -776,12 +776,14 @@ internal sealed class TabTestHarness : IAsyncDisposable
         Services = new AppServices(AppPaths.Under(_root), launcher is FakeP4 ? launcher : new NoRealP4Launcher(launcher ?? new ProcessLauncher(outputDrainTime: Waiting.Timeout)), Time, Platform, dispatcher ?? new InlineDispatcher(), processTrees: Trees, notifier: Notifier,
             appInstaller: appInstaller, httpHandler: http ?? new OfflineHandler(), appVersion: appVersion ?? TestVersion, loginShell: loginShell,
             projectToolPaths: otherPrograms, sleepBlocker: SleepBlocker, loginItems: LoginItems, systemMotion: SystemMotion,
-            trash: Trash, userPresence: Presence, wakeTimer: WakeTimer, demo: demo, loggerFactory: new TestOutputLoggers());
+            trash: Trash, userPresence: Presence, wakeTimer: WakeTimer, computerPower: ComputerPower, demo: demo, loggerFactory: new TestOutputLoggers());
         Services.Notifications.UseBadge(Notifier);
         // The machine running the tests doesn't decide whether the Claude app is available (its ANTHROPIC_BASE_URL, say).
         Services.RemoteControl.EnvironmentVariable = _ => null;
         // Nor whether it has Codex (DESIGN.md §18, "Codex, a second agent"): not found, unless a test says it is.
         Services.FindCodex = _ => Task.FromResult(new Core.Installation.CodexLocateResult(null, Core.Installation.CodexInstallProblem.NotFound, "Codex wasn't found."));
+        // Ollama's and llama-server's programs aren't found, whatever this machine has, unless a test says where they are.
+        Services.LocalServers.FileExists = _ => false;
         // Nor do its organization's managed Claude Code settings (DESIGN.md §7, "Starting mode").
         Services.ClaudeManagedSettingsDirectory = null;
         // Nor its environment, for what Claude Code's configuration says (its DISABLE_PROMPT_CACHING, say).
@@ -839,6 +841,9 @@ internal sealed class TabTestHarness : IAsyncDisposable
 
     /// <summary>Stands in for waking the computer for a timed message (DESIGN.md §18, "Timed messages").</summary>
     public FakeWakeTimer WakeTimer { get; } = new();
+
+    /// <summary>Stands in for shutting the computer down or putting it to sleep once Claude is done (DESIGN.md §9).</summary>
+    public FakeComputerPower ComputerPower { get; } = new();
 
     /// <summary>Stands in for the OS's reduce-motion setting (DESIGN.md §3, "Accessibility").</summary>
     public FakeSystemMotion SystemMotion { get; } = new();
