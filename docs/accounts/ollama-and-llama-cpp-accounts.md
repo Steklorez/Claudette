@@ -27,19 +27,19 @@ Anthropic doesn't support Claude Code on models other than Claude. How well it w
 2. Under **Add an account**, type a **Name**, such as Workstation, and choose **Ollama** or **llama.cpp** as its **Kind**. The form says what an account of that kind is before anything else.
 3. Check the **Address**: `http://localhost:11434` for Ollama, and `http://localhost:9931`, `llama-server`'s own, for llama.cpp. Click **Check**: it says the server's version and how many models it has, or why it couldn't ask.
 4. Choose the **Model** from what **Check** found, or type its name. Each says its size, its window and whether it can use tools, think and see images.
-5. Check the **Window** and the **Longest reply**: see [The window](#the-window).
+5. Check the **Window (tokens)** and the **Longest reply (tokens)**: see [The window](#the-window).
 6. Click **Add account**.
 
-**Model for background work** is the model Claude Code uses for its small jobs, such as naming a session. It's the same model unless you choose a smaller, quicker one.
+**Model for background work (optional)** is the model Claude Code uses for its small jobs, such as naming a session. It's the same model unless you choose a smaller, quicker one.
 
 ## The window
 
-The window a model runs at is the server's to choose, not Claude Code's, and Claude Code is told it, so it compacts the conversation in time. Under the **Window**, the form says where Claude Code will compact it.
+The window a model runs at is the server's to choose, not Claude Code's, and Claude Code is told it, so it compacts the conversation in time. Under the **Window (tokens)**, the form says where Claude Code will compact it.
 
 - **Ollama** runs a model at its own setting (the app's slider, or `OLLAMA_CONTEXT_LENGTH`), which a request can't change. Unless it's changed, that's 4,096 tokens on a graphics card under 24 GB, far too small: Ollama cuts the start off each request that doesn't fit, without saying so, and Claude forgets what it was doing. **Check the window** loads the model and says the window Ollama runs it at. When it's smaller than the account's, **Make a copy with a …-token window…** asks first, then makes a copy of the model, such as `qwen3:8b-64k`, that runs at the account's window whatever Ollama's setting is. The copy shares the model's files, so nothing is downloaded; `ollama rm` removes it. Or change Ollama's own setting, or let Deventry start Ollama, which runs it at the account's window.
 - **llama-server** runs its model at the window it was started with (`-c`), or the whole window the model was trained for. **Check** reads it. A request that doesn't fit is refused, never cut.
 
-**Longest reply**, 8,192 tokens unless changed, is the most the model writes in one go. Claude Code keeps that much of the window free, and its own default of 32,000 would take half of a 64,000-token window.
+**Longest reply (tokens)**, 8,192 unless changed, is the most the model writes in one go. Claude Code keeps that much of the window free, and its own default of 32,000 would take half of a 64,000-token window.
 
 ## Starting the server
 
@@ -62,7 +62,7 @@ Claude Code still talks to Anthropic for its updates, telemetry and error report
 
 - **The header** names the account, the model and where it runs, such as *Ollama · qwen3:8b · on this computer*, in place of the plan's meters or an API key's spend. Its turns are recorded with their tokens and cost nothing; the Usage window's **Accounts** lists them too.
 - **Starting.** Before a tab's Claude Code starts, Deventry makes sure the server answers, starting it if the account says to, and loads the model so the first reply doesn't wait for it. If the server runs the model at a smaller window than the account's, the tab says so. If the server doesn't answer, or hasn't the model, the tab says why instead of starting.
-- **The model** is the account's. The model picker shows it once; Tab settings can start the tab on another of the server's models. Effort isn't offered: a model that can think, thinks.
+- **The model** is the account's, which the model picker shows. To use another of the server's models, change the account's **Model** in Settings, or add another account for it. Effort isn't offered: a model that can think, thinks.
 - **What it doesn't have:** web search, which needs Anthropic's (the tab starts without it), the prompt cache's countdown, the Claude app, and images for a model that can't see them, which the tab won't send.
 - **If the server stops** in the middle, the turn ends with Claude Code's *Connection refused*, and the tab says the server stopped answering. Your next message checks it first, starting it again if the account says to.
 
