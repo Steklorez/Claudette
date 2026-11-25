@@ -206,6 +206,19 @@ public class LocalAccountsTests
     }
 
     [Fact]
+    public void A_conversation_moves_to_a_local_model_only_if_it_fits_before_Claude_Code_would_compact_it()
+    {
+        var local = new LocalServerSettings { Model = "qwen3:8b", Window = 65_536, LongestReply = 8_192, Address = "http://localhost:11434" };
+
+        Assert.True(SwitchCost.Fits(local, 40_000));
+        Assert.False(SwitchCost.Fits(local, 44_344));
+        Assert.True(SwitchCost.Fits(local, 0));
+        Assert.True(SwitchCost.Fits(new LocalServerSettings { Window = 0 }, 1_000_000));
+        Assert.Equal("qwen3:8b reads the conversation's 18,000 tokens again on Ollama, on this computer: it's free, and takes a moment. Its window is 65,536 tokens.",
+            SwitchCost.DescribeLocal(LocalServers.Ollama, local, 18_000));
+    }
+
+    [Fact]
     public void Settings_say_whats_wrong_with_an_account()
     {
         Assert.Null(LocalServers.Problem(LocalServers.Ollama, Ollama()));

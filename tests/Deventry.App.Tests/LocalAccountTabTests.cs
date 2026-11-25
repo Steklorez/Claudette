@@ -175,6 +175,59 @@ public class LocalAccountTabTests
         Assert.DoesNotContain(h.Transport.SentUserTexts, text => text.Contains("What's in this?", StringComparison.Ordinal));
     }
 
+    // ---- Moving a tab onto one --------------------------------------------------------------------------------------------
+
+    private static async Task<TabViewModel> DefaultTabWithAConversationAsync(TabTestHarness h, long tokens)
+    {
+        h.Transport.Answers["get_context_usage"] = _ => new JsonObject { ["totalTokens"] = tokens, ["maxTokens"] = 1_000_000, ["percentage"] = 2.0 };
+        var tab = await h.OpenTabAsync();
+        h.Transport.EmitTurn();
+        await TabTestHarness.Eventually(() => tab.State.SessionId == "s1" && tab.Context.Tokens == tokens && tab.Status == TabStatus.Idle && tab.IsSettled, "the turn");
+        return tab;
+    }
+
+    [Fact]
+    public async Task Moving_a_tab_to_a_local_account_says_its_free()
+    {
+        using var ollama = FakeLocalServers.Ollama();
+        await using var h = new TabTestHarness(http: ollama);
+        var tab = await DefaultTabWithAConversationAsync(h, 18_000);
+        var home = await AddOllamaAsync(h, l => l.Window = 65_536);
+        h.Services.Accounts.NewFolderAccount = null;
+
+        tab.SwitchAccountCommand.Execute(home.Id);
+
+        var confirm = h.Shell.Confirmation!;
+        Assert.Equal("Move", confirm.ConfirmText);
+        Assert.Equal("qwen3:8b reads the conversation's 18,000 tokens again on Ollama, on this computer: it's free, and takes a moment. Its window is 65,536 tokens.", confirm.Message);
+        await confirm.ConfirmCommand.ExecuteAsync(null);
+        await TabTestHarness.Eventually(() => h.Factory.Launches.Count == 2 && tab.IsSettled, "the restart on Home");
+        Assert.Same(home, tab.Account);
+        Assert.Equal("s1", h.Factory.Launches[1].Resume);
+        Assert.Equal("qwen3:8b", h.Factory.Launches[1].Model);
+    }
+
+    [Fact]
+    public async Task A_conversation_too_big_for_the_models_window_starts_a_new_chat_with_a_digest_instead()
+    {
+        using var ollama = FakeLocalServers.Ollama();
+        await using var h = new TabTestHarness(http: ollama);
+        var tab = await DefaultTabWithAConversationAsync(h, 150_000);
+        var home = await AddOllamaAsync(h, l => l.Window = 65_536);
+        h.Services.Accounts.NewFolderAccount = null;
+
+        tab.SwitchAccountCommand.Execute(home.Id);
+
+        var confirm = h.Shell.Confirmation!;
+        Assert.Equal("New chat with a digest", confirm.ConfirmText);
+        Assert.StartsWith("The conversation's 150,000 tokens don't fit qwen3:8b's 65,536-token window, so it can't move to Home as it is.", confirm.Message, StringComparison.Ordinal);
+        await confirm.ConfirmCommand.ExecuteAsync(null);
+        await TabTestHarness.Eventually(() => h.Factory.Launches.Count == 2 && tab.IsSettled, "the new chat on Home");
+        Assert.Same(home, tab.Account);
+        Assert.Null(h.Factory.Launches[1].Resume);
+        Assert.StartsWith("Context from an earlier conversation (a digest):", tab.ComposerText, StringComparison.Ordinal);
+    }
+
     [Fact]
     public async Task A_server_that_stopped_answering_mid_session_is_said_and_checked_before_the_next_message()
     {
