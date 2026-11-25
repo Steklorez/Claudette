@@ -44,6 +44,12 @@ public sealed class AccountsService(AppServices services, ICredentialStore crede
 
     public bool HasAccounts => All.Count > 0;
 
+    /// <summary>
+    /// There's an Ollama or llama.cpp account, whose tabs need no sign-in, so Deventry opens without Claude Code's
+    /// (DESIGN.md §18, "Without a Claude account").
+    /// </summary>
+    public bool HasLocalAccounts => All.Any(a => a.IsLocal);
+
     /// <summary>The account with <paramref name="id"/>; null for Default, or for one that's gone.</summary>
     public ClaudeAccount? Find(string? id) => AccountState.Find(services.State, id);
 

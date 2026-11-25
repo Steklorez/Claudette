@@ -1,0 +1,54 @@
+﻿"Sign in to Claude"
+"Claude Code needs you to sign in."
+[button] Sign in
+[button] More options
+[button] I've already signed in
+[button] Try the demo
+[button] Use Ollama or llama.cpp instead
+
+---- Use Ollama or llama.cpp instead ----
+"Sign in to Claude"
+"Claude Code needs you to sign in."
+[button] Sign in
+[button] More options
+[button] I've already signed in
+[button] Try the demo
+"Claude Code can run on a model your own Ollama or llama-server serves, with no Claude account. You can sign in to Claude later, from the account menu."
+[choice] "Ollama"
+[field] "Account name (optional)"
+"Claude Code runs as it always does, but its model runs in Ollama on this computer, or at the address below. Your prompts and files go to that server for the model's answers, and nowhere else. Claude Code itself still talks to Anthropic for its updates and telemetry unless you keep it off the internet below. Anthropic doesn't support Claude Code on models other than Claude: how well it works depends on the model you choose, and what goes wrong is the model's or the server's to fix, not Claude Code's."
+"Ollama runs a model at the window its own setting gives it (the app's slider, or OLLAMA_CONTEXT_LENGTH), which a request can't change: 4,096 tokens on a GPU under 24 GB unless changed. A server Deventry starts runs at the window below."
+[button] ollama.com
+[button] Claude Code on Ollama
+"Address"
+[field] "http://localhost:11434"
+[button] Check
+"Model"
+[choice] ""
+[field] "the model's name, such as qwen3:8b"
+"Model for background work (optional)"
+[field] "the same model"
+"Window (tokens)"
+[button] (icon)
+[button] (icon)
+[field] "65,536"
+[button] Check the window
+"Claude Code compacts the conversation at about 44,344 tokens, keeping the longest reply and a margin free."
+"Longest reply (tokens)"
+[button] (icon)
+[button] (icon)
+[field] "8,192"
+[ ] It takes an API key (for Ollama's cloud at https://ollama.com)
+[x] Start Ollama when it isn't running
+"Deventry runs "ollama serve" on the address's port, with the window below as the default for the models it loads, and stops it when Deventry closes. An Ollama that's already running, such as Ollama's app, is used as it is."
+"Path to ollama"
+[field] "Not found: install Ollama, or choose ollama"
+[button] Browse…
+[ ] Keep Claude Code off the internet
+"No telemetry, error reports, update checks or feature flags from Claude Code, and no check with Anthropic before WebFetch reads a page. Claude Code's features that wait on its feature flags stay off too."
+[button] Line up
+[button] Page up
+[button] Page down
+[button] Line down
+[button] Add it and open Deventry
+[button] Cancel

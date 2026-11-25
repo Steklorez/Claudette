@@ -325,13 +325,16 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
             }
             else
             {
-                CurrentPage = new SignInViewModel(services, CheckSignInAsync) { Error = message, Codex = new CodexSetupViewModel(services) };
+                CurrentPage = new SignInViewModel(services, CheckSignInAsync) { Error = message, Codex = new CodexSetupViewModel(services), LocalAccount = new LocalAccountOfferViewModel(services, CheckSignInAsync) };
             }
             return;
         }
 
         Account.Status = status;
-        if (!status.LoggedIn)
+        // An Ollama or llama.cpp account's tabs need no sign-in, so Deventry opens with one (DESIGN.md §18, "Without a
+        // Claude account"): Default's tabs find Claude Code signed out as they would anyway.
+        var withoutSignIn = !status.LoggedIn && !midSession && services.Accounts.HasLocalAccounts;
+        if (!status.LoggedIn && !withoutSignIn)
         {
             if (midSession)
             {
@@ -343,12 +346,15 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
             }
             else
             {
-                CurrentPage = new SignInViewModel(services, CheckSignInAsync) { Codex = new CodexSetupViewModel(services) };
+                CurrentPage = new SignInViewModel(services, CheckSignInAsync) { Codex = new CodexSetupViewModel(services), LocalAccount = new LocalAccountOfferViewModel(services, CheckSignInAsync) };
             }
             return;
         }
 
-        Account.OnSignedIn(status);
+        if (status.LoggedIn)
+        {
+            Account.OnSignedIn(status);
+        }
         services.ProjectsDirectory = status.ProjectsDirectory
             ?? (status.ConfigDirectory is { } config ? Path.Combine(config, "projects") : null);
         services.ClaudeConfigDirectory = status.ConfigDirectory
@@ -388,7 +394,8 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
             {
                 _shell.Restore(initialFolder);
             }
-            StartUsage();
+            // Plan usage is asked for once Claude Code is signed in.
+            StartUsage(poll: status.LoggedIn);
             // The tabs are up: a remote client Settings turns on can reach them (DESIGN.md §18, "Remote clients").
             services.RemoteClients.Start(_shell);
             StartUpdateChecks(_shell);
@@ -398,18 +405,21 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
         else
         {
             CurrentPage = _shell;
-            // Like the tabs, the utility session (plan usage) starts again, with the new sign-in.
+            // Like the tabs, the utility session (plan usage) starts again, with the new sign-in, and plan usage is
+            // asked for if Deventry opened without one.
             await services.StopUtilitySessionAsync();
+            services.Usage?.Start();
             await _shell.OnSignedInAgainAsync();
         }
     }
 
     /// <summary>Starts plan usage tracking and the header. A failure here never stops the tabs from working.</summary>
-    private void StartUsage()
+    /// <param name="poll">Ask for the plan's usage: not before Claude Code is signed in.</param>
+    private void StartUsage(bool poll = true)
     {
         try
         {
-            var tracker = services.StartUsageTracking();
+            var tracker = services.StartUsageTracking(poll);
             var usage = new UsageViewModel(services, tracker)
             {
                 // The detailed header's busiest tabs, by name (DESIGN.md §6, "Detailed header").

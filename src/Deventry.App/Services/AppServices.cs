@@ -768,13 +768,17 @@ public sealed class AppServices : IAsyncDisposable
     public UsageTracker? Usage { get; private set; }
 
     /// <summary>Opens the usage history and starts polling plan usage. Called once, after sign-in.</summary>
-    public UsageTracker StartUsageTracking()
+    /// <param name="poll">Ask for the plan's usage now; without, <see cref="UsageTracker.Start"/> does, once Claude Code is signed in.</param>
+    public UsageTracker StartUsageTracking(bool poll = true)
     {
         if (Usage is null)
         {
             UsageHistory = new UsageStore(Paths.UsageDatabase, Time);
             Usage = new UsageTracker(this, UsageHistory);
-            Usage.Start();
+            if (poll)
+            {
+                Usage.Start();
+            }
         }
         return Usage;
     }
